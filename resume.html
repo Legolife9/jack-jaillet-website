@@ -17,7 +17,7 @@
 
   <a class="skip-link" href="#main">Skip to content</a>
 
-  <nav class="site-nav">
+  <nav class="site-nav" aria-label="Primary">
     <div class="wrap">
       <a class="brand" href="index.html">
         <img class="brand-img" src="assets/favicon.png" alt="" width="40" height="40">
@@ -34,7 +34,9 @@
     </div>
   </nav>
 
-  <header class="resume-head" id="main">
+  <main id="main">
+
+  <header class="resume-head">
     <div class="wrap">
       <h1>Jack Jaillet</h1>
       <p class="lede">Business-oriented student passionate about community service, leadership, and communication. Skilled in customer service, hospitality, and management.</p>
@@ -42,7 +44,7 @@
         <span>He/Him</span>
         <span>Massachusetts, United States</span>
         <a href="mailto:contact@jackjaillet.com">contact@jackjaillet.com</a>
-        <a href="https://www.linkedin.com/in/jackjaillet/" target="_blank" rel="noopener">linkedin.com/in/jackjaillet</a>
+        <a href="https://www.linkedin.com/in/jackjaillet/" target="_blank" rel="noopener">linkedin.com/in/jackjaillet<span class="sr-only"> (opens in new tab)</span></a>
         <button class="btn btn-ghost btn-small no-print" id="print-btn" type="button">Print or save as PDF</button>
       </div>
     </div>
@@ -51,9 +53,9 @@
   <div class="resume-body">
     <div class="wrap resume-grid">
 
-      <main>
-        <section class="resume-section">
-          <h2>Experience</h2>
+      <div>
+        <section class="resume-section" aria-labelledby="experience-heading">
+          <h2 id="experience-heading">Experience</h2>
 
           <article class="job">
             <div class="job-top">
@@ -112,8 +114,8 @@
           </article>
         </section>
 
-        <section class="resume-section">
-          <h2>Leadership &amp; Service</h2>
+        <section class="resume-section" aria-labelledby="leadership-heading">
+          <h2 id="leadership-heading">Leadership &amp; Service</h2>
 
           <article class="job">
             <div class="job-top">
@@ -155,11 +157,11 @@
             <p>Founded and maintain a remote community resource project.</p>
           </article>
         </section>
-      </main>
+      </div>
 
       <aside>
-        <section class="aside-block">
-          <h2>Education</h2>
+        <section class="aside-block" aria-labelledby="education-heading">
+          <h2 id="education-heading">Education</h2>
           <div class="edu">
             <h3>UMass Amherst, Isenberg School of Management</h3>
             <p>Incoming, Fall 2026 &middot; Class of 2030</p>
@@ -170,8 +172,8 @@
           </div>
         </section>
 
-        <section class="aside-block">
-          <h2>Honors</h2>
+        <section class="aside-block" aria-labelledby="honors-heading">
+          <h2 id="honors-heading">Honors</h2>
           <ul class="plain-list">
             <li><b>2024-25 Massachusetts Leo of the Year</b> Lions Clubs International, District 33A &middot; Apr 2025</li>
             <li><b>Leo of the Year, Montachusett Regional Vocational Technical School</b> School-level award preceding the state honor</li>
@@ -180,8 +182,8 @@
           </ul>
         </section>
 
-        <section class="aside-block">
-          <h2>Skills</h2>
+        <section class="aside-block" aria-labelledby="skills-heading">
+          <h2 id="skills-heading">Skills</h2>
           <div class="skill-chips">
             <span>Leadership</span>
             <span>Communication</span>
@@ -200,8 +202,8 @@
           </div>
         </section>
 
-        <section class="aside-block">
-          <h2>Certifications</h2>
+        <section class="aside-block" aria-labelledby="certifications-heading">
+          <h2 id="certifications-heading">Certifications</h2>
           <ul class="plain-list">
             <li><b>Certified Trainer</b> Training Active Bystanders, since 2023</li>
             <li><b>Soft Skills Certificate Series</b> MyCareerTech.com, 12 certificates including Productivity and Marketing &middot; 2026</li>
@@ -212,26 +214,31 @@
     </div>
   </div>
 
-  <section class="contact-band" id="contact">
+  <section class="contact-band" id="contact" aria-labelledby="contact-heading">
     <div class="wrap reveal">
-      <h2>Let's connect.</h2>
+      <h2 id="contact-heading">Let's connect.</h2>
       <p>Whether it's an opportunity, a project, or a question about anything I'm involved in, my inbox is open.</p>
       <div class="contact-actions">
         <a class="btn btn-primary" href="mailto:contact@jackjaillet.com">Get in touch</a>
-        <a class="btn btn-ghost" href="https://www.linkedin.com/in/jackjaillet/" target="_blank" rel="noopener">Connect on LinkedIn</a>
+        <a class="btn btn-ghost" href="https://www.linkedin.com/in/jackjaillet/" target="_blank" rel="noopener">Connect on LinkedIn<span class="sr-only"> (opens in new tab)</span></a>
       </div>
     </div>
   </section>
+
+  </main>
 
   <footer class="site-footer">
     <div class="wrap">
       <a class="brand" href="index.html" aria-label="Jack Jaillet, back to home">
         <img class="brand-img" src="assets/favicon.png" alt="" width="32" height="32">
       </a>
+      <nav aria-label="Footer">
       <ul class="footer-links">
         <li><a href="mailto:contact@jackjaillet.com">contact@jackjaillet.com</a></li>
-        <li><a href="https://www.linkedin.com/in/jackjaillet/" target="_blank" rel="noopener">LinkedIn</a></li>
+        <li><a href="https://www.linkedin.com/in/jackjaillet/" target="_blank" rel="noopener">LinkedIn<span class="sr-only"> (opens in new tab)</span></a></li>
+        <li><a href="accessibility.html">Accessibility</a></li>
       </ul>
+      </nav>
       <small>&copy; <span id="year">2026</span> Jack Jaillet</small>
     </div>
   </footer>

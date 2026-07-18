@@ -17,7 +17,7 @@
 
   <a class="skip-link" href="#main">Skip to content</a>
 
-  <nav class="site-nav">
+  <nav class="site-nav" aria-label="Primary">
     <div class="wrap">
       <a class="brand" href="index.html">
         <img class="brand-img" src="assets/favicon.png" alt="" width="40" height="40">
@@ -34,7 +34,9 @@
     </div>
   </nav>
 
-  <header class="hero" id="main">
+  <main id="main">
+
+  <header class="hero">
     <div class="wrap hero-grid">
       <div>
         <h1>Always learning,<br><em>always leading.</em></h1>
@@ -54,10 +56,10 @@
     </div>
   </header>
 
-  <section class="section section-alt">
+  <section class="section section-alt" aria-labelledby="highlights-heading">
     <div class="wrap">
       <div class="section-head reveal">
-        <h2>A few highlights</h2>
+        <h2 id="highlights-heading">A few highlights</h2>
       </div>
       <div class="highlights">
         <article class="hl hl-lead reveal">
@@ -84,20 +86,20 @@
     </div>
   </section>
 
-  <section class="band">
+  <section class="band" aria-labelledby="umass-heading">
     <div class="wrap band-inner">
       <div class="reveal">
-        <h2>Next stop: UMass Amherst</h2>
+        <h2 id="umass-heading">Next stop: UMass Amherst</h2>
         <p>This fall I'm joining the Isenberg School of Management, Class of 2030.</p>
       </div>
       <a class="btn btn-on-blue" href="updates.html#umass">Read the announcement</a>
     </div>
   </section>
 
-  <section class="section">
+  <section class="section" aria-labelledby="updates-heading">
     <div class="wrap">
       <div class="section-head section-head-row reveal">
-        <h2>Latest updates</h2>
+        <h2 id="updates-heading">Latest updates</h2>
         <a class="more-link" href="updates.html">All updates &rarr;</a>
       </div>
       <div class="post-teasers">
@@ -117,26 +119,31 @@
     </div>
   </section>
 
-  <section class="contact-band" id="contact">
+  <section class="contact-band" id="contact" aria-labelledby="contact-heading">
     <div class="wrap reveal">
-      <h2>Let's connect.</h2>
+      <h2 id="contact-heading">Let's connect.</h2>
       <p>Whether it's an opportunity, a project, or a question about anything I'm involved in, my inbox is open.</p>
       <div class="contact-actions">
         <a class="btn btn-primary" href="mailto:contact@jackjaillet.com">Get in touch</a>
-        <a class="btn btn-ghost" href="https://www.linkedin.com/in/jackjaillet/" target="_blank" rel="noopener">Connect on LinkedIn</a>
+        <a class="btn btn-ghost" href="https://www.linkedin.com/in/jackjaillet/" target="_blank" rel="noopener">Connect on LinkedIn<span class="sr-only"> (opens in new tab)</span></a>
       </div>
     </div>
   </section>
+
+  </main>
 
   <footer class="site-footer">
     <div class="wrap">
       <a class="brand" href="index.html" aria-label="Jack Jaillet, back to home">
         <img class="brand-img" src="assets/favicon.png" alt="" width="32" height="32">
       </a>
+      <nav aria-label="Footer">
       <ul class="footer-links">
         <li><a href="mailto:contact@jackjaillet.com">contact@jackjaillet.com</a></li>
-        <li><a href="https://www.linkedin.com/in/jackjaillet/" target="_blank" rel="noopener">LinkedIn</a></li>
+        <li><a href="https://www.linkedin.com/in/jackjaillet/" target="_blank" rel="noopener">LinkedIn<span class="sr-only"> (opens in new tab)</span></a></li>
+        <li><a href="accessibility.html">Accessibility</a></li>
       </ul>
+      </nav>
       <small>&copy; <span id="year">2026</span> Jack Jaillet</small>
     </div>
   </footer>

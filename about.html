@@ -17,7 +17,7 @@
 
   <a class="skip-link" href="#main">Skip to content</a>
 
-  <nav class="site-nav">
+  <nav class="site-nav" aria-label="Primary">
     <div class="wrap">
       <a class="brand" href="index.html">
         <img class="brand-img" src="assets/favicon.png" alt="" width="40" height="40">
@@ -34,7 +34,9 @@
     </div>
   </nav>
 
-  <header class="about-head" id="main">
+  <main id="main">
+
+  <header class="about-head">
     <div class="wrap about-grid">
       <div>
         <h1>Hey, thanks for<br><em>stopping by.</em></h1>
@@ -54,10 +56,10 @@
     </div>
   </header>
 
-  <section class="section section-alt">
+  <section class="section section-alt" aria-labelledby="involve-heading">
     <div class="wrap">
       <div class="section-head reveal">
-        <h2>Where I'm involved</h2>
+        <h2 id="involve-heading">Where I'm involved</h2>
       </div>
       <div class="involve reveal">
         <div>
@@ -91,10 +93,10 @@
     </div>
   </section>
 
-  <section class="section">
+  <section class="section" aria-labelledby="drives-heading">
     <div class="wrap">
       <div class="section-head reveal">
-        <h2>What drives me</h2>
+        <h2 id="drives-heading">What drives me</h2>
       </div>
       <div class="prose reveal">
         <p>I try to lead with intentionality and stay genuinely curious about the reasoning behind decisions and actions. The things I'm proudest of, from state-level recognition to a finished conference recap video, were never done alone. Teachers, mentors, friends, and community members believed in me, challenged me, and showed up when it mattered.</p>
@@ -103,26 +105,31 @@
     </div>
   </section>
 
-  <section class="contact-band" id="contact">
+  <section class="contact-band" id="contact" aria-labelledby="contact-heading">
     <div class="wrap reveal">
-      <h2>Let's connect.</h2>
+      <h2 id="contact-heading">Let's connect.</h2>
       <p>Whether it's an opportunity, a project, or a question about anything I'm involved in, my inbox is open.</p>
       <div class="contact-actions">
         <a class="btn btn-primary" href="mailto:contact@jackjaillet.com">Get in touch</a>
-        <a class="btn btn-ghost" href="https://www.linkedin.com/in/jackjaillet/" target="_blank" rel="noopener">Connect on LinkedIn</a>
+        <a class="btn btn-ghost" href="https://www.linkedin.com/in/jackjaillet/" target="_blank" rel="noopener">Connect on LinkedIn<span class="sr-only"> (opens in new tab)</span></a>
       </div>
     </div>
   </section>
+
+  </main>
 
   <footer class="site-footer">
     <div class="wrap">
       <a class="brand" href="index.html" aria-label="Jack Jaillet, back to home">
         <img class="brand-img" src="assets/favicon.png" alt="" width="32" height="32">
       </a>
+      <nav aria-label="Footer">
       <ul class="footer-links">
         <li><a href="mailto:contact@jackjaillet.com">contact@jackjaillet.com</a></li>
-        <li><a href="https://www.linkedin.com/in/jackjaillet/" target="_blank" rel="noopener">LinkedIn</a></li>
+        <li><a href="https://www.linkedin.com/in/jackjaillet/" target="_blank" rel="noopener">LinkedIn<span class="sr-only"> (opens in new tab)</span></a></li>
+        <li><a href="accessibility.html">Accessibility</a></li>
       </ul>
+      </nav>
       <small>&copy; <span id="year">2026</span> Jack Jaillet</small>
     </div>
   </footer>
