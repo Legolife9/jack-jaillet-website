@@ -64,6 +64,14 @@ img { max-width: 100%; height: auto; display: block; }
 a { color: var(--link); text-decoration: none; }
 a:hover { text-decoration: underline; text-underline-offset: 3px; }
 
+/* visible cue that a link leaves the site (sr-only text carries it for screen readers) */
+a[target="_blank"]::after {
+  content: "\2197\FE0E";
+  margin-left: 0.35em;
+  font-size: 0.8em;
+}
+a.btn[target="_blank"]::after { margin-left: 0; }
+
 /* links inside running text carry an underline, not color alone */
 .lede a, .prose a, .post p a {
   text-decoration: underline;
