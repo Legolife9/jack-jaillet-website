@@ -746,6 +746,12 @@ h3 { font-size: 1.25rem; }
 .plain-list li { padding: 8px 0; font-size: 0.95rem; color: var(--ink-2); }
 .plain-list li b { color: var(--ink); font-weight: 600; display: block; }
 
+/* ---------- now page ---------- */
+
+.now-list { max-width: 46em; }
+.now-list li { padding: 16px 0; font-size: 1rem; }
+.now-list li b { font-family: var(--serif); font-size: 1.15rem; }
+
 /* ---------- contact band / footer ---------- */
 
 .contact-band {
