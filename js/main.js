@@ -72,6 +72,32 @@
     syncTheme();
   }
 
+  // Glow parallax: the hero light leans toward the cursor (or device tilt);
+  // CSS transitions on `translate` provide the damped, light-like lag.
+  var hero = document.querySelector(".hero");
+  if (hero && window.matchMedia("(prefers-reduced-motion: no-preference)").matches) {
+    var setGlow = function (nx, ny) {
+      hero.style.setProperty("--glow-x", (nx * 34).toFixed(1) + "px");
+      hero.style.setProperty("--glow-y", (ny * 24).toFixed(1) + "px");
+      hero.style.setProperty("--glow-x2", (nx * -16).toFixed(1) + "px");
+      hero.style.setProperty("--glow-y2", (ny * -11).toFixed(1) + "px");
+    };
+    if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+      hero.addEventListener("pointermove", function (e) {
+        var r = hero.getBoundingClientRect();
+        setGlow(((e.clientX - r.left) / r.width) * 2 - 1, ((e.clientY - r.top) / r.height) * 2 - 1);
+      });
+      hero.addEventListener("pointerleave", function () { setGlow(0, 0); });
+    } else if ("DeviceOrientationEvent" in window) {
+      window.addEventListener("deviceorientation", function (e) {
+        if (e.gamma === null || e.beta === null) return;
+        var nx = Math.max(-1, Math.min(1, e.gamma / 20));
+        var ny = Math.max(-1, Math.min(1, (e.beta - 45) / 25));
+        setGlow(nx, ny);
+      });
+    }
+  }
+
   // Resume print button
   var printBtn = document.getElementById("print-btn");
   if (printBtn) {
