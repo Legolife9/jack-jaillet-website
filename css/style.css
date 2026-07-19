@@ -413,16 +413,35 @@ h3 { font-size: 1.25rem; }
   overflow: hidden;
 }
 .orgs-track { display: flex; width: max-content; }
-.orgs-set {
+.orgs-set { display: flex; align-items: center; }
+.org-item {
   display: flex;
-  gap: 56px;
-  padding-right: 56px;
+  align-items: center;
+  gap: 12px;
   white-space: nowrap;
-}
-.orgs-set span {
   color: var(--ink-2);
   font-weight: 500;
   font-size: 0.95rem;
+}
+.org-item img {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid var(--line);
+  object-fit: contain;
+  padding: 3px;
+}
+/* dot separator after every item keeps the loop seam consistent */
+.org-item::after {
+  content: "";
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.4;
+  margin: 0 26px;
+  flex-shrink: 0;
 }
 @media (prefers-reduced-motion: no-preference) {
   .orgs-track { animation: orgs-scroll 45s linear infinite; }
@@ -432,7 +451,7 @@ h3 { font-size: 1.25rem; }
 @media (prefers-reduced-motion: reduce) {
   .orgs { padding: 20px 24px; }
   .orgs-track { width: auto; flex-wrap: wrap; justify-content: center; }
-  .orgs-set { flex-wrap: wrap; justify-content: center; gap: 16px 32px; padding-right: 0; }
+  .orgs-set { flex-wrap: wrap; justify-content: center; gap: 14px 0; }
   .orgs-set + .orgs-set { display: none; }
 }
 
