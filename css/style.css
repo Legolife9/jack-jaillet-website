@@ -609,12 +609,12 @@ h3 { font-size: 1.25rem; }
   border-radius: inherit;
   box-shadow: var(--card-glow);
   opacity: 0;
-  transition: opacity 0.25s var(--ease);
+  transition: opacity 0.7s var(--ease);
   pointer-events: none;
 }
 @media (hover: hover) and (pointer: fine) {
   .hl:hover { transform: translateY(-3px); }
-  .hl:hover::after { opacity: 1; }
+  .hl:hover::after { opacity: 1; transition-duration: 0.45s; }
 }
 @media (prefers-color-scheme: dark) {
   @media (hover: hover) and (pointer: fine) {
