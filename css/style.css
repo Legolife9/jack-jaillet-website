@@ -19,12 +19,9 @@
   --link: #1e4fa3;      /* blue for text on the page background */
   --on-blue: #ffffff;
   --on-blue-muted: rgba(255, 255, 255, 0.85);
-  --gold: #8a5d00;       /* secondary accent: dates, labels, recognition (5.4:1 on paper) */
-  --gold-tint: #f8f0dc;
   --glow-strong: rgba(30, 79, 163, 0.10);
   --glow-soft: rgba(30, 79, 163, 0.06);
-  --glow-gold: rgba(138, 93, 0, 0.05);
-  --portrait-glow: 0 24px 64px rgba(30, 79, 163, 0.22);
+  --bloom: rgba(30, 79, 163, 0.20);
   --btn-glow: 0 6px 24px rgba(30, 79, 163, 0.35);
   --card-glow: 0 0 44px rgba(30, 79, 163, 0.18);
   --btn-hover: #163d82;          /* primary button hover bg (white text: 9.4:1) */
@@ -53,12 +50,9 @@
     --link: #9db8f3;
     --on-blue: #e9ecf3;
     --on-blue-muted: rgba(233, 236, 243, 0.85);
-    --gold: #e5c273;
-    --gold-tint: #292214;
     --glow-strong: rgba(42, 95, 189, 0.30);
     --glow-soft: rgba(42, 95, 189, 0.14);
-    --glow-gold: rgba(229, 194, 115, 0.07);
-    --portrait-glow: 0 0 90px rgba(42, 95, 189, 0.40);
+    --bloom: rgba(42, 95, 189, 0.50);
     --btn-glow: 0 6px 28px rgba(42, 95, 189, 0.55);
     --card-glow: 0 0 48px rgba(42, 95, 189, 0.30);
     --btn-hover: #2a5fbd;          /* lighter, not light: keeps #e9ecf3 text at 5.1:1 */
@@ -335,11 +329,20 @@ h3 { font-size: 1.25rem; }
 /* ---------- hero ---------- */
 
 .hero {
+  position: relative;
+  overflow: hidden;
   padding: 64px 0 72px;
+}
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
   background:
     radial-gradient(640px 440px at 76% 42%, var(--glow-strong), transparent 70%),
-    radial-gradient(520px 380px at 8% 88%, var(--glow-gold), transparent 70%);
+    radial-gradient(520px 380px at 8% 88%, var(--glow-soft), transparent 70%);
+  pointer-events: none;
 }
+.hero > .wrap { position: relative; }
 
 @media (prefers-reduced-motion: no-preference) {
   .hero h1, .hero .lede, .hero-ctas {
@@ -389,11 +392,32 @@ h3 { font-size: 1.25rem; }
   z-index: 0;
 }
 
+.portrait::after {
+  content: "";
+  position: absolute;
+  inset: -28% -34%;
+  background: radial-gradient(closest-side, var(--bloom), transparent);
+  z-index: -1;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero::before {
+    animation: glow-breathe 9s ease-in-out infinite alternate;
+  }
+  .portrait::after {
+    animation: glow-breathe 7s ease-in-out 1.5s infinite alternate;
+  }
+  @keyframes glow-breathe {
+    from { opacity: 0.6; transform: scale(1); }
+    to { opacity: 1; transform: scale(1.05); }
+  }
+}
+
 .portrait img,
 .portrait .portrait-fallback {
   position: relative;
   z-index: 1;
-  box-shadow: var(--portrait-glow);
   width: 100%;
   aspect-ratio: 4 / 5;
   object-fit: cover;
@@ -591,7 +615,6 @@ h3 { font-size: 1.25rem; }
 .hl-cta a { font-weight: 600; }
 .hl p { color: var(--ink-2); font-size: 0.95rem; }
 .hl .hl-org { font-weight: 600; color: var(--ink); font-size: 0.95rem; }
-.hl-c .hl-org { color: var(--gold); }
 
 .hl-lead {
   grid-area: lead;
@@ -606,7 +629,7 @@ h3 { font-size: 1.25rem; }
 
 .hl-a { grid-area: a; }
 .hl-b { grid-area: b; }
-.hl-c { grid-area: c; background: var(--gold-tint); border-color: transparent; }
+.hl-c { grid-area: c; background: var(--blue-tint); border-color: transparent; }
 
 @media (max-width: 820px) {
   .highlights {
@@ -658,7 +681,7 @@ h3 { font-size: 1.25rem; }
 .post p { max-width: 68ch; }
 
 .post time {
-  color: var(--gold);
+  color: var(--ink-2);
   font-size: 0.9rem;
   font-weight: 500;
   display: block;
@@ -725,7 +748,7 @@ h3 { font-size: 1.25rem; }
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--gold);
+  color: var(--link);
   margin-bottom: 14px;
 }
 
@@ -786,7 +809,7 @@ h3 { font-size: 1.25rem; }
 
 .job h3 { font-family: var(--sans); font-size: 1.05rem; font-weight: 600; }
 .job .job-org { color: var(--link); font-weight: 500; font-size: 0.95rem; }
-.job time { color: var(--gold); font-size: 0.9rem; white-space: nowrap; }
+.job time { color: var(--ink-2); font-size: 0.9rem; white-space: nowrap; }
 .job p { color: var(--ink-2); font-size: 0.95rem; margin-top: 8px; }
 
 .job ul.roles { list-style: none; margin-top: 10px; }
@@ -831,7 +854,7 @@ h3 { font-size: 1.25rem; }
 
 .now-list { max-width: 46em; }
 .now-list li { padding: 16px 0; font-size: 1rem; }
-.now-list li b { font-family: var(--serif); font-size: 1.15rem; color: var(--gold); }
+.now-list li b { font-family: var(--serif); font-size: 1.15rem; }
 
 /* ---------- contact band / footer ---------- */
 
