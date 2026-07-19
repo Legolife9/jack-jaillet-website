@@ -13,10 +13,10 @@
   --ink: #14171d;
   --ink-2: #49505f;
   --line: #dce0e9;
-  --blue: #0a47bb;      /* fixed brand blue: button/band backgrounds only */
-  --blue-deep: #083a99;
-  --blue-tint: #e8eefb;
-  --link: #0a47bb;      /* blue for text on the page background */
+  --blue: #1e4fa3;      /* calmed brand cobalt: button/band backgrounds */
+  --blue-deep: #163d82;
+  --blue-tint: #e9eef9;
+  --link: #1e4fa3;      /* blue for text on the page background */
   --nav-bg: rgba(247, 248, 250, 0.92);
   --serif: "Playfair Display", Georgia, "Times New Roman", serif;
   --sans: "Instrument Sans", -apple-system, "Segoe UI", Arial, sans-serif;
@@ -36,9 +36,9 @@
     --ink: #e9ecf3;
     --ink-2: #a3acbf;
     --line: #29303e;
-    --blue-deep: #a9c4fb;   /* chip / selection text on dark tint */
-    --blue-tint: #1a2540;
-    --link: #8fb0f9;
+    --blue-deep: #b6c9f8;   /* chip / selection text on dark tint */
+    --blue-tint: #192338;
+    --link: #9db8f3;
     --nav-bg: rgba(16, 19, 26, 0.92);
   }
 }
@@ -202,6 +202,22 @@ h3 { font-size: 1.25rem; }
   font-size: 0.95rem;
 }
 .nav-links a:hover { color: var(--ink); text-decoration: none; }
+.nav-links a:not(.btn) { position: relative; }
+.nav-links a:not(.btn):not([aria-current])::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -3px;
+  height: 2px;
+  background: var(--link);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.25s var(--ease);
+}
+@media (hover: hover) and (pointer: fine) {
+  .nav-links a:not(.btn):not([aria-current]):hover::after { transform: scaleX(1); }
+}
 .nav-links a[aria-current="page"] {
   color: var(--ink);
   border-bottom: 2px solid var(--link);
@@ -276,12 +292,29 @@ h3 { font-size: 1.25rem; }
 
 .btn-small { padding: 12px 20px; font-size: 0.9rem; }
 
-.btn-on-blue { background: #fff; color: #083a99; }
+.btn-on-blue { background: #fff; color: #163d82; }
 .btn-on-blue:hover { background: var(--blue-tint); }
 
 /* ---------- hero ---------- */
 
 .hero { padding: 64px 0 72px; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero h1, .hero .lede, .hero-ctas {
+    opacity: 0;
+    transform: translateY(18px);
+    animation: rise 0.6s var(--ease) forwards;
+  }
+  .hero .lede { animation-delay: 0.1s; }
+  .hero-ctas { animation-delay: 0.2s; }
+  .portrait {
+    opacity: 0;
+    transform: scale(0.96) translateY(12px);
+    animation: settle 0.7s var(--ease) 0.15s forwards;
+  }
+  @keyframes rise { to { opacity: 1; transform: none; } }
+  @keyframes settle { to { opacity: 1; transform: none; } }
+}
 
 .hero-grid {
   display: grid;
@@ -357,6 +390,37 @@ h3 { font-size: 1.25rem; }
   .portrait { justify-self: start; width: min(100%, 340px); }
 }
 
+/* ---------- organizations strip ---------- */
+
+.orgs {
+  border-top: 1px solid var(--line);
+  padding: 20px 0;
+  overflow: hidden;
+}
+.orgs-track { display: flex; width: max-content; }
+.orgs-set {
+  display: flex;
+  gap: 56px;
+  padding-right: 56px;
+  white-space: nowrap;
+}
+.orgs-set span {
+  color: var(--ink-2);
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .orgs-track { animation: orgs-scroll 45s linear infinite; }
+  .orgs:hover .orgs-track { animation-play-state: paused; }
+  @keyframes orgs-scroll { to { transform: translateX(-50%); } }
+}
+@media (prefers-reduced-motion: reduce) {
+  .orgs { padding: 20px 24px; }
+  .orgs-track { width: auto; flex-wrap: wrap; justify-content: center; }
+  .orgs-set { flex-wrap: wrap; justify-content: center; gap: 16px 32px; padding-right: 0; }
+  .orgs-set + .orgs-set { display: none; }
+}
+
 /* ---------- sections ---------- */
 
 .section { padding: 80px 0; }
@@ -428,7 +492,7 @@ h3 { font-size: 1.25rem; }
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  box-shadow: 0 14px 34px rgba(10, 71, 187, 0.08);
+  box-shadow: 0 14px 34px rgba(30, 79, 163, 0.1);
   opacity: 0;
   transition: opacity 0.25s var(--ease);
   pointer-events: none;
@@ -541,6 +605,10 @@ h3 { font-size: 1.25rem; }
   display: inline-block;
   margin-top: 28px;
   font-weight: 600;
+  transition: transform 0.2s var(--ease);
+}
+@media (hover: hover) and (pointer: fine) {
+  .more-link:hover { transform: translateX(4px); }
 }
 
 /* ---------- about page ---------- */
