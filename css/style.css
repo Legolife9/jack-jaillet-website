@@ -19,6 +19,8 @@
   --link: #1e4fa3;      /* blue for text on the page background */
   --on-blue: #ffffff;
   --on-blue-muted: rgba(255, 255, 255, 0.85);
+  --btn-hover: #163d82;          /* primary button hover bg (white text: 9.4:1) */
+  --btn-on-blue-hover: #e9eef9;  /* white-button hover bg (navy text: 7.7:1) */
   --nav-bg: rgba(247, 248, 250, 0.92);
   --serif: "Playfair Display", Georgia, "Times New Roman", serif;
   --sans: "Instrument Sans", -apple-system, "Segoe UI", Arial, sans-serif;
@@ -43,6 +45,8 @@
     --link: #9db8f3;
     --on-blue: #e9ecf3;
     --on-blue-muted: rgba(233, 236, 243, 0.85);
+    --btn-hover: #2a5fbd;          /* lighter, not light: keeps #e9ecf3 text at 5.1:1 */
+    --btn-on-blue-hover: #d3def6;  /* stays light so the navy text stays readable */
     --nav-bg: rgba(16, 19, 26, 0.92);
   }
 }
@@ -301,14 +305,16 @@ h3 { font-size: 1.25rem; }
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .btn-primary:hover { background: var(--blue-deep); }
+  .btn-primary:hover { background: var(--btn-hover); }
   .btn-ghost:hover { border-color: var(--ink-2); }
 }
 
 .btn-small { padding: 12px 20px; font-size: 0.9rem; }
 
 .btn-on-blue { background: #fff; color: #163d82; }
-.btn-on-blue:hover { background: var(--blue-tint); }
+@media (hover: hover) and (pointer: fine) {
+  .btn-on-blue:hover { background: var(--btn-on-blue-hover); }
+}
 
 /* ---------- hero ---------- */
 
