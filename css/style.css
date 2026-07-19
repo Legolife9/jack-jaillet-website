@@ -21,6 +21,12 @@
   --on-blue-muted: rgba(255, 255, 255, 0.85);
   --gold: #8a5d00;       /* secondary accent: dates, labels, recognition (5.4:1 on paper) */
   --gold-tint: #f8f0dc;
+  --glow-strong: rgba(30, 79, 163, 0.10);
+  --glow-soft: rgba(30, 79, 163, 0.06);
+  --glow-gold: rgba(138, 93, 0, 0.05);
+  --portrait-glow: 0 24px 64px rgba(30, 79, 163, 0.22);
+  --btn-glow: 0 6px 24px rgba(30, 79, 163, 0.35);
+  --card-glow: 0 0 44px rgba(30, 79, 163, 0.18);
   --btn-hover: #163d82;          /* primary button hover bg (white text: 9.4:1) */
   --btn-on-blue-hover: #e9eef9;  /* white-button hover bg (navy text: 7.7:1) */
   --nav-bg: rgba(247, 248, 250, 0.92);
@@ -49,6 +55,12 @@
     --on-blue-muted: rgba(233, 236, 243, 0.85);
     --gold: #e5c273;
     --gold-tint: #292214;
+    --glow-strong: rgba(42, 95, 189, 0.30);
+    --glow-soft: rgba(42, 95, 189, 0.14);
+    --glow-gold: rgba(229, 194, 115, 0.07);
+    --portrait-glow: 0 0 90px rgba(42, 95, 189, 0.40);
+    --btn-glow: 0 6px 28px rgba(42, 95, 189, 0.55);
+    --card-glow: 0 0 48px rgba(42, 95, 189, 0.30);
     --btn-hover: #2a5fbd;          /* lighter, not light: keeps #e9ecf3 text at 5.1:1 */
     --btn-on-blue-hover: #d3def6;  /* stays light so the navy text stays readable */
     --nav-bg: rgba(16, 19, 26, 0.92);
@@ -292,7 +304,7 @@ h3 { font-size: 1.25rem; }
   border: 1px solid transparent;
   cursor: pointer;
   white-space: nowrap;
-  transition: transform 0.18s var(--ease), background 0.18s var(--ease), border-color 0.18s var(--ease);
+  transition: transform 0.18s var(--ease), background 0.18s var(--ease), border-color 0.18s var(--ease), box-shadow 0.18s var(--ease);
 }
 .btn:hover { text-decoration: none; }
 .btn:active { transform: translateY(1px) scale(0.99); transition-duration: 0.05s; }
@@ -309,7 +321,7 @@ h3 { font-size: 1.25rem; }
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .btn-primary:hover { background: var(--btn-hover); }
+  .btn-primary:hover { background: var(--btn-hover); box-shadow: var(--btn-glow); }
   .btn-ghost:hover { border-color: var(--ink-2); }
 }
 
@@ -322,7 +334,12 @@ h3 { font-size: 1.25rem; }
 
 /* ---------- hero ---------- */
 
-.hero { padding: 64px 0 72px; }
+.hero {
+  padding: 64px 0 72px;
+  background:
+    radial-gradient(640px 440px at 76% 42%, var(--glow-strong), transparent 70%),
+    radial-gradient(520px 380px at 8% 88%, var(--glow-gold), transparent 70%);
+}
 
 @media (prefers-reduced-motion: no-preference) {
   .hero h1, .hero .lede, .hero-ctas {
@@ -376,6 +393,7 @@ h3 { font-size: 1.25rem; }
 .portrait .portrait-fallback {
   position: relative;
   z-index: 1;
+  box-shadow: var(--portrait-glow);
   width: 100%;
   aspect-ratio: 4 / 5;
   object-fit: cover;
@@ -536,7 +554,7 @@ h3 { font-size: 1.25rem; }
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  box-shadow: 0 14px 34px rgba(30, 79, 163, 0.1);
+  box-shadow: var(--card-glow);
   opacity: 0;
   transition: opacity 0.25s var(--ease);
   pointer-events: none;
@@ -546,7 +564,6 @@ h3 { font-size: 1.25rem; }
   .hl:hover::after { opacity: 1; }
 }
 @media (prefers-color-scheme: dark) {
-  .hl::after { display: none; }
   @media (hover: hover) and (pointer: fine) {
     .hl:hover { border-color: var(--ink-2); }
   }
@@ -603,7 +620,7 @@ h3 { font-size: 1.25rem; }
 .band {
   position: relative;
   overflow: hidden;
-  background: var(--blue);
+  background: radial-gradient(720px 340px at 18% 0%, rgba(255, 255, 255, 0.16), transparent 65%) var(--blue);
   color: var(--on-blue);
   padding: 72px 0;
 }
@@ -821,6 +838,7 @@ h3 { font-size: 1.25rem; }
 .contact-band {
   padding: 96px 0;
   text-align: left;
+  background: radial-gradient(700px 400px at 24% 30%, var(--glow-soft), transparent 70%);
 }
 .contact-band h2 { font-size: clamp(2rem, 4vw, 3rem); margin-bottom: 16px; }
 .contact-band p { color: var(--ink-2); max-width: 34em; margin-bottom: 32px; }
