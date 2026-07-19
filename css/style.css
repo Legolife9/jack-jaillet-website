@@ -17,6 +17,8 @@
   --blue-deep: #163d82;
   --blue-tint: #e9eef9;
   --link: #1e4fa3;      /* blue for text on the page background */
+  --on-blue: #ffffff;
+  --on-blue-muted: rgba(255, 255, 255, 0.85);
   --nav-bg: rgba(247, 248, 250, 0.92);
   --serif: "Playfair Display", Georgia, "Times New Roman", serif;
   --sans: "Instrument Sans", -apple-system, "Segoe UI", Arial, sans-serif;
@@ -39,6 +41,8 @@
     --blue-deep: #b6c9f8;   /* chip / selection text on dark tint */
     --blue-tint: #192338;
     --link: #9db8f3;
+    --on-blue: #e9ecf3;
+    --on-blue-muted: rgba(233, 236, 243, 0.85);
     --nav-bg: rgba(16, 19, 26, 0.92);
   }
 }
@@ -88,7 +92,7 @@ a.btn[target="_blank"]::after { margin-left: 0; }
 }
 .btn:focus-visible { outline-offset: 2px; }
 .band :focus-visible,
-.hl-lead :focus-visible { outline-color: #fff; }
+.hl-lead :focus-visible { outline-color: var(--on-blue); }
 
 .sr-only {
   position: absolute;
@@ -108,7 +112,7 @@ a.btn[target="_blank"]::after { margin-left: 0; }
   top: 0;
   z-index: 100;
   background: var(--blue);
-  color: #fff;
+  color: var(--on-blue);
   font-weight: 600;
   padding: 12px 20px;
   border-radius: 0 0 14px 14px;
@@ -285,7 +289,7 @@ h3 { font-size: 1.25rem; }
 .btn:hover { text-decoration: none; }
 .btn:active { transform: translateY(1px) scale(0.99); transition-duration: 0.05s; }
 
-.btn-primary { background: var(--blue); color: #fff; }
+.btn-primary { background: var(--blue); color: var(--on-blue); }
 
 .btn-ghost {
   background: transparent;
@@ -524,12 +528,12 @@ h3 { font-size: 1.25rem; }
   grid-area: lead;
   background: var(--blue);
   border-color: var(--blue);
-  color: #fff;
+  color: var(--on-blue);
   min-height: 100%;
 }
-.hl-lead h3 { font-size: 1.7rem; color: #fff; }
-.hl-lead p, .hl-lead .hl-org { color: rgba(255, 255, 255, 0.85); }
-.hl-lead a { color: #fff; text-decoration: underline; text-underline-offset: 3px; }
+.hl-lead h3 { font-size: 1.7rem; color: var(--on-blue); }
+.hl-lead p, .hl-lead .hl-org { color: var(--on-blue-muted); }
+.hl-lead a { color: var(--on-blue); text-decoration: underline; text-underline-offset: 3px; }
 
 .hl-a { grid-area: a; }
 .hl-b { grid-area: b; }
@@ -548,7 +552,7 @@ h3 { font-size: 1.25rem; }
   position: relative;
   overflow: hidden;
   background: var(--blue);
-  color: #fff;
+  color: var(--on-blue);
   padding: 72px 0;
 }
 .band::before {
@@ -560,8 +564,8 @@ h3 { font-size: 1.25rem; }
   pointer-events: none;
 }
 .band .wrap { position: relative; }
-.band h2 { color: #fff; margin-bottom: 14px; }
-.band p { color: rgba(255, 255, 255, 0.85); max-width: 36em; }
+.band h2 { color: var(--on-blue); margin-bottom: 14px; }
+.band p { color: var(--on-blue-muted); max-width: 36em; }
 .band .band-inner {
   display: flex;
   flex-wrap: wrap;
