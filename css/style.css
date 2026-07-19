@@ -306,7 +306,7 @@ h3 { font-size: 1.25rem; }
 .btn:active { transform: translateY(1px) scale(0.99); transition-duration: 0.05s; }
 
 .btn-primary { background: var(--blue); color: var(--on-blue); }
-.btn-primary::before {
+.btn::before {
   content: "";
   position: absolute;
   top: 0;
@@ -316,6 +316,10 @@ h3 { font-size: 1.25rem; }
   background: linear-gradient(105deg, transparent, rgba(255, 255, 255, 0.35), transparent);
   transform: translateX(-150%) skewX(-20deg);
   pointer-events: none;
+}
+/* white light is invisible on the white button: it gets a blue streak */
+.btn-on-blue::before {
+  background: linear-gradient(105deg, transparent, rgba(30, 79, 163, 0.18), transparent);
 }
 /* the nav CTA needs extra specificity: .nav-links a outranks .btn-primary */
 .nav-links a.btn-primary,
@@ -331,9 +335,13 @@ h3 { font-size: 1.25rem; }
   .btn:hover { transform: translateY(-1px); }
   .btn:active { transform: translateY(1px) scale(0.99); }
   .btn-primary:hover { background: var(--btn-hover); box-shadow: var(--btn-glow); }
-  .btn-ghost:hover { border-color: var(--link); background: var(--blue-tint); }
+  .btn-ghost:hover {
+    border-color: var(--link);
+    background: var(--blue-tint);
+    box-shadow: 0 4px 20px var(--glow-strong);
+  }
   @media (prefers-reduced-motion: no-preference) {
-    .btn-primary::before { transition: transform 0.6s var(--ease); }
+    .btn::before { transition: transform 0.6s var(--ease); }
     .btn-primary:hover::before { transform: translateX(350%) skewX(-20deg); }
   }
 }
@@ -342,7 +350,10 @@ h3 { font-size: 1.25rem; }
 
 .btn-on-blue { background: #fff; color: #163d82; }
 @media (hover: hover) and (pointer: fine) {
-  .btn-on-blue:hover { background: var(--btn-on-blue-hover); }
+  .btn-on-blue:hover {
+    background: var(--btn-on-blue-hover);
+    box-shadow: 0 0 26px rgba(255, 255, 255, 0.38);
+  }
 }
 
 /* ---------- hero ---------- */
@@ -421,15 +432,14 @@ h3 { font-size: 1.25rem; }
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .hero::before {
-    animation: glow-breathe 9s ease-in-out infinite alternate;
-  }
-  .portrait::after {
-    animation: glow-breathe 7s ease-in-out 1.5s infinite alternate;
-  }
-  @keyframes glow-breathe {
-    from { opacity: 0.6; transform: scale(1); }
-    to { opacity: 1; transform: scale(1.05); }
+  .hero::before { animation: glow-drift 16s ease-in-out infinite; }
+  .portrait::after { animation: glow-drift 11s ease-in-out 2s infinite; }
+  .contact-band::before { animation: glow-drift 19s ease-in-out 1s infinite; }
+  @keyframes glow-drift {
+    0%   { opacity: 0.65; transform: translate3d(0, 0, 0) scale(1); }
+    33%  { opacity: 1;    transform: translate3d(1.6%, -1.2%, 0) scale(1.05); }
+    66%  { opacity: 0.8;  transform: translate3d(-1.2%, 1.4%, 0) scale(1.02); }
+    100% { opacity: 0.65; transform: translate3d(0, 0, 0) scale(1); }
   }
 }
 
@@ -878,10 +888,19 @@ h3 { font-size: 1.25rem; }
 /* ---------- contact band / footer ---------- */
 
 .contact-band {
+  position: relative;
+  overflow: hidden;
   padding: 96px 0;
   text-align: left;
-  background: radial-gradient(700px 400px at 24% 30%, var(--glow-soft), transparent 70%);
 }
+.contact-band::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(700px 400px at 24% 30%, var(--glow-soft), transparent 70%);
+  pointer-events: none;
+}
+.contact-band > .wrap { position: relative; }
 .contact-band h2 { font-size: clamp(2rem, 4vw, 3rem); margin-bottom: 16px; }
 .contact-band p { color: var(--ink-2); max-width: 34em; margin-bottom: 32px; }
 .contact-actions { display: flex; flex-wrap: wrap; gap: 16px; }
