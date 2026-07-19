@@ -549,6 +549,25 @@ h3 { font-size: 1.25rem; }
 }
 
 .hl h3 { font-size: 1.35rem; }
+
+.hl-logo {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid var(--line);
+  object-fit: contain;
+  padding: 4px;
+  margin-bottom: auto;
+}
+.hl-lead .hl-logo {
+  width: 64px;
+  height: 64px;
+  padding: 6px;
+  border-color: transparent;
+}
+.hl-cta { margin-top: 12px; }
+.hl-cta a { font-weight: 600; }
 .hl p { color: var(--ink-2); font-size: 0.95rem; }
 .hl .hl-org { font-weight: 600; color: var(--ink); font-size: 0.95rem; }
 
