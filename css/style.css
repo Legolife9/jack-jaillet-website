@@ -286,6 +286,8 @@ h3 { font-size: 1.25rem; }
 /* ---------- buttons ---------- */
 
 .btn {
+  position: relative;
+  overflow: hidden;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -304,6 +306,17 @@ h3 { font-size: 1.25rem; }
 .btn:active { transform: translateY(1px) scale(0.99); transition-duration: 0.05s; }
 
 .btn-primary { background: var(--blue); color: var(--on-blue); }
+.btn-primary::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 40%;
+  background: linear-gradient(105deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  transform: translateX(-150%) skewX(-20deg);
+  pointer-events: none;
+}
 /* the nav CTA needs extra specificity: .nav-links a outranks .btn-primary */
 .nav-links a.btn-primary,
 .nav-links a.btn-primary:hover { color: var(--on-blue); }
@@ -315,8 +328,14 @@ h3 { font-size: 1.25rem; }
 }
 
 @media (hover: hover) and (pointer: fine) {
+  .btn:hover { transform: translateY(-1px); }
+  .btn:active { transform: translateY(1px) scale(0.99); }
   .btn-primary:hover { background: var(--btn-hover); box-shadow: var(--btn-glow); }
-  .btn-ghost:hover { border-color: var(--ink-2); }
+  .btn-ghost:hover { border-color: var(--link); background: var(--blue-tint); }
+  @media (prefers-reduced-motion: no-preference) {
+    .btn-primary::before { transition: transform 0.6s var(--ease); }
+    .btn-primary:hover::before { transform: translateX(350%) skewX(-20deg); }
+  }
 }
 
 .btn-small { padding: 12px 20px; font-size: 0.9rem; }
