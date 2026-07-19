@@ -290,6 +290,9 @@ h3 { font-size: 1.25rem; }
 .btn:active { transform: translateY(1px) scale(0.99); transition-duration: 0.05s; }
 
 .btn-primary { background: var(--blue); color: var(--on-blue); }
+/* the nav CTA needs extra specificity: .nav-links a outranks .btn-primary */
+.nav-links a.btn-primary,
+.nav-links a.btn-primary:hover { color: var(--on-blue); }
 
 .btn-ghost {
   background: transparent;
