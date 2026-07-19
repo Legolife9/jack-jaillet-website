@@ -52,6 +52,26 @@
     revealed.forEach(function (el) { el.classList.add("in"); });
   }
 
+  // Theme switch: overrides the system preference and remembers the choice
+  var themeBtn = document.querySelector(".theme-toggle");
+  if (themeBtn) {
+    var darkMedia = window.matchMedia("(prefers-color-scheme: dark)");
+    var effectiveTheme = function () {
+      return document.documentElement.dataset.theme || (darkMedia.matches ? "dark" : "light");
+    };
+    var syncTheme = function () {
+      themeBtn.setAttribute("aria-checked", effectiveTheme() === "dark" ? "true" : "false");
+    };
+    themeBtn.addEventListener("click", function () {
+      var next = effectiveTheme() === "dark" ? "light" : "dark";
+      document.documentElement.dataset.theme = next;
+      try { localStorage.setItem("theme", next); } catch (e) {}
+      syncTheme();
+    });
+    darkMedia.addEventListener("change", syncTheme);
+    syncTheme();
+  }
+
   // Resume print button
   var printBtn = document.getElementById("print-btn");
   if (printBtn) {
