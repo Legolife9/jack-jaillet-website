@@ -86,12 +86,13 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; overflow-x: clip; }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
 }
 
 body {
+  overflow-x: clip;
   font-family: var(--sans);
   font-size: 1.0625rem;
   line-height: 1.65;
@@ -1009,15 +1010,14 @@ h3 { font-size: 1.25rem; }
 
 .contact-band {
   position: relative;
-  overflow: hidden;
-  padding: 96px 0;
+  padding: 56px 0 96px;
   text-align: left;
 }
 .contact-band::before {
   content: "";
   position: absolute;
-  inset: 0;
-  background: radial-gradient(700px 400px at 24% 30%, var(--glow-soft), transparent 70%);
+  inset: -160px -80px 0 -80px;
+  background: radial-gradient(700px 420px at 26% 55%, var(--glow-soft), transparent 70%);
   pointer-events: none;
 }
 .contact-band > .wrap { position: relative; }
