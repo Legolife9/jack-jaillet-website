@@ -613,6 +613,12 @@ h3 { font-size: 1.25rem; }
   border: 1px solid var(--line);
   object-fit: contain;
   padding: 3px;
+  filter: grayscale(1);
+  opacity: 0.75;
+  transition: filter 0.35s var(--ease), opacity 0.35s var(--ease);
+}
+@media (hover: hover) and (pointer: fine) {
+  .org-item:hover img { filter: none; opacity: 1; }
 }
 /* dot separator after every item keeps the loop seam consistent */
 .org-item::after {
@@ -741,6 +747,12 @@ h3 { font-size: 1.25rem; }
   object-fit: contain;
   padding: 4px;
   margin-bottom: auto;
+  filter: grayscale(1);
+  opacity: 0.8;
+  transition: filter 0.4s var(--ease), opacity 0.4s var(--ease);
+}
+@media (hover: hover) and (pointer: fine) {
+  .hl:hover .hl-logo { filter: none; opacity: 1; }
 }
 .hl-lead .hl-logo {
   width: 64px;
