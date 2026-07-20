@@ -52,12 +52,12 @@
     revealed.forEach(function (el) { el.classList.add("in"); });
   }
 
-  // Theme switch: overrides the system preference and remembers the choice
+  // Theme switch: dark is the site default; the switch opts into light
+  // and the choice is remembered.
   var themeBtn = document.querySelector(".theme-toggle");
   if (themeBtn) {
-    var darkMedia = window.matchMedia("(prefers-color-scheme: dark)");
     var effectiveTheme = function () {
-      return document.documentElement.dataset.theme || (darkMedia.matches ? "dark" : "light");
+      return document.documentElement.dataset.theme || "dark";
     };
     var syncTheme = function () {
       themeBtn.setAttribute("aria-checked", effectiveTheme() === "dark" ? "true" : "false");
@@ -68,7 +68,6 @@
       try { localStorage.setItem("theme", next); } catch (e) {}
       syncTheme();
     });
-    darkMedia.addEventListener("change", syncTheme);
     syncTheme();
   }
 

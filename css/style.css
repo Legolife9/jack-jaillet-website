@@ -1,73 +1,20 @@
 /* ============================================================
    Jack Jaillet - personal site
    Editorial resume system: cobalt accent, serif display,
-   Instrument Sans body. Auto light/dark via prefers-color-scheme;
-   print is always light.
+   Instrument Sans body. Dark by default; the nav switch opts into
+   light (remembered per visitor). Print is always light.
    ============================================================ */
 
 :root {
-  color-scheme: light dark;
-  --paper: #f7f8fa;
-  --paper-2: #eef1f6;
-  --surface: #ffffff;
-  --ink: #14171d;
-  --ink-2: #49505f;
-  --line: #dce0e9;
-  --blue: #1e4fa3;      /* calmed brand cobalt: button/band backgrounds */
-  --blue-deep: #163d82;
-  --blue-tint: #e9eef9;
-  --link: #1e4fa3;      /* blue for text on the page background */
-  --on-blue: #ffffff;
-  --on-blue-muted: rgba(255, 255, 255, 0.85);
-  --glow-strong: rgba(30, 79, 163, 0.10);
-  --glow-soft: rgba(30, 79, 163, 0.06);
-  --bloom: rgba(30, 79, 163, 0.20);
-  --btn-glow: 0 6px 24px rgba(30, 79, 163, 0.35);
-  --card-glow: 0 0 44px rgba(30, 79, 163, 0.18);
-  --btn-hover: #163d82;          /* primary button hover bg (white text: 9.4:1) */
-  --btn-on-blue-hover: #e9eef9;  /* white-button hover bg (navy text: 7.7:1) */
-  --nav-bg: rgba(247, 248, 250, 0.92);
-  --serif: "Playfair Display", Georgia, "Times New Roman", serif;
-  --sans: "Instrument Sans", -apple-system, "Segoe UI", Arial, sans-serif;
-  --radius: 14px;
-  --wrap: 1120px;
-  --ease: cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-/* Dark theme: follows system preference. Brand blue stays on buttons
-   and the band (white text passes contrast on it in both modes);
-   blue used as TEXT lightens so it stays readable on near-black. */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --paper: #10131a;
-    --paper-2: #151923;
-    --surface: #171c26;
-    --ink: #e9ecf3;
-    --ink-2: #a3acbf;
-    --line: #29303e;
-    --blue-deep: #b6c9f8;   /* chip / selection text on dark tint */
-    --blue-tint: #192338;
-    --link: #9db8f3;
-    --on-blue: #e9ecf3;
-    --on-blue-muted: rgba(233, 236, 243, 0.85);
-    --glow-strong: rgba(42, 95, 189, 0.30);
-    --glow-soft: rgba(42, 95, 189, 0.14);
-    --bloom: rgba(42, 95, 189, 0.50);
-    --btn-glow: 0 6px 28px rgba(42, 95, 189, 0.55);
-    --card-glow: 0 0 48px rgba(42, 95, 189, 0.30);
-    --btn-hover: #2a5fbd;          /* lighter, not light: keeps #e9ecf3 text at 5.1:1 */
-    --btn-on-blue-hover: #d3def6;  /* stays light so the navy text stays readable */
-    --nav-bg: rgba(16, 19, 26, 0.92);
-  }
-}
-:root[data-theme="dark"] {
+  color-scheme: dark;
   --paper: #10131a;
   --paper-2: #151923;
   --surface: #171c26;
   --ink: #e9ecf3;
   --ink-2: #a3acbf;
   --line: #29303e;
-  --blue-deep: #b6c9f8;   /* chip / selection text on dark tint */
+  --blue: #1e4fa3;
+  --blue-deep: #b6c9f8;
   --blue-tint: #192338;
   --link: #9db8f3;
   --on-blue: #e9ecf3;
@@ -77,12 +24,39 @@
   --bloom: rgba(42, 95, 189, 0.50);
   --btn-glow: 0 6px 28px rgba(42, 95, 189, 0.55);
   --card-glow: 0 0 48px rgba(42, 95, 189, 0.30);
-  --btn-hover: #2a5fbd;          /* lighter, not light: keeps #e9ecf3 text at 5.1:1 */
-  --btn-on-blue-hover: #d3def6;  /* stays light so the navy text stays readable */
+  --btn-hover: #2a5fbd;
+  --btn-on-blue-hover: #d3def6;
   --nav-bg: rgba(16, 19, 26, 0.92);
-  color-scheme: dark;
+  --serif: "Playfair Display", Georgia, "Times New Roman", serif;
+  --sans: "Instrument Sans", -apple-system, "Segoe UI", Arial, sans-serif;
+  --radius: 14px;
+  --wrap: 1120px;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
 }
-:root[data-theme="light"] { color-scheme: light; }
+
+/* Dark is the default; the nav switch opts into light and is remembered. */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --paper: #f7f8fa;
+  --paper-2: #eef1f6;
+  --surface: #ffffff;
+  --ink: #14171d;
+  --ink-2: #49505f;
+  --line: #dce0e9;
+  --blue-deep: #163d82;
+  --blue-tint: #e9eef9;
+  --link: #1e4fa3;
+  --on-blue: #ffffff;
+  --on-blue-muted: rgba(255, 255, 255, 0.85);
+  --glow-strong: rgba(30, 79, 163, 0.10);
+  --glow-soft: rgba(30, 79, 163, 0.06);
+  --bloom: rgba(30, 79, 163, 0.20);
+  --btn-glow: 0 6px 24px rgba(30, 79, 163, 0.35);
+  --card-glow: 0 0 44px rgba(30, 79, 163, 0.18);
+  --btn-hover: #163d82;
+  --btn-on-blue-hover: #e9eef9;
+  --nav-bg: rgba(247, 248, 250, 0.92);
+}
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -354,8 +328,6 @@ h3 { font-size: 1.25rem; }
   z-index: 1;
   transition: color 0.25s var(--ease), opacity 0.25s var(--ease);
 }
-.theme-toggle .icon-sun { color: var(--ink); }
-.theme-toggle .icon-moon { color: var(--ink-2); opacity: 0.55; }
 .theme-knob {
   position: absolute;
   top: 3px;
@@ -365,17 +337,14 @@ h3 { font-size: 1.25rem; }
   border-radius: 50%;
   background: var(--surface);
   border: 1px solid var(--line);
-  transform: translateX(0);
+  transform: translateX(30px);
   transition: transform 0.25s var(--ease);
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .theme-knob { transform: translateX(30px); }
-  :root:not([data-theme="light"]) .theme-toggle .icon-sun { color: var(--ink-2); opacity: 0.55; }
-  :root:not([data-theme="light"]) .theme-toggle .icon-moon { color: var(--ink); opacity: 1; }
-}
-:root[data-theme="dark"] .theme-knob { transform: translateX(30px); }
-:root[data-theme="dark"] .theme-toggle .icon-sun { color: var(--ink-2); opacity: 0.55; }
-:root[data-theme="dark"] .theme-toggle .icon-moon { color: var(--ink); opacity: 1; }
+.theme-toggle .icon-sun { color: var(--ink-2); opacity: 0.55; }
+.theme-toggle .icon-moon { color: var(--ink); opacity: 1; }
+:root[data-theme="light"] .theme-knob { transform: translateX(0); }
+:root[data-theme="light"] .theme-toggle .icon-sun { color: var(--ink); opacity: 1; }
+:root[data-theme="light"] .theme-toggle .icon-moon { color: var(--ink-2); opacity: 0.55; }
 
 /* ---------- buttons ---------- */
 
@@ -661,19 +630,13 @@ h3 { font-size: 1.25rem; }
   right: -70px;
   width: 460px;
   height: 460px;
-  background: url("../assets/watermark-black.png") no-repeat center / contain;
-  opacity: 0.05;
+  background: url("../assets/watermark-white.png") no-repeat center / contain;
+  opacity: 0.07;
   pointer-events: none;
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .section-alt::before {
-    background-image: url("../assets/watermark-white.png");
-    opacity: 0.07;
-  }
-}
-:root[data-theme="dark"] .section-alt::before {
-  background-image: url("../assets/watermark-white.png");
-  opacity: 0.07;
+:root[data-theme="light"] .section-alt::before {
+  background-image: url("../assets/watermark-black.png");
+  opacity: 0.05;
 }
 .section-alt .wrap { position: relative; }
 .section-tight { padding: 56px 0; }
@@ -728,13 +691,9 @@ h3 { font-size: 1.25rem; }
   .hl:hover { transform: translateY(-3px); }
   .hl:hover::after { opacity: 1; transition-duration: 0.45s; }
 }
-@media (prefers-color-scheme: dark) {
-  @media (hover: hover) and (pointer: fine) {
-    :root:not([data-theme="light"]) .hl:hover { border-color: var(--ink-2); }
-  }
-}
 @media (hover: hover) and (pointer: fine) {
-  :root[data-theme="dark"] .hl:hover { border-color: var(--ink-2); }
+  .hl:hover { border-color: var(--ink-2); }
+  :root[data-theme="light"] .hl:hover { border-color: var(--line); }
 }
 
 .hl h3 { font-size: 1.35rem; }
