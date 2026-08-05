@@ -1218,7 +1218,17 @@ a.org-item:hover { color: var(--ink); text-decoration: none; }
   justify-content: space-between;
   gap: 16px;
 }
-.footer-links { display: flex; gap: 24px; list-style: none; }
+/* Must wrap. Three links plus the email address need ~398px, and on a
+   375px screen the body's overflow-x:clip silently cut "Accessibility"
+   off the right edge rather than scrolling to it. */
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-6);
+  list-style: none;
+  min-width: 0;
+}
+.footer-links a { word-break: break-word; }
 .footer-links a { color: var(--ink-2); font-size: 0.95rem; display: inline-block; padding: 12px 0; }
 .footer-links a:hover { color: var(--ink); }
 .site-footer small { color: var(--ink-2); font-size: 0.9rem; }
