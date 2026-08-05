@@ -367,14 +367,30 @@ h3 { font-size: 1.25rem; }
   }
   .nav-links.open { display: flex; }
   .nav-links li { width: 100%; }
-  .nav-links a { display: block; padding: var(--space-3) 0; }
+  /* :not(.btn) matters. Without it the CTA inherits display:block and
+     padding:12px 0, which strips its horizontal padding and shoves the
+     label against the left edge of the pill. */
+  .nav-links a:not(.btn) { display: block; padding: var(--space-3) 0; }
+
+  /* Full-width centred pill reads as a deliberate mobile CTA rather than a
+     stray inline button. */
+  .nav-links .btn {
+    width: 100%;
+    justify-content: center;
+    margin: var(--space-2) 0;
+  }
+
   /* --blue on --paper measured 2.39:1 here and read dimmer than the inactive
-     items. --link is 9.37:1, and the rule keeps a non-colour signal. */
+     items. --link is 9.37:1, and the rule keeps a non-colour signal.
+     The negative margin cancels the padding, so the accent bar sits out in
+     the menu gutter and the label stays flush with every other item — an
+     indented active item just looks misaligned. */
   .nav-links a[aria-current="page"] {
     border-bottom: none;
     color: var(--link);
     font-weight: 600;
     padding-left: var(--space-3);
+    margin-left: calc(-1 * var(--space-3));
     box-shadow: inset 3px 0 0 var(--link);
   }
 }
