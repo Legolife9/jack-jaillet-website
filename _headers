@@ -13,7 +13,7 @@
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=(), usb=()
   Strict-Transport-Security: max-age=31536000; includeSubDomains
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'sha256-V5qJba2Pfl34pHXr5tflSMB61vARUx4poZzLZG+ElkI='; style-src 'self' https://fonts.googleapis.com 'sha256-AQw+/rZat5Ptf1TLzB41a0GmKxd3HreJnk3Ip+F7Ou4='; font-src https://fonts.gstatic.com; img-src 'self' data:; base-uri 'self'; form-action 'none'; frame-ancestors 'none'; object-src 'none'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://static.cloudflareinsights.com 'sha256-V5qJba2Pfl34pHXr5tflSMB61vARUx4poZzLZG+ElkI=' 'sha256-a0hEZRQjGtEYnU0wX8rTH2CTwYf9djfXwINH8IV4bsA='; connect-src 'self' https://cloudflareinsights.com; style-src 'self' https://fonts.googleapis.com 'sha256-AQw+/rZat5Ptf1TLzB41a0GmKxd3HreJnk3Ip+F7Ou4='; font-src https://fonts.gstatic.com; img-src 'self' data:; base-uri 'self'; form-action 'none'; frame-ancestors 'none'; object-src 'none'; upgrade-insecure-requests
 
 # Images are content-stable but do get replaced occasionally (the logo set was
 # swapped once already), so this is a week rather than a year.

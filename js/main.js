@@ -5,19 +5,65 @@
   var toggle = document.querySelector(".nav-toggle");
   var menu = document.getElementById("nav-menu");
   if (toggle && menu) {
-    toggle.addEventListener("click", function () {
-      var open = menu.classList.toggle("open");
+    // Matches the 740px nav breakpoint in the stylesheet. Keep them in sync.
+    var navQuery = window.matchMedia("(max-width: 740px)");
+
+    var isOpen = function () { return menu.classList.contains("open"); };
+
+    var focusable = function () {
+      return Array.prototype.filter.call(
+        menu.querySelectorAll("a[href], button"),
+        function (el) { return el.offsetParent !== null; }
+      );
+    };
+
+    var setOpen = function (open, restoreFocus) {
+      menu.classList.toggle("open", open);
       toggle.setAttribute("aria-expanded", open ? "true" : "false");
       toggle.setAttribute("aria-label", open ? "Close navigation menu" : "Open navigation menu");
-    });
-    document.addEventListener("keydown", function (e) {
-      if (e.key === "Escape" && menu.classList.contains("open")) {
-        menu.classList.remove("open");
-        toggle.setAttribute("aria-expanded", "false");
-        toggle.setAttribute("aria-label", "Open navigation menu");
+      // Stop the page scrolling away behind the open menu.
+      document.documentElement.classList.toggle("nav-locked", open);
+      if (open) {
+        var first = focusable()[0];
+        if (first) first.focus();
+      } else if (restoreFocus) {
         toggle.focus();
       }
+    };
+
+    toggle.addEventListener("click", function () { setOpen(!isOpen(), true); });
+
+    document.addEventListener("keydown", function (e) {
+      if (!isOpen()) return;
+      if (e.key === "Escape") { setOpen(false, true); return; }
+      if (e.key !== "Tab") return;
+      // Keep Tab inside the menu while it is covering the page.
+      var items = focusable();
+      if (!items.length) return;
+      var first = items[0];
+      var last = items[items.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
     });
+
+    // Tapping anywhere off the menu closes it. Clicks inside are left alone
+    // so the theme switch still works with the menu open.
+    document.addEventListener("click", function (e) {
+      if (!isOpen()) return;
+      if (menu.contains(e.target) || toggle.contains(e.target)) return;
+      setOpen(false, false);
+    });
+
+    // Rotating or resizing past the breakpoint would otherwise leave the
+    // menu stuck open behind the restored desktop nav.
+    var onBreakpoint = function (e) { if (!e.matches && isOpen()) setOpen(false, false); };
+    if (navQuery.addEventListener) navQuery.addEventListener("change", onBreakpoint);
+    else if (navQuery.addListener) navQuery.addListener(onBreakpoint);
   }
 
   // Headshot fallback: if the image file isn't in assets/ yet,

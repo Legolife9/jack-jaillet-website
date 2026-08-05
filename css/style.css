@@ -99,6 +99,9 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 html { scroll-behavior: smooth; overflow-x: clip; }
+/* Set while the mobile menu is open. overflow:hidden holds the scroll
+   position, unlike the position:fixed approach which jumps to the top. */
+html.nav-locked { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
 }
@@ -337,7 +340,12 @@ h3 { font-size: 1.25rem; }
   inset: -6px -4px;
 }
 
-@media (max-width: 820px) {
+/* Two breakpoint families, deliberately decoupled:
+     740px — the nav collapses to a menu. Measured: brand + links need 716px,
+             so anything wider keeps the full horizontal nav. An iPad in
+             portrait (768px) gets real navigation, not a hamburger.
+     700px — the two-column layouts stack. */
+@media (max-width: 740px) {
   .nav-toggle { display: inline-block; }
   .nav-links {
     position: absolute;
@@ -349,8 +357,13 @@ h3 { font-size: 1.25rem; }
     gap: 0;
     background: var(--paper);
     border-bottom: 1px solid var(--line);
-    padding: 8px 24px 16px;
+    padding: var(--space-2) var(--space-6) var(--space-4);
     display: none;
+    /* Landscape phones are shorter than the menu is tall. Without this the
+       last items are unreachable. dvh accounts for mobile browser chrome. */
+    max-height: calc(100dvh - 72px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
   .nav-links.open { display: flex; }
   .nav-links li { width: 100%; }
@@ -374,7 +387,7 @@ h3 { font-size: 1.25rem; }
   gap: 10px;
 }
 .theme-text { color: var(--ink-2); font-weight: 500; font-size: 0.95rem; }
-@media (min-width: 821px) {
+@media (min-width: 741px) {
   .theme-text {
     position: absolute;
     width: 1px;
@@ -385,8 +398,8 @@ h3 { font-size: 1.25rem; }
     white-space: nowrap;
   }
 }
-@media (max-width: 820px) {
-  .theme-item { width: 100%; justify-content: space-between; padding: 12px 0; }
+@media (max-width: 740px) {
+  .theme-item { width: 100%; justify-content: space-between; padding: var(--space-3) 0; }
 }
 
 .theme-toggle {
@@ -645,9 +658,16 @@ h3 { font-size: 1.25rem; }
 .portrait.missing img { display: none; }
 .portrait.missing .portrait-fallback { display: flex; }
 
-@media (max-width: 820px) {
-  .hero { padding: 48px 0 64px; }
-  .hero-grid { grid-template-columns: 1fr; gap: 40px; }
+/* Tablet: keep the portrait beside the copy, just tighter. Stacking here
+   left a 340px portrait marooned next to ~380px of dead space. */
+@media (max-width: 1000px) and (min-width: 701px) {
+  .hero { padding: var(--space-14) 0 var(--space-16); }
+  .hero-grid { gap: var(--space-8); }
+  .portrait { width: min(100%, 320px); }
+}
+@media (max-width: 700px) {
+  .hero { padding: var(--space-12) 0 var(--space-16); }
+  .hero-grid { grid-template-columns: 1fr; gap: var(--space-10); }
   .portrait { justify-self: start; width: min(100%, 340px); }
 }
 
@@ -974,7 +994,7 @@ a.org-item:hover { color: var(--ink); text-decoration: none; }
   grid-template-columns: 1fr 1fr;
   gap: 16px;
 }
-@media (max-width: 820px) {
+@media (max-width: 700px) {
   .post-teasers { grid-template-columns: 1fr; }
 }
 
@@ -997,7 +1017,10 @@ a.org-item:hover { color: var(--ink); text-decoration: none; }
   gap: 56px;
   align-items: start;
 }
-@media (max-width: 820px) {
+@media (max-width: 1000px) and (min-width: 701px) {
+  .about-grid { gap: var(--space-8); }
+}
+@media (max-width: 700px) {
   .about-grid { grid-template-columns: 1fr; }
 }
 
@@ -1024,8 +1047,12 @@ a.org-item:hover { color: var(--ink); text-decoration: none; }
   gap: 40px;
   margin-top: 12px;
 }
-@media (max-width: 820px) {
-  .involve { grid-template-columns: 1fr; gap: 28px; }
+/* Three columns get cramped well before they get narrow. */
+@media (max-width: 900px) and (min-width: 621px) {
+  .involve { grid-template-columns: 1fr 1fr; gap: var(--space-8); }
+}
+@media (max-width: 620px) {
+  .involve { grid-template-columns: 1fr; gap: var(--space-7); }
 }
 
 .involve h3 {
@@ -1069,8 +1096,11 @@ a.org-item:hover { color: var(--ink); text-decoration: none; }
   grid-template-columns: 7fr 4fr;
   gap: 64px;
 }
-@media (max-width: 820px) {
-  .resume-grid { grid-template-columns: 1fr; gap: 48px; }
+@media (max-width: 1000px) and (min-width: 701px) {
+  .resume-grid { gap: var(--space-10); }
+}
+@media (max-width: 700px) {
+  .resume-grid { grid-template-columns: 1fr; gap: var(--space-12); }
 }
 
 .resume-section + .resume-section { margin-top: 52px; }
