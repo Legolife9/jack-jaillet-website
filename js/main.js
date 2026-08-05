@@ -31,6 +31,16 @@
     });
   });
 
+  // Logo fallback: every logo sits beside its organisation's name in text,
+  // so a missing file should just drop the mark rather than leave a broken
+  // image box behind. (The whole set went missing once during an asset
+  // rename; the text alone still reads fine.)
+  document.querySelectorAll(".org-item img, .hl-logo").forEach(function (img) {
+    var drop = function () { img.style.display = "none"; };
+    if (img.complete && img.naturalWidth === 0) drop();
+    img.addEventListener("error", drop);
+  });
+
   // Scroll reveal (skipped entirely under prefers-reduced-motion,
   // where the CSS keeps everything visible and static).
   var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -48,6 +58,18 @@
       { threshold: 0.15 }
     );
     revealed.forEach(function (el) { io.observe(el); });
+
+    // Failsafe. The reveal styles start at opacity 0, so if the observer
+    // never reports (a browser quirk, or a tab that is throttled or never
+    // composited), the copy would stay invisible permanently. If nothing at
+    // all has been revealed shortly after load, assume the observer isn't
+    // working and just show everything.
+    setTimeout(function () {
+      if (!document.querySelector(".reveal.in")) {
+        io.disconnect();
+        revealed.forEach(function (el) { el.classList.add("in"); });
+      }
+    }, 2500);
   } else {
     revealed.forEach(function (el) { el.classList.add("in"); });
   }
@@ -71,28 +93,75 @@
     syncTheme();
   }
 
+  // Organisations marquee: the strip scrolls on its own, so WCAG 2.2.2 needs
+  // a way to stop it that doesn't depend on a mouse. CSS already pauses on
+  // hover and focus-within; this adds an explicit control for everyone else.
+  var orgs = document.querySelector(".orgs");
+  var orgsPause = document.querySelector(".orgs-pause");
+  if (orgs && orgsPause) {
+    if (reduce) {
+      // The reduced-motion layout is a static wrapped grid. Nothing to pause.
+      orgsPause.remove();
+    } else {
+      orgsPause.addEventListener("click", function () {
+        var paused = orgs.dataset.paused === "true";
+        orgs.dataset.paused = paused ? "false" : "true";
+        orgsPause.setAttribute(
+          "aria-label",
+          paused ? "Pause the scrolling organization list" : "Resume the scrolling organization list"
+        );
+      });
+    }
+  }
+
   // Glow parallax: the hero light leans toward the cursor (or device tilt);
   // CSS transitions on `translate` provide the damped, light-like lag.
   var hero = document.querySelector(".hero");
   if (hero && window.matchMedia("(prefers-reduced-motion: no-preference)").matches) {
-    var setGlow = function (nx, ny) {
+    // The rect is cached and refreshed on resize/scroll. Reading it inside the
+    // move handler forced a layout on every pointer event.
+    var rect = null;
+    var refreshRect = function () { rect = null; };
+    window.addEventListener("resize", refreshRect);
+    window.addEventListener("scroll", refreshRect, { passive: true });
+
+    var pending = false;
+    var nx = 0;
+    var ny = 0;
+
+    // One style write per frame instead of one per pointer event.
+    var flush = function () {
+      pending = false;
       hero.style.setProperty("--glow-x", (nx * 34).toFixed(1) + "px");
       hero.style.setProperty("--glow-y", (ny * 24).toFixed(1) + "px");
       hero.style.setProperty("--glow-x2", (nx * -16).toFixed(1) + "px");
       hero.style.setProperty("--glow-y2", (ny * -11).toFixed(1) + "px");
     };
+    var setGlow = function (x, y) {
+      nx = x;
+      ny = y;
+      if (!pending) {
+        pending = true;
+        requestAnimationFrame(flush);
+      }
+    };
+
     if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
       hero.addEventListener("pointermove", function (e) {
-        var r = hero.getBoundingClientRect();
-        setGlow(((e.clientX - r.left) / r.width) * 2 - 1, ((e.clientY - r.top) / r.height) * 2 - 1);
-      });
+        if (!rect) rect = hero.getBoundingClientRect();
+        setGlow(
+          ((e.clientX - rect.left) / rect.width) * 2 - 1,
+          ((e.clientY - rect.top) / rect.height) * 2 - 1
+        );
+      }, { passive: true });
       hero.addEventListener("pointerleave", function () { setGlow(0, 0); });
     } else if ("DeviceOrientationEvent" in window) {
       window.addEventListener("deviceorientation", function (e) {
         if (e.gamma === null || e.beta === null) return;
-        var nx = Math.max(-1, Math.min(1, e.gamma / 20));
-        var ny = Math.max(-1, Math.min(1, (e.beta - 45) / 25));
-        setGlow(nx, ny);
+        setGlow(
+          Math.max(-1, Math.min(1, e.gamma / 20)),
+          Math.max(-1, Math.min(1, (e.beta - 45) / 25))
+        );
       });
     }
   }

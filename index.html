@@ -19,34 +19,50 @@
   <meta name="twitter:title" content="Jack Jaillet | Business Student & Community Leader">
   <meta name="twitter:description" content="Jack Jaillet is a business student at UMass Amherst's Isenberg School of Management, a community leader, and a photographer based in Massachusetts.">
   <meta name="twitter:image" content="https://jackjaillet.com/assets/og-image.jpg">
-  <link rel="icon" type="image/png" href="assets/favicon.png">
-  <link rel="apple-touch-icon" href="assets/favicon.png">
+  <link rel="icon" type="image/png" href="/assets/favicon.png">
+  <link rel="apple-touch-icon" href="/assets/favicon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "Person",
-    "name": "Jack Jaillet",
-    "url": "https://jackjaillet.com",
-    "image": "https://jackjaillet.com/assets/headshot-serious.jpg",
-    "email": "contact@jackjaillet.com",
-    "jobTitle": "Business Student",
-    "description": "Business-oriented student, community leader, and photographer based in Massachusetts.",
-    "alumniOf": [
-      { "@type": "CollegeOrUniversity", "name": "University of Massachusetts Amherst, Isenberg School of Management" },
-      { "@type": "EducationalOrganization", "name": "Montachusett Regional Vocational Technical School" }
-    ],
-    "award": "2024-25 Massachusetts Leo of the Year",
-    "worksFor": { "@type": "Organization", "name": "Charming Memories Photography" },
-    "memberOf": [
-      { "@type": "Organization", "name": "Massachusetts Youth Leadership Foundation" },
-      { "@type": "Organization", "name": "Lions Clubs International" }
-    ],
-    "homeLocation": { "@type": "Place", "name": "Massachusetts, United States" },
-    "sameAs": [ "https://www.linkedin.com/in/jackjaillet/" ]
+    "@type": "ProfilePage",
+    "url": "https://jackjaillet.com/",
+    "mainEntity": {
+      "@type": "Person",
+      "@id": "https://jackjaillet.com/#jack",
+      "name": "Jack Jaillet",
+      "url": "https://jackjaillet.com",
+      "image": "https://jackjaillet.com/assets/headshot-serious.jpg",
+      "email": "contact@jackjaillet.com",
+      "jobTitle": "Business Student",
+      "description": "Business-oriented student, community leader, and photographer based in Massachusetts.",
+      "alumniOf": [
+        { "@type": "EducationalOrganization", "name": "Montachusett Regional Vocational Technical School" }
+      ],
+      "award": "2024-25 Massachusetts Leo of the Year",
+      "worksFor": {
+        "@type": "Organization",
+        "name": "Charming Memories Photography",
+        "url": "https://www.charmingphotography.com/"
+      },
+      "founder": [
+        { "@type": "Organization", "name": "Charming Memories Photography", "url": "https://www.charmingphotography.com/" },
+        { "@type": "Organization", "name": "LGBTQIA Safe Zone", "url": "https://www.lgbtqiasafezone.org/" }
+      ],
+      "memberOf": [
+        { "@type": "Organization", "name": "Massachusetts Youth Leadership Foundation", "url": "https://www.massyouthleadership.org/" },
+        { "@type": "Organization", "name": "Lions Clubs International", "url": "https://www.lionsclubs.org/en" }
+      ],
+      "knowsAbout": [ "Leadership", "Community Service", "Photography", "Video Production", "Public Speaking" ],
+      "homeLocation": { "@type": "Place", "name": "Massachusetts, United States" },
+      "sameAs": [
+        "https://www.linkedin.com/in/jackjaillet/",
+        "https://www.charmingphotography.com/"
+      ]
+    }
   }
   </script>
   <script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
@@ -58,16 +74,16 @@
 
   <nav class="site-nav" aria-label="Primary">
     <div class="wrap">
-      <a class="brand" href="index.html">
-        <img class="brand-img" src="assets/favicon.png" alt="" role="presentation" width="40" height="40">
+      <a class="brand" href="/">
+        <img class="brand-img" src="/assets/favicon.png" alt="" width="40" height="40">
         <span class="brand-name">Jack Jaillet</span>
       </a>
       <button class="nav-toggle" aria-expanded="false" aria-controls="nav-menu" aria-label="Open navigation menu">Menu</button>
       <ul class="nav-links" id="nav-menu">
-        <li><a href="index.html" aria-current="page">Home</a></li>
-        <li><a href="about.html">About</a></li>
-        <li><a href="resume.html">Resume</a></li>
-        <li><a href="updates.html">Now</a></li>
+        <li><a href="/" aria-current="page">Home</a></li>
+        <li><a href="/about">About</a></li>
+        <li><a href="/resume">Resume</a></li>
+        <li><a href="/updates">Now</a></li>
         <li><a class="btn btn-primary btn-small" href="mailto:contact@jackjaillet.com">Get in touch</a></li>
         <li class="theme-item">
           <span class="theme-text" id="theme-text">Dark mode</span>
@@ -81,7 +97,7 @@
     </div>
   </nav>
 
-  <main id="main" role="main">
+  <main id="main">
 
   <header class="hero">
     <div class="wrap hero-grid">
@@ -89,45 +105,49 @@
         <h1>Always learning,<br><em>always leading.</em></h1>
         <p class="lede">I'm Jack Jaillet, a business student at UMass Amherst's Isenberg School of Management, community leader, and photographer from Massachusetts.</p>
         <div class="hero-ctas">
-          <a class="btn btn-primary" href="about.html">More about me</a>
-          <a class="btn btn-ghost" href="resume.html">View resume</a>
+          <a class="btn btn-primary" href="/about">More about me</a>
+          <a class="btn btn-ghost" href="/resume">View resume</a>
         </div>
       </div>
       <figure class="portrait">
-        <img src="assets/headshot-serious.jpg" alt="Portrait of Jack Jaillet" width="900" height="1259" fetchpriority="high">
+        <img src="/assets/headshot-serious.jpg" alt="Portrait of Jack Jaillet" width="900" height="1259" fetchpriority="high">
         <div class="portrait-fallback">
           <span class="brand-mark" aria-hidden="true"><i>J</i><i>J</i></span>
-          <span>Headshot goes here.<br>Save it as <b>assets/headshot-serious.jpg</b></span>
+          <span>Jack Jaillet</span>
         </div>
       </figure>
     </div>
   </header>
 
-  <section class="orgs" aria-label="Organizations Jack has worked with">
+  <section class="orgs" aria-label="Organizations Jack has worked with" data-paused="false">
+    <button class="orgs-pause" type="button" aria-label="Pause the scrolling organization list">
+      <svg class="icon-pause" aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+      <svg class="icon-play" aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v13.72a1 1 0 0 0 1.54.84l10.3-6.86a1 1 0 0 0 0-1.68L9.54 4.3A1 1 0 0 0 8 5.14z"/></svg>
+    </button>
     <div class="orgs-track" aria-hidden="true">
       <div class="orgs-set">
-        <a class="org-item" tabindex="-1" href="https://www.massyouthleadership.org/" target="_blank" rel="noopener"><img src="assets/logos/mylf.jpg" alt="" role="presentation">Massachusetts Youth Leadership Foundation<span class="sr-only"> (opens in new tab)</span></a>
-        <a class="org-item" tabindex="-1" href="https://www.lionsclubs.org/en" target="_blank" rel="noopener"><img src="assets/logos/lions.svg" alt="" role="presentation">Lions Clubs International<span class="sr-only"> (opens in new tab)</span></a>
-        <a class="org-item" tabindex="-1" href="https://www.brightfuturefinancialllc.com/" target="_blank" rel="noopener"><img src="assets/logos/bright-future.jpg" alt="" role="presentation">Bright Future Financial<span class="sr-only"> (opens in new tab)</span></a>
-        <a class="org-item" tabindex="-1" href="https://www.charmingphotography.com/" target="_blank" rel="noopener"><img src="assets/logos/charming-memories.png" alt="" role="presentation">Charming Memories Photography<span class="sr-only"> (opens in new tab)</span></a>
-        <a class="org-item" tabindex="-1" href="https://www.trainingactivebystanders.org/" target="_blank" rel="noopener"><img src="assets/logos/tab.png" alt="" role="presentation">Training Active Bystanders<span class="sr-only"> (opens in new tab)</span></a>
-        <span class="org-item"><img src="assets/logos/gehm.jpg" alt="" role="presentation">Gardner Emergency Housing Mission</span>
-        <a class="org-item" tabindex="-1" href="https://www.greatwolf.com/new-england" target="_blank" rel="noopener"><img src="assets/logos/great-wolf.png" alt="" role="presentation">Great Wolf Lodge<span class="sr-only"> (opens in new tab)</span></a>
-        <a class="org-item" tabindex="-1" href="https://www.luk.org/" target="_blank" rel="noopener"><img src="assets/logos/luk.jpg" alt="" role="presentation">LUK, Inc.<span class="sr-only"> (opens in new tab)</span></a>
-        <a class="org-item" tabindex="-1" href="https://quabbinmediation.org/" target="_blank" rel="noopener"><img src="assets/logos/quabbin.jpg" alt="" role="presentation">Quabbin Mediation<span class="sr-only"> (opens in new tab)</span></a>
-        <a class="org-item" tabindex="-1" href="https://www.templetonma.gov/1386/Templeton-Community-Television" target="_blank" rel="noopener"><img src="assets/logos/tctv.jpg" alt="" role="presentation">Templeton Community Television<span class="sr-only"> (opens in new tab)</span></a>
+        <a class="org-item" tabindex="-1" href="https://www.massyouthleadership.org/" target="_blank" rel="noopener"><img src="/assets/logos/mylf.jpg" alt="" width="34" height="34" loading="lazy" decoding="async">Massachusetts Youth Leadership Foundation<span class="sr-only"> (opens in new tab)</span></a>
+        <a class="org-item" tabindex="-1" href="https://www.lionsclubs.org/en" target="_blank" rel="noopener"><img src="/assets/logos/lions.jpg" alt="" width="34" height="34" loading="lazy" decoding="async">Lions Clubs International<span class="sr-only"> (opens in new tab)</span></a>
+        <a class="org-item" tabindex="-1" href="https://www.brightfuturefinancialllc.com/" target="_blank" rel="noopener"><img src="/assets/logos/bright-future.jpg" alt="" width="34" height="34" loading="lazy" decoding="async">Bright Future Financial<span class="sr-only"> (opens in new tab)</span></a>
+        <a class="org-item" tabindex="-1" href="https://www.charmingphotography.com/" target="_blank" rel="noopener"><img src="/assets/logos/charming-memories.jpg" alt="" width="34" height="34" loading="lazy" decoding="async">Charming Memories Photography<span class="sr-only"> (opens in new tab)</span></a>
+        <a class="org-item" tabindex="-1" href="https://www.trainingactivebystanders.org/" target="_blank" rel="noopener"><img src="/assets/logos/tab.jpg" alt="" width="34" height="34" loading="lazy" decoding="async">Training Active Bystanders<span class="sr-only"> (opens in new tab)</span></a>
+        <span class="org-item"><img src="/assets/logos/gehm.jpg" alt="" width="34" height="34" loading="lazy" decoding="async">Gardner Emergency Housing Mission</span>
+        <a class="org-item" tabindex="-1" href="https://www.greatwolf.com/new-england" target="_blank" rel="noopener"><img src="/assets/logos/great-wolf.jpg" alt="" width="34" height="34" loading="lazy" decoding="async">Great Wolf Lodge<span class="sr-only"> (opens in new tab)</span></a>
+        <a class="org-item" tabindex="-1" href="https://www.luk.org/" target="_blank" rel="noopener"><img src="/assets/logos/luk.jpg" alt="" width="34" height="34" loading="lazy" decoding="async">LUK, Inc.<span class="sr-only"> (opens in new tab)</span></a>
+        <a class="org-item" tabindex="-1" href="https://quabbinmediation.org/" target="_blank" rel="noopener"><img src="/assets/logos/quabbin.jpg" alt="" width="34" height="34" loading="lazy" decoding="async">Quabbin Mediation<span class="sr-only"> (opens in new tab)</span></a>
+        <a class="org-item" tabindex="-1" href="https://www.templetonma.gov/1386/Templeton-Community-Television" target="_blank" rel="noopener"><img src="/assets/logos/tctv.jpg" alt="" width="34" height="34" loading="lazy" decoding="async">Templeton Community Television<span class="sr-only"> (opens in new tab)</span></a>
       </div>
       <div class="orgs-set">
-        <a class="org-item" tabindex="-1" href="https://www.massyouthleadership.org/" target="_blank" rel="noopener"><img src="assets/logos/mylf.jpg" alt="" role="presentation">Massachusetts Youth Leadership Foundation<span class="sr-only"> (opens in new tab)</span></a>
-        <a class="org-item" tabindex="-1" href="https://www.lionsclubs.org/en" target="_blank" rel="noopener"><img src="assets/logos/lions.svg" alt="" role="presentation">Lions Clubs International<span class="sr-only"> (opens in new tab)</span></a>
-        <a class="org-item" tabindex="-1" href="https://www.brightfuturefinancialllc.com/" target="_blank" rel="noopener"><img src="assets/logos/bright-future.jpg" alt="" role="presentation">Bright Future Financial<span class="sr-only"> (opens in new tab)</span></a>
-        <a class="org-item" tabindex="-1" href="https://www.charmingphotography.com/" target="_blank" rel="noopener"><img src="assets/logos/charming-memories.png" alt="" role="presentation">Charming Memories Photography<span class="sr-only"> (opens in new tab)</span></a>
-        <a class="org-item" tabindex="-1" href="https://www.trainingactivebystanders.org/" target="_blank" rel="noopener"><img src="assets/logos/tab.png" alt="" role="presentation">Training Active Bystanders<span class="sr-only"> (opens in new tab)</span></a>
-        <span class="org-item"><img src="assets/logos/gehm.jpg" alt="" role="presentation">Gardner Emergency Housing Mission</span>
-        <a class="org-item" tabindex="-1" href="https://www.greatwolf.com/new-england" target="_blank" rel="noopener"><img src="assets/logos/great-wolf.png" alt="" role="presentation">Great Wolf Lodge<span class="sr-only"> (opens in new tab)</span></a>
-        <a class="org-item" tabindex="-1" href="https://www.luk.org/" target="_blank" rel="noopener"><img src="assets/logos/luk.jpg" alt="" role="presentation">LUK, Inc.<span class="sr-only"> (opens in new tab)</span></a>
-        <a class="org-item" tabindex="-1" href="https://quabbinmediation.org/" target="_blank" rel="noopener"><img src="assets/logos/quabbin.jpg" alt="" role="presentation">Quabbin Mediation<span class="sr-only"> (opens in new tab)</span></a>
-        <a class="org-item" tabindex="-1" href="https://www.templetonma.gov/1386/Templeton-Community-Television" target="_blank" rel="noopener"><img src="assets/logos/tctv.jpg" alt="" role="presentation">Templeton Community Television<span class="sr-only"> (opens in new tab)</span></a>
+        <a class="org-item" tabindex="-1" href="https://www.massyouthleadership.org/" target="_blank" rel="noopener"><img src="/assets/logos/mylf.jpg" alt="" width="34" height="34" loading="lazy" decoding="async">Massachusetts Youth Leadership Foundation<span class="sr-only"> (opens in new tab)</span></a>
+        <a class="org-item" tabindex="-1" href="https://www.lionsclubs.org/en" target="_blank" rel="noopener"><img src="/assets/logos/lions.jpg" alt="" width="34" height="34" loading="lazy" decoding="async">Lions Clubs International<span class="sr-only"> (opens in new tab)</span></a>
+        <a class="org-item" tabindex="-1" href="https://www.brightfuturefinancialllc.com/" target="_blank" rel="noopener"><img src="/assets/logos/bright-future.jpg" alt="" width="34" height="34" loading="lazy" decoding="async">Bright Future Financial<span class="sr-only"> (opens in new tab)</span></a>
+        <a class="org-item" tabindex="-1" href="https://www.charmingphotography.com/" target="_blank" rel="noopener"><img src="/assets/logos/charming-memories.jpg" alt="" width="34" height="34" loading="lazy" decoding="async">Charming Memories Photography<span class="sr-only"> (opens in new tab)</span></a>
+        <a class="org-item" tabindex="-1" href="https://www.trainingactivebystanders.org/" target="_blank" rel="noopener"><img src="/assets/logos/tab.jpg" alt="" width="34" height="34" loading="lazy" decoding="async">Training Active Bystanders<span class="sr-only"> (opens in new tab)</span></a>
+        <span class="org-item"><img src="/assets/logos/gehm.jpg" alt="" width="34" height="34" loading="lazy" decoding="async">Gardner Emergency Housing Mission</span>
+        <a class="org-item" tabindex="-1" href="https://www.greatwolf.com/new-england" target="_blank" rel="noopener"><img src="/assets/logos/great-wolf.jpg" alt="" width="34" height="34" loading="lazy" decoding="async">Great Wolf Lodge<span class="sr-only"> (opens in new tab)</span></a>
+        <a class="org-item" tabindex="-1" href="https://www.luk.org/" target="_blank" rel="noopener"><img src="/assets/logos/luk.jpg" alt="" width="34" height="34" loading="lazy" decoding="async">LUK, Inc.<span class="sr-only"> (opens in new tab)</span></a>
+        <a class="org-item" tabindex="-1" href="https://quabbinmediation.org/" target="_blank" rel="noopener"><img src="/assets/logos/quabbin.jpg" alt="" width="34" height="34" loading="lazy" decoding="async">Quabbin Mediation<span class="sr-only"> (opens in new tab)</span></a>
+        <a class="org-item" tabindex="-1" href="https://www.templetonma.gov/1386/Templeton-Community-Television" target="_blank" rel="noopener"><img src="/assets/logos/tctv.jpg" alt="" width="34" height="34" loading="lazy" decoding="async">Templeton Community Television<span class="sr-only"> (opens in new tab)</span></a>
       </div>
     </div>
     <ul class="sr-only">
@@ -151,26 +171,26 @@
       </div>
       <div class="highlights">
         <article class="hl hl-lead reveal" aria-labelledby="hl-myl">
-          <img class="hl-logo" src="assets/logos/mylf.jpg" alt="" role="presentation" width="64" height="64">
+          <img class="hl-logo" src="/assets/logos/mylf.jpg" alt="" width="64" height="64" loading="lazy" decoding="async">
           <span class="hl-org"><a href="https://www.massyouthleadership.org/" target="_blank" rel="noopener">Massachusetts Youth Leadership Foundation<span class="sr-only"> (opens in new tab)</span><svg class="ext-icon" aria-hidden="true" focusable="false" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a></span>
           <h3 id="hl-myl">Multimedia Director</h3>
           <p>Leading video production for the MassSTAR conference: filming Friday through Sunday, editing on the fly, and delivering the finished recap the same weekend. Delegate in 2024, back on the planning committee ever since.</p>
           <p class="hl-cta"><a href="https://lnkd.in/girWviJ6" target="_blank" rel="noopener">Watch the 2026 recap video<span class="sr-only"> (opens in new tab)</span></a></p>
         </article>
         <article class="hl hl-a reveal" aria-labelledby="hl-photo">
-          <img class="hl-logo" src="assets/logos/charming-memories.png" alt="" role="presentation" width="44" height="44">
+          <img class="hl-logo" src="/assets/logos/charming-memories.jpg" alt="" width="44" height="44" loading="lazy" decoding="async">
           <span class="hl-org"><a href="https://www.charmingphotography.com/" target="_blank" rel="noopener">Charming Memories Photography<span class="sr-only"> (opens in new tab)</span><svg class="ext-icon" aria-hidden="true" focusable="false" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a></span>
           <h3 id="hl-photo">Founder</h3>
           <p>Portrait, event, and corporate photography across Massachusetts.</p>
         </article>
         <article class="hl hl-b reveal" aria-labelledby="hl-bff">
-          <img class="hl-logo" src="assets/logos/bright-future.jpg" alt="" role="presentation" width="44" height="44">
+          <img class="hl-logo" src="/assets/logos/bright-future.jpg" alt="" width="44" height="44" loading="lazy" decoding="async">
           <span class="hl-org"><a href="https://www.brightfuturefinancialllc.com/" target="_blank" rel="noopener">Bright Future Financial LLC<span class="sr-only"> (opens in new tab)</span><svg class="ext-icon" aria-hidden="true" focusable="false" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a></span>
           <h3 id="hl-bff">Client Service Associate</h3>
           <p>Internship in data management and database administration at a financial services firm.</p>
         </article>
         <article class="hl hl-c reveal" aria-labelledby="hl-leo">
-          <img class="hl-logo" src="assets/logos/lions.svg" alt="" role="presentation" width="44" height="44">
+          <img class="hl-logo" src="/assets/logos/lions.jpg" alt="" width="44" height="44" loading="lazy" decoding="async">
           <span class="hl-org"><a href="https://www.lionsclubs.org/en" target="_blank" rel="noopener">Lions Clubs International, District 33A<span class="sr-only"> (opens in new tab)</span><svg class="ext-icon" aria-hidden="true" focusable="false" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a></span>
           <h3 id="hl-leo">2024-25 Massachusetts Leo of the Year</h3>
           <p>Named Leo of the Year for my school, then for the state of Massachusetts.</p>
@@ -185,7 +205,7 @@
         <h2 id="umass-heading">Next stop: UMass Amherst</h2>
         <p>This fall I'm joining the Isenberg School of Management, Class of 2030.</p>
       </div>
-      <a class="btn btn-on-blue" href="updates.html#umass">Read the announcement</a>
+      <a class="btn btn-on-blue" href="/updates#umass">Read the announcement</a>
     </div>
   </section>
 
@@ -193,20 +213,20 @@
     <div class="wrap">
       <div class="section-head section-head-row reveal">
         <h2 id="updates-heading">Recent milestones</h2>
-        <a class="more-link" href="updates.html">Full timeline &rarr;</a>
+        <a class="more-link" href="/updates">Full timeline &rarr;</a>
       </div>
       <div class="post-teasers">
         <article class="post reveal">
           <time datetime="2026-07">July 2026</time>
           <h3>Committing to UMass Amherst</h3>
           <p>I am so excited to share that I will be attending UMass Amherst this fall at the Isenberg School of Management. My major is undeclared for now, but I could not be more excited for this new path.</p>
-          <div class="post-foot"><a href="updates.html#umass">Read more<span class="sr-only"> about committing to UMass Amherst</span></a></div>
+          <div class="post-foot"><a href="/updates#umass">Read more<span class="sr-only"> about committing to UMass Amherst</span></a></div>
         </article>
         <article class="post reveal">
           <time datetime="2026-07">July 2026</time>
           <h3>Three years of MassSTAR</h3>
           <p>Three years ago, I walked into MassSTAR as a sophomore delegate with no idea how much this conference would shape who I am today.</p>
-          <div class="post-foot"><a href="updates.html#massstar">Read more<span class="sr-only"> about three years of MassSTAR</span></a></div>
+          <div class="post-foot"><a href="/updates#massstar">Read more<span class="sr-only"> about three years of MassSTAR</span></a></div>
         </article>
       </div>
     </div>
@@ -227,20 +247,20 @@
 
   <footer class="site-footer">
     <div class="wrap">
-      <a class="brand" href="index.html" aria-label="Jack Jaillet, back to home">
-        <img class="brand-img" src="assets/favicon.png" alt="" role="presentation" width="32" height="32">
+      <a class="brand" href="/" aria-label="Jack Jaillet, back to home">
+        <img class="brand-img" src="/assets/favicon.png" alt="" width="32" height="32" loading="lazy" decoding="async">
       </a>
       <nav aria-label="Footer">
       <ul class="footer-links">
         <li><a href="mailto:contact@jackjaillet.com">contact@jackjaillet.com</a></li>
         <li><a href="https://www.linkedin.com/in/jackjaillet/" target="_blank" rel="noopener">LinkedIn<span class="sr-only"> (opens in new tab)</span></a></li>
-        <li><a href="accessibility.html">Accessibility</a></li>
+        <li><a href="/accessibility">Accessibility</a></li>
       </ul>
       </nav>
       <small>&copy; <span id="year">2026</span> Jack Jaillet</small>
     </div>
   </footer>
 
-  <script src="js/main.js"></script>
+  <script src="/js/main.js"></script>
 </body>
 </html>

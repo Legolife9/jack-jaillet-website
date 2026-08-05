@@ -1,0 +1,29 @@
+# Cloudflare Pages response headers.
+#
+# The two CSP hashes below cover the only inline blocks on the site:
+#   script — the theme bootstrap in each page's <head>
+#   style  — the <noscript> reveal fallback
+# If you edit either of those snippets (even the whitespace), recompute the
+# hash or the browser will silently refuse to run it. Everything else is in
+# /css/style.css and /js/main.js, so this should rarely need touching.
+
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=(), usb=()
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'sha256-V5qJba2Pfl34pHXr5tflSMB61vARUx4poZzLZG+ElkI='; style-src 'self' https://fonts.googleapis.com 'sha256-AQw+/rZat5Ptf1TLzB41a0GmKxd3HreJnk3Ip+F7Ou4='; font-src https://fonts.gstatic.com; img-src 'self' data:; base-uri 'self'; form-action 'none'; frame-ancestors 'none'; object-src 'none'; upgrade-insecure-requests
+
+# Images are content-stable but do get replaced occasionally (the logo set was
+# swapped once already), so this is a week rather than a year.
+/assets/*
+  Cache-Control: public, max-age=604800
+
+# No filename hashing on these, so they must revalidate or a CSS fix would
+# take a week to reach anyone who had already visited.
+/css/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+/js/*
+  Cache-Control: public, max-age=0, must-revalidate
