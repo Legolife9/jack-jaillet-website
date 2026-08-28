@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<!--
+  ============================================================
+  POST TEMPLATE - copy this file, don't edit it.
+
+  1. Copy this file to blog/your-post-slug.html
+     (lowercase, dashes, no spaces - it becomes the URL)
+  2. Find and replace every {{PLACEHOLDER}} below. They are all listed here:
+
+       {{TITLE}}        Post title. Also goes in <title> and the OG tags.
+       {{SLUG}}         The filename without .html, e.g. my-first-post
+       {{SUMMARY}}      One or two sentences. Shows up in Google and on social.
+       {{DATE_ISO}}     Machine date, e.g. 2026-08-10
+       {{DATE_HUMAN}}   Readable date, e.g. August 10, 2026
+       {{READ_TIME}}    e.g. 4  (roughly words divided by 220)
+       {{OG_IMAGE}}     Social preview image, e.g. /assets/blog/my-photo.jpg
+                        Use /assets/og-image.jpg if the post has no image.
+
+  3. Write the post inside <article class="post-body">. Delete any blocks
+     you don't use - every kind of block you can use is shown down there,
+     each with a comment above it.
+  4. Double-click "Publish blog.bat" in this folder.
+
+  That last step adds the post to the blog page and the sitemap for you,
+  so there is no list to keep in sync by hand. Run it again any time you
+  change a title, date, or summary.
+
+  DRAFTS: while the noindex line a few lines down is still there, the post
+  is treated as a draft - it stays off the blog page and Google ignores it.
+  Delete that one line when the post is ready, then publish.
+
+  Open blog/README.md for the same steps with more detail.
+  ============================================================
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Mobile browser chrome follows the theme. Dark is the site default, so
+       that is the static value; the bootstrap below corrects it before first
+       paint for visitors who chose light. -->
+  <meta name="theme-color" content="#10131a">
+  <!-- DRAFT SWITCH. While this line is here the post is a draft: it stays off
+       the blog page and search engines skip it. Delete this one line when the
+       post is ready to go live, then run "Publish blog.bat". -->
+  <meta name="robots" content="noindex">
+  <title>{{TITLE}} | Jack Jaillet</title>
+  <meta name="description" content="{{SUMMARY}}">
+  <link rel="canonical" href="https://jackjaillet.com/blog/{{SLUG}}">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Jack Jaillet">
+  <meta property="og:title" content="{{TITLE}}">
+  <meta property="og:description" content="{{SUMMARY}}">
+  <meta property="og:url" content="https://jackjaillet.com/blog/{{SLUG}}">
+  <meta property="og:image" content="https://jackjaillet.com{{OG_IMAGE}}">
+  <meta property="og:image:alt" content="{{TITLE}}">
+  <meta property="article:published_time" content="{{DATE_ISO}}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{TITLE}}">
+  <meta name="twitter:description" content="{{SUMMARY}}">
+  <meta name="twitter:image" content="https://jackjaillet.com{{OG_IMAGE}}">
+  <link rel="icon" type="image/png" href="/assets/favicon.png">
+  <link rel="apple-touch-icon" href="/assets/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "{{TITLE}}",
+    "description": "{{SUMMARY}}",
+    "datePublished": "{{DATE_ISO}}",
+    "image": "https://jackjaillet.com{{OG_IMAGE}}",
+    "mainEntityOfPage": "https://jackjaillet.com/blog/{{SLUG}}",
+    "author": { "@id": "https://jackjaillet.com/#jack" },
+    "publisher": { "@id": "https://jackjaillet.com/#jack" }
+  }
+  </script>
+  <script>try{var t=localStorage.getItem("theme");if(t){document.documentElement.dataset.theme=t;var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content",t==="light"?"#f7f8fa":"#10131a")}}catch(e){}</script>
+  <noscript><style>.reveal{opacity:1 !important;transform:none !important}</style></noscript>
+</head>
+<body>
+
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <nav class="site-nav" aria-label="Primary">
+    <div class="wrap">
+      <a class="brand" href="/">
+        <img class="brand-img" src="/assets/favicon.png" alt="" width="40" height="40">
+        <span class="brand-name">Jack Jaillet</span>
+      </a>
+      <button class="nav-toggle" aria-expanded="false" aria-controls="nav-menu" aria-label="Open navigation menu">Menu</button>
+      <ul class="nav-links" id="nav-menu">
+        <li><a href="/">Home</a></li>
+        <li><a href="/about">About</a></li>
+        <li><a href="/resume">Resume</a></li>
+        <li><a href="/updates">Now</a></li>
+        <li><a href="/blog/" aria-current="page">Blog</a></li>
+        <li><a class="btn btn-primary btn-small" href="mailto:contact@jackjaillet.com">Get in touch</a></li>
+        <li class="theme-item">
+          <span class="theme-text" id="theme-text">Dark mode</span>
+          <button class="theme-toggle" type="button" role="switch" aria-checked="true" aria-labelledby="theme-text">
+            <svg class="icon-sun" aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+            <svg class="icon-moon" aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            <span class="theme-knob" aria-hidden="true"></span>
+          </button>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <main id="main">
+
+  <header class="post-head">
+    <div class="wrap wrap-article">
+      <a class="back-link" href="/blog/">&larr; All posts</a>
+      <h1 class="post-title">{{TITLE}}</h1>
+      <p class="post-meta">
+        <time datetime="{{DATE_ISO}}">{{DATE_HUMAN}}</time>
+        <span class="dot" aria-hidden="true">&middot;</span>
+        <span>{{READ_TIME}} min read</span>
+      </p>
+      <!-- Optional standfirst. One sentence that sets up the post. Delete if unused. -->
+      <p class="post-lede">{{SUMMARY}}</p>
+    </div>
+
+    <!-- HEADER IMAGE. The big picture at the top of the post.
+         Delete this whole <figure> if the post doesn't have one.
+         Add class "crop-wide" for a forced 16:9 or "crop-square" for 1:1.
+         Use this same file for {{OG_IMAGE}} up in the <head> so it's also
+         the preview when the post gets shared. -->
+    <figure class="post-hero">
+      <img src="/assets/blog/placeholder.svg" alt="Describe what is in the photo" width="1600" height="1000" fetchpriority="high" decoding="async">
+      <figcaption>An optional caption. Delete the figcaption line if you don't want one.</figcaption>
+    </figure>
+  </header>
+
+  <div class="wrap wrap-article">
+    <article class="post-body">
+
+      <!-- ========================================================
+           WRITE THE POST HERE.
+           Everything below is a working example of each block you
+           can use. Keep what you need, delete the rest.
+           ======================================================== -->
+
+      <!-- PARAGRAPH. One <p> per paragraph. -->
+      <p>This is a normal paragraph. Wrap every paragraph in its own <code>&lt;p&gt;</code> tag. Blank lines on their own do nothing in HTML.</p>
+
+      <p>You can put a <a href="/about">link to another page</a> in a paragraph, a <a href="https://www.linkedin.com/in/jackjaillet/" target="_blank" rel="noopener">link to another site<span class="sr-only"> (opens in new tab)</span></a>, or make words <strong>bold</strong> for emphasis.</p>
+
+      <!-- SECTION HEADING. Use these to break up a long post. -->
+      <h2>A section heading</h2>
+
+      <p>Headings go in order: <code>h2</code> for sections, <code>h3</code> underneath them. Don't skip levels, screen readers use them to navigate.</p>
+
+      <h3>A smaller heading</h3>
+
+      <p>Use this one sparingly, only when a section really has sub-parts.</p>
+
+      <!-- IMAGE, article width.
+           Put the file in assets/blog/ first. Set width and height to the
+           real pixel size of the file so the page doesn't jump while it
+           loads. alt="" describes the image for anyone who can't see it;
+           leave it empty only if the caption already says everything. -->
+      <figure class="post-figure">
+        <img src="/assets/blog/placeholder.svg" alt="Describe what is in the photo" width="1600" height="1000" loading="lazy" decoding="async">
+        <figcaption>An optional caption. Delete the figcaption line if you don't want one.</figcaption>
+      </figure>
+
+      <!-- IMAGE, wider than the text. Good for landscapes and screenshots.
+           Add class "wide". -->
+      <figure class="post-figure wide">
+        <img src="/assets/blog/placeholder.svg" alt="Describe what is in the photo" width="1600" height="1000" loading="lazy" decoding="async">
+        <figcaption>A wide image breaks out past the text column.</figcaption>
+      </figure>
+
+      <!-- TWO IMAGES SIDE BY SIDE. Add class "pair" and put two images in.
+           They stack on phones automatically. -->
+      <figure class="post-figure pair">
+        <img src="/assets/blog/placeholder.svg" alt="Describe the first photo" width="1600" height="1000" loading="lazy" decoding="async">
+        <img src="/assets/blog/placeholder.svg" alt="Describe the second photo" width="1600" height="1000" loading="lazy" decoding="async">
+        <figcaption>One caption covers both.</figcaption>
+      </figure>
+
+      <!-- CROPPED IMAGE. Add "crop-wide" (16:9) or "crop-square" (1:1) to
+           force a shape when your photos are all different sizes. -->
+      <figure class="post-figure crop-wide">
+        <img src="/assets/blog/placeholder.svg" alt="Describe what is in the photo" width="1600" height="1000" loading="lazy" decoding="async">
+      </figure>
+
+      <!-- BULLET LIST. Swap <ul> for <ol> to get numbers instead. -->
+      <ul>
+        <li>A bullet point.</li>
+        <li>Another one.</li>
+        <li>Lists are good for anything you'd otherwise write as "first, second, third".</li>
+      </ul>
+
+      <!-- PULL QUOTE. The <cite> line is optional. -->
+      <blockquote>
+        A line worth setting apart from the rest of the post.
+        <cite>Who said it</cite>
+      </blockquote>
+
+      <!-- CALLOUT BOX. For a side note, an update, or a heads-up. -->
+      <div class="post-note">
+        <p><strong>Note:</strong> a tinted box for anything that sits beside the main thread of the post.</p>
+      </div>
+
+      <!-- DIVIDER. A quiet break between two halves of a post. -->
+      <hr>
+
+      <p>The last paragraph of the post.</p>
+
+      <!-- ========================================================
+           END OF POST. Leave everything below this line alone.
+           ======================================================== -->
+
+      <div class="post-end">
+        <a href="/blog/">&larr; All posts</a>
+        <a href="mailto:contact@jackjaillet.com">Get in touch</a>
+      </div>
+
+    </article>
+  </div>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <a class="brand" href="/" aria-label="Jack Jaillet, back to home">
+        <img class="brand-img" src="/assets/favicon.png" alt="" width="32" height="32" loading="lazy" decoding="async">
+      </a>
+      <nav aria-label="Footer">
+      <ul class="footer-links">
+        <li><a href="mailto:contact@jackjaillet.com">contact@jackjaillet.com</a></li>
+        <li><a href="https://www.linkedin.com/in/jackjaillet/" target="_blank" rel="noopener">LinkedIn<span class="sr-only"> (opens in new tab)</span></a></li>
+        <li><a href="/accessibility">Accessibility</a></li>
+      </ul>
+      </nav>
+      <small>&copy; <span id="year">2026</span> Jack Jaillet</small>
+    </div>
+  </footer>
+
+  <script src="/js/main.js"></script>
+</body>
+</html>

@@ -25,6 +25,15 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://jackjaillet.com/blog/</loc>
+    <lastmod>2026-08-10</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <!-- BLOG:START - post URLs are written here by blog/build.js. Don't edit by hand. -->
+
+  <!-- BLOG:END -->
+  <url>
     <loc>https://jackjaillet.com/accessibility</loc>
     <lastmod>2026-08-04</lastmod>
     <changefreq>yearly</changefreq>
