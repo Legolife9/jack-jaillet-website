@@ -3,6 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Mobile browser chrome follows the theme. Dark is the site default, so
+       that is the static value; the bootstrap below corrects it before first
+       paint for visitors who chose light. -->
+  <meta name="theme-color" content="#10131a">
   <title>Jack Jaillet | Business Student &amp; Community Leader</title>
   <meta name="description" content="Jack Jaillet is a business student at UMass Amherst's Isenberg School of Management, a community leader, and a photographer based in Massachusetts.">
   <link rel="canonical" href="https://jackjaillet.com/">
@@ -65,7 +69,7 @@
     }
   }
   </script>
-  <script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+  <script>try{var t=localStorage.getItem("theme");if(t){document.documentElement.dataset.theme=t;var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content",t==="light"?"#f7f8fa":"#10131a")}}catch(e){}</script>
   <noscript><style>.reveal{opacity:1 !important;transform:none !important}</style></noscript>
 </head>
 <body>
@@ -84,6 +88,7 @@
         <li><a href="/about">About</a></li>
         <li><a href="/resume">Resume</a></li>
         <li><a href="/updates">Now</a></li>
+        <li><a href="/blog/">Blog</a></li>
         <li><a class="btn btn-primary btn-small" href="mailto:contact@jackjaillet.com">Get in touch</a></li>
         <li class="theme-item">
           <span class="theme-text" id="theme-text">Dark mode</span>

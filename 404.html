@@ -3,6 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Mobile browser chrome follows the theme. Dark is the site default, so
+       that is the static value; the bootstrap below corrects it before first
+       paint for visitors who chose light. -->
+  <meta name="theme-color" content="#10131a">
   <title>Page not found | Jack Jaillet</title>
   <meta name="description" content="That page doesn't exist. Here's how to find your way back.">
   <meta name="robots" content="noindex, follow">
@@ -12,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css">
-  <script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+  <script>try{var t=localStorage.getItem("theme");if(t){document.documentElement.dataset.theme=t;var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content",t==="light"?"#f7f8fa":"#10131a")}}catch(e){}</script>
   <noscript><style>.reveal{opacity:1 !important;transform:none !important}</style></noscript>
 </head>
 <body>
@@ -31,6 +35,7 @@
         <li><a href="/about">About</a></li>
         <li><a href="/resume">Resume</a></li>
         <li><a href="/updates">Now</a></li>
+        <li><a href="/blog/">Blog</a></li>
         <li><a class="btn btn-primary btn-small" href="mailto:contact@jackjaillet.com">Get in touch</a></li>
         <li class="theme-item">
           <span class="theme-text" id="theme-text">Dark mode</span>
@@ -65,6 +70,7 @@
           <li><b><a href="/about">About</a></b> Who I am and where I'm involved.</li>
           <li><b><a href="/resume">Resume</a></b> Experience, leadership, education and skills.</li>
           <li><b><a href="/updates">Now</a></b> What I'm working on, plus a timeline of milestones.</li>
+          <li><b><a href="/blog/">Blog</a></b> Longer writing on the projects I'm in the middle of.</li>
           <li><b><a href="/accessibility">Accessibility</a></b> How this site is built, and how to report a barrier.</li>
         </ul>
         <p class="note">Landed here from a link on my site? Email me at <a href="mailto:contact@jackjaillet.com">contact@jackjaillet.com</a> and I'll fix it.</p>

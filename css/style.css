@@ -65,6 +65,11 @@
 
   --wrap: 1120px;
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Height of the sticky nav bar. Four rules depend on this agreeing with
+     itself: the bar, the mobile menu's offset and max-height, and the
+     scroll-padding that keeps anchor targets out from under it. */
+  --nav-h: 72px;
 }
 
 /* Dark is the default; the nav switch opts into light and is remembered. */
@@ -81,24 +86,35 @@
   --link: #1e4fa3;
   --on-blue: #ffffff;
   --on-blue-muted: rgba(255, 255, 255, 0.85);
-  --glow-strong: rgba(30, 79, 163, 0.10);
-  --glow-soft: rgba(30, 79, 163, 0.06);
-  --bloom: rgba(30, 79, 163, 0.20);
+  /* Light's glow has to be brighter and more saturated than dark's, not just
+     more opaque. The deep primary at low alpha over near-white paper goes grey
+     before it ever reads as light, which is why this used to disappear. These
+     lift toward azure so the wash keeps its colour on #f7f8fa. */
+  --glow-strong: rgba(58, 118, 245, 0.26);
+  --glow-soft: rgba(96, 152, 250, 0.20);
+  --bloom: rgba(58, 118, 245, 0.34);
   --btn-hover: #163d82;
   --btn-on-blue-hover: #e9eef9;
   --nav-bg: rgba(247, 248, 250, 0.92);
   /* 3.28 : 1 on --paper, 3.08 on --paper-2, 3.48 on --surface. */
   --line-strong: #7e8aa0;
 
-  /* Light has a real light source, so elevation reads as shadow here. */
+  /* Light has a real light source, so plain elevation reads as a neutral
+     shadow. The two coloured ones are glow, not shadow, so they follow the
+     azure above rather than the navy primary. */
   --shadow-sm: 0 2px 8px rgba(20, 23, 29, 0.06);
-  --shadow-md: 0 6px 24px rgba(30, 79, 163, 0.35);
-  --shadow-lg: 0 0 44px rgba(30, 79, 163, 0.18);
+  --shadow-md: 0 6px 24px rgba(58, 118, 245, 0.40);
+  --shadow-lg: 0 0 44px rgba(58, 118, 245, 0.22);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
-html { scroll-behavior: smooth; overflow-x: clip; }
+html {
+  scroll-behavior: smooth;
+  overflow-x: clip;
+  /* Anchor targets clear the sticky nav instead of landing under it. */
+  scroll-padding-top: calc(var(--nav-h) + var(--space-6));
+}
 /* Set while the mobile menu is open. overflow:hidden holds the scroll
    position, unlike the position:fixed approach which jumps to the top. */
 html.nav-locked { overflow: hidden; }
@@ -214,7 +230,20 @@ a[target="_blank"]:has(.ext-icon)::after { content: none; }
 
 /* ---------- type ---------- */
 
-h1, h2, h3 { font-family: var(--serif); font-weight: 600; line-height: 1.12; letter-spacing: -0.01em; }
+h1, h2, h3 {
+  font-family: var(--serif);
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+  /* Headings here run two or three lines and were breaking at whatever fit,
+     leaving one-word last lines. Ignored by browsers that don't support it. */
+  text-wrap: balance;
+}
+
+/* Running copy gets the cheaper pass: no balancing, just no orphans. */
+.lede, .prose p, .post p, .hl p, .now-list li, .job p, .entry-body > p, .post-body > p {
+  text-wrap: pretty;
+}
 
 h1 { font-size: clamp(2.4rem, 5.2vw, 3.9rem); }
 h2 { font-size: clamp(1.7rem, 3.2vw, 2.4rem); }
@@ -279,7 +308,7 @@ h3 { font-size: 1.25rem; }
 }
 
 .site-nav .wrap {
-  height: 72px;
+  height: var(--nav-h);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -341,15 +370,16 @@ h3 { font-size: 1.25rem; }
 }
 
 /* Two breakpoint families, deliberately decoupled:
-     740px — the nav collapses to a menu. Measured: brand + links need 716px,
-             so anything wider keeps the full horizontal nav. An iPad in
-             portrait (768px) gets real navigation, not a hamburger.
+     820px — the nav collapses to a menu. Measured: brand + links need 796px
+             once Blog joined the set, so anything wider keeps the full
+             horizontal nav. This used to be 740px, which fit an iPad in
+             portrait; the sixth link no longer does.
      700px — the two-column layouts stack. */
-@media (max-width: 740px) {
+@media (max-width: 820px) {
   .nav-toggle { display: inline-block; }
   .nav-links {
     position: absolute;
-    top: 72px;
+    top: var(--nav-h);
     left: 0;
     right: 0;
     flex-direction: column;
@@ -361,7 +391,7 @@ h3 { font-size: 1.25rem; }
     display: none;
     /* Landscape phones are shorter than the menu is tall. Without this the
        last items are unreachable. dvh accounts for mobile browser chrome. */
-    max-height: calc(100dvh - 72px);
+    max-height: calc(100dvh - var(--nav-h));
     overflow-y: auto;
     overscroll-behavior: contain;
   }
@@ -403,7 +433,7 @@ h3 { font-size: 1.25rem; }
   gap: 10px;
 }
 .theme-text { color: var(--ink-2); font-weight: 500; font-size: 0.95rem; }
-@media (min-width: 741px) {
+@media (min-width: 821px) {
   .theme-text {
     position: absolute;
     width: 1px;
@@ -414,7 +444,7 @@ h3 { font-size: 1.25rem; }
     white-space: nowrap;
   }
 }
-@media (max-width: 740px) {
+@media (max-width: 820px) {
   .theme-item { width: 100%; justify-content: space-between; padding: var(--space-3) 0; }
 }
 
@@ -730,17 +760,27 @@ h3 { font-size: 1.25rem; }
 .orgs[data-paused="true"] .orgs-pause .icon-play { display: block; }
 .orgs[data-paused="true"] .orgs-pause .icon-pause { display: none; }
 
-/* The track fades out behind the button so labels never collide with it. */
+/* Both edges fade, so the strip reads as a ribbon passing behind the page
+   instead of a box with hard-clipped contents. The right side is wider
+   because it also has to clear the pause button. */
+.orgs::before,
 .orgs::after {
   content: "";
   position: absolute;
   top: 0;
   bottom: 0;
-  right: 0;
-  width: 96px;
-  background: linear-gradient(to right, transparent, var(--paper) 60%);
   pointer-events: none;
   z-index: 1;
+}
+.orgs::before {
+  left: 0;
+  width: clamp(32px, 7vw, 72px);
+  background: linear-gradient(to left, transparent, var(--paper) 60%);
+}
+.orgs::after {
+  right: 0;
+  width: clamp(64px, 10vw, 96px);
+  background: linear-gradient(to right, transparent, var(--paper) 60%);
 }
 .orgs-set { display: flex; align-items: center; }
 .org-item {
@@ -794,7 +834,7 @@ a.org-item:hover { color: var(--ink); text-decoration: none; }
 @media (prefers-reduced-motion: reduce) {
   /* Nothing is moving, so there is nothing to pause. */
   .orgs { padding: var(--space-5) var(--space-6); }
-  .orgs-pause, .orgs::after { display: none; }
+  .orgs-pause, .orgs::before, .orgs::after { display: none; }
   .orgs-track { width: auto; flex-wrap: wrap; justify-content: center; }
   .orgs-set { flex-wrap: wrap; justify-content: center; gap: var(--space-3) 0; }
   .orgs-set + .orgs-set { display: none; }
@@ -922,6 +962,16 @@ a.org-item:hover { color: var(--ink); text-decoration: none; }
 }
 .hl-cta { margin-top: 12px; }
 .hl-cta a { font-weight: 600; }
+
+/* Standalone CTA links sat at 19px tall, under the 24px target minimum. They
+   are their own line rather than links inside a sentence, so the inline
+   exception doesn't apply. The text does not move; only the hit area grows. */
+.hl-cta a,
+.post-foot a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+}
 .hl p { color: var(--ink-2); font-size: 0.95rem; }
 .hl .hl-org { font-weight: 600; color: var(--ink); font-size: 0.95rem; }
 
@@ -1023,6 +1073,296 @@ a.org-item:hover { color: var(--ink); text-decoration: none; }
 @media (hover: hover) and (pointer: fine) {
   .more-link:hover { transform: translateX(4px); }
 }
+
+/* ---------- blog index ---------- */
+
+.entries { border-bottom: 1px solid var(--line); }
+
+.entry {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-8);
+  padding: var(--space-8) 0;
+  border-top: 1px solid var(--line);
+}
+
+.entry-body { flex: 1 1 auto; min-width: 0; }
+.entry-body > p { color: var(--ink-2); max-width: 62ch; }
+
+.entry-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--ink-2);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+.entry-meta .dot { opacity: 0.45; }
+
+.entry h2 {
+  font-size: 1.55rem;
+  margin: var(--space-3) 0;
+}
+.entry h2 a { color: var(--ink); }
+.entry h2 a:hover { color: var(--link); text-decoration: none; }
+
+/* The whole row is the target: the title link is stretched over the card so
+   the thumbnail and excerpt are clickable too, without nesting links. */
+.entry h2 a::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+/* Links inside the excerpt would otherwise sit under the stretched title. */
+.entry-body p a { position: relative; }
+
+.entry-more {
+  display: inline-block;
+  margin-top: var(--space-4);
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: transform 0.2s var(--ease);
+}
+
+.entry-thumb {
+  flex: 0 0 220px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.entry-thumb img {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  transition: transform 0.5s var(--ease);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .entry:hover h2 a { color: var(--link); }
+  .entry:hover .entry-more { transform: translateX(4px); }
+  .entry:hover .entry-thumb img { transform: scale(1.05); }
+}
+
+@media (max-width: 700px) {
+  .entry { flex-direction: column-reverse; gap: var(--space-5); }
+  .entry-thumb { flex: none; width: 100%; }
+}
+
+/* Written by blog/build.js when no posts are published yet. It's a composed
+   panel rather than one line of text on purpose — an empty page reads as
+   broken, a panel reads as "not yet". */
+.blog-empty {
+  position: relative;
+  overflow: hidden;
+  padding: var(--space-16) var(--space-8);
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.blog-empty::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(560px 320px at 50% 0%, var(--glow-strong), transparent 70%);
+  pointer-events: none;
+}
+.blog-empty > * { position: relative; }
+
+.blog-empty-kicker {
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 600;
+  font-size: clamp(1.75rem, 4vw, 2.4rem);
+  line-height: 1.2;
+  color: var(--ink);
+}
+.blog-empty-note {
+  margin: var(--space-5) auto 0;
+  max-width: 46ch;
+  color: var(--ink-2);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .blog-empty::before { animation: glow-drift 14s ease-in-out infinite; }
+}
+
+@media (max-width: 700px) {
+  .blog-empty { padding: var(--space-12) var(--space-6); }
+}
+
+/* ---------- blog post ---------- */
+
+/* Reading measure. Wider than .prose because a post carries images and
+   pull quotes that need room; the paragraphs stay near 70 characters. */
+.wrap-article { max-width: 760px; }
+
+.post-head { padding: var(--space-12) 0 0; }
+
+.back-link {
+  display: inline-block;
+  margin-bottom: var(--space-6);
+  color: var(--ink-2);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.back-link:hover { color: var(--link); text-decoration: none; }
+
+.post-title { font-size: clamp(2.1rem, 4.6vw, 3.1rem); }
+
+.post-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-5);
+  color: var(--ink-2);
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+.post-meta .dot { opacity: 0.45; }
+
+.post-lede {
+  margin-top: var(--space-5);
+  font-size: 1.15rem;
+  color: var(--ink-2);
+}
+
+/* Header image. Sits under the title and runs one step wider than the
+   reading measure, so it reads as the top of the page rather than as the
+   first picture in the body. */
+.post-hero {
+  max-width: 1000px;
+  margin: var(--space-10) auto 0;
+  padding: 0 var(--space-6);
+}
+
+.post-body { padding: var(--space-10) 0 var(--space-12); }
+
+.post-body > p,
+.post-body li { color: var(--ink-2); }
+.post-body > p { margin-bottom: var(--space-6); }
+.post-body strong { color: var(--ink); font-weight: 600; }
+
+.post-body h2 {
+  font-size: 1.75rem;
+  margin: var(--space-12) 0 var(--space-4);
+}
+.post-body h3 {
+  font-size: 1.3rem;
+  margin: var(--space-8) 0 var(--space-3);
+}
+
+.post-body ul,
+.post-body ol {
+  margin: 0 0 var(--space-6);
+  padding-left: 1.3em;
+}
+.post-body li { margin-bottom: var(--space-2); }
+.post-body li::marker { color: var(--link); }
+
+.post-body blockquote {
+  margin: var(--space-10) 0;
+  padding-left: var(--space-6);
+  border-left: 2px solid var(--link);
+  font-family: var(--serif);
+  font-size: 1.35rem;
+  font-style: italic;
+  line-height: 1.4;
+  color: var(--ink);
+}
+.post-body blockquote cite {
+  display: block;
+  margin-top: var(--space-3);
+  font-family: var(--sans);
+  font-size: 0.9rem;
+  font-style: normal;
+  color: var(--ink-2);
+}
+
+.post-note {
+  margin: var(--space-8) 0;
+  padding: var(--space-5) var(--space-6);
+  background: var(--blue-tint);
+  border-radius: var(--radius);
+  font-size: 0.98rem;
+}
+.post-note p { color: var(--ink-2); }
+.post-note p + p { margin-top: var(--space-3); }
+
+.post-body hr {
+  border: 0;
+  height: 1px;
+  background: var(--line);
+  margin: var(--space-12) 0;
+}
+
+.post-body code {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 0.9em;
+  background: var(--blue-tint);
+  color: var(--blue-deep);
+  padding: 0.15em 0.4em;
+  border-radius: var(--radius-sm);
+}
+
+/* ---------- post images ---------- */
+
+.post-figure { margin: var(--space-10) 0; }
+.post-figure img,
+.post-hero img {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.post-figure figcaption,
+.post-hero figcaption {
+  margin-top: var(--space-3);
+  color: var(--ink-2);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+/* Breaks the reading measure without breaking the page: the 100vw cap keeps
+   it inside the viewport on tablets, where the article column is already
+   nearly full width. */
+.post-figure.wide {
+  width: min(100vw - var(--space-12), 1000px);
+  margin-left: 50%;
+  transform: translateX(-50%);
+}
+
+.post-figure.pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+.post-figure.pair figcaption { grid-column: 1 / -1; margin-top: 0; }
+@media (max-width: 560px) {
+  .post-figure.pair { grid-template-columns: 1fr; }
+}
+
+/* Cropped to a shape so a mixed set of source photos still lines up. */
+.post-figure.crop-wide img,
+.post-hero.crop-wide img { aspect-ratio: 16 / 9; object-fit: cover; }
+.post-figure.crop-square img,
+.post-hero.crop-square img { aspect-ratio: 1 / 1; object-fit: cover; }
+
+.post-end {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-top: var(--space-12);
+  padding-top: var(--space-8);
+  border-top: 1px solid var(--line);
+  color: var(--ink-2);
+  font-size: 0.95rem;
+}
+.post-end a { font-weight: 600; }
 
 /* ---------- about page ---------- */
 

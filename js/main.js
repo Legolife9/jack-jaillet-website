@@ -5,8 +5,8 @@
   var toggle = document.querySelector(".nav-toggle");
   var menu = document.getElementById("nav-menu");
   if (toggle && menu) {
-    // Matches the 740px nav breakpoint in the stylesheet. Keep them in sync.
-    var navQuery = window.matchMedia("(max-width: 740px)");
+    // Matches the 820px nav breakpoint in the stylesheet. Keep them in sync.
+    var navQuery = window.matchMedia("(max-width: 820px)");
 
     var isOpen = function () { return menu.classList.contains("open"); };
 
@@ -127,8 +127,13 @@
     var effectiveTheme = function () {
       return document.documentElement.dataset.theme || "dark";
     };
+    // Keeps the mobile browser chrome in step with the page. The <head>
+    // bootstrap sets this before first paint; this handles the switch.
+    var themeMeta = document.querySelector('meta[name="theme-color"]');
     var syncTheme = function () {
-      themeBtn.setAttribute("aria-checked", effectiveTheme() === "dark" ? "true" : "false");
+      var dark = effectiveTheme() === "dark";
+      themeBtn.setAttribute("aria-checked", dark ? "true" : "false");
+      if (themeMeta) themeMeta.setAttribute("content", dark ? "#10131a" : "#f7f8fa");
     };
     themeBtn.addEventListener("click", function () {
       var next = effectiveTheme() === "dark" ? "light" : "dark";
