@@ -207,12 +207,21 @@ function bannerData(t1, t2, bg, fg){
   g.globalAlpha = 1; g.font = '700 64px Arial, sans-serif'; g.textBaseline = 'middle'; g.fillText(t1, 60, 120);
   g.font = '400 36px Arial, sans-serif'; g.fillText(t2, 60, 200); return c.toDataURL('image/jpeg', .88);
 }
+// a block letter beside two lines of text, like a university mark
+function markData(ch, t1, t2, color){
+  const c = document.createElement('canvas'); c.width = 312; c.height = 120; const g = c.getContext('2d');
+  g.fillStyle = color; g.fillRect(0, 0, 120, 120);
+  g.fillStyle = '#ffffff'; g.font = '900 96px Georgia, serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(ch, 60, 66);
+  g.fillStyle = color; g.textAlign = 'left'; g.font = '700 46px Arial, sans-serif'; g.fillText(t1, 136, 40);
+  g.font = '400 34px Arial, sans-serif'; g.fillText(t2, 136, 90); return c.toDataURL('image/png');
+}
 // sample art is drawn once per look and reused
 const ARTC = {};
 const memo = (k, f) => ARTC[k] || (ARTC[k] = f());
 const avatar = (ini, bg, fg) => memo('a' + ini + bg, () => avatarData(ini, bg, fg));
 const logo = (w, c) => memo('l' + w + c, () => logoData(w, c));
 const banner = (t1, t2, bg, fg) => memo('b' + t1 + bg, () => bannerData(t1, t2, bg, fg));
+const mark = (ch, t1, t2, c) => memo('m' + ch + t1 + t2 + c, () => markData(ch, t1, t2, c));
 function presets(){
   // sample people are fictional; 555-01xx numbers are reserved for fiction
   const who = o => Object.assign({ phone:'(503) 555-0148', city:'Portland, OR' }, o);
@@ -350,14 +359,17 @@ function presets(){
               T('School', 'Westbrook University', { size:13, weight:600, color:'#1d4ed8', pb:8 }),
               mk('contact', { items:[{ icon:I('fas','envelope'), text:pn.email, link:'mailto:' + pn.email }, { icon:I('fab','linkedin'), text:pn.web, link:'https://' + pn.web }], size:12, iconSize:11, iconColor:'#1d4ed8', pb:0 })]])
     ])},
-    // the Student layout in UMass Amherst maroon, with a maroon rule like the university's own letterhead
+    // UMass Amherst maroon: ringed headshot over the university mark, a thin rule, then name with LinkedIn, school, pronouns, contact
     { key:'umass', cat:'Personal', name:'UMass Amherst', state:newState('UMass Amherst', { font:FONTS[0][0], color:'#1a1a1a', link:'#881c1c', palette:['#881c1c','#1a1a1a','#5c5c5c','#f4e6e6','#f7f4f4'] }, [
-      mkRow([[T('Name', 'Maya Brennan', { size:17, weight:700, color:'#1a1a1a', pb:1, tag:'she/her', tagPos:'after' }),
-              T('Title', 'B.B.A. Candidate, Class of 2030', { size:13, color:'#5c5c5c' }),
-              T('School', 'Isenberg School of Management', { size:13, color:'#5c5c5c', pb:2 }),
-              T('University', 'UMASS AMHERST', { size:12, weight:700, spacing:1.5, color:'#881c1c', pb:8 }),
-              mk('divider', { width:30, thickness:2, color:'#881c1c', pb:8 }),
-              mk('contact', { items:[{ icon:I('fas','envelope'), text:'mbrennan@umass.edu', link:'mailto:mbrennan@umass.edu' }, { icon:I('fab','linkedin'), text:'linkedin.com/in/mayabrennan', link:'https://linkedin.com/in/mayabrennan' }], size:12, iconSize:11, iconColor:'#881c1c', pb:0 })]])
+      mkRow([[photo({ name:'Maya Brennan' }, 'MB', '#f4e6e6', '#881c1c', { width:110, borderW:3, borderColor:'#881c1c', align:'center', pb:8 }),
+              mk('image', { label:'Logo', sample:'m|M|UMASS|AMHERST|#881c1c', width:96, align:'center', alt:'UMass Amherst', pb:0 })],
+             [T('Name', 'Maya Brennan', { size:20, weight:700, color:'#881c1c', pb:2 }),
+              mk('social', { items:[{ icon:I('fab','linkedin'), link:'https://linkedin.com/in/mayabrennan' }], inline:true, gapL:8, shape:'none', color:'#0a66c2', size:20, pad:0, pb:2 }),
+              T('School', 'Isenberg School of Management', { size:14, color:'#5c5c5c', pb:1 }),
+              T('Degree', 'BBA, 2030', { size:14, color:'#5c5c5c', pb:2 }),
+              T('Pronouns', '(She/Her/Hers)', { size:13, italic:true, color:'#8c8c8c', pb:10 }),
+              mk('contact', { items:[{ icon:I('fas','envelope'), text:'mbrennan@umass.edu', link:'mailto:mbrennan@umass.edu' }, { icon:I('fas','phone'), text:'(413) 555-0172', link:'tel:4135550172' }], size:13, iconSize:18, iconColor:'#881c1c', gap:6, pb:0 })]],
+        { divW:1, divC:'#555555', gap:20, valign:'middle' })
     ])},
     { key:'freelance', cat:'Personal', name:'Freelancer', state:newState('Freelancer', { font:FONTS[2][0], palette:['#15803d','#14241a','#5c6b61','#dcfce7','#f3f7f4'] }, [
       mkRow([[photo(th, 'TL', '#dcfce7', '#15803d', { width:60, pb:0 })],
@@ -400,7 +412,7 @@ const T0 = 'role="presentation" cellpadding="0" cellspacing="0" border="0"';
 // sample pictures in the templates are drawn in the browser from a short key, so they never take up storage
 function sampleArt(key){
   const [k, a, b2, c, d] = String(key).split('|');
-  return k === 'a' ? avatar(a, b2, c) : k === 'l' ? logo(a, b2) : k === 'b' ? banner(a, b2, c, d) : '';
+  return k === 'a' ? avatar(a, b2, c) : k === 'l' ? logo(a, b2) : k === 'b' ? banner(a, b2, c, d) : k === 'm' ? mark(a, b2, c, d) : '';
 }
 // a hosted image, cropped to the chosen frame by images.weserv.nl (a free image service) when a frame is set
 function cropUrl(url, b){
@@ -855,6 +867,16 @@ function moveBlock(f, dir){
   f.c.blocks.splice(f.i, 1);
   if (dir < 0) to.c.blocks.push(f.b); else to.c.blocks.unshift(f.b);
 }
+function colCount(r, label){
+  const nc = { n:r.cols.length };
+  const cnt = segs(nc, 'n', label, [[1,'1'],[2,'2'],[3,'3'],[4,'4']]);
+  cnt.querySelector('.seg').addEventListener('click', () => {
+    while (r.cols.length < nc.n) r.cols.push(mkCol([]));
+    while (r.cols.length > nc.n) removeCol(r, r.cols[r.cols.length - 1]);
+    changed({ list:true, insp:true });
+  });
+  return cnt;
+}
 function removeCol(r, c){
   const i = r.cols.indexOf(c);
   if (r.cols.length === 1){ state.rows.splice(state.rows.indexOf(r), 1); return; }
@@ -957,9 +979,11 @@ function color(obj, key, label, auto){
   sync();
   return field(label, w);
 }
+// font choices preview in their own face (Chrome and Edge draw this; Safari ignores it)
+const fontStyle = v => FONTS.some(f => f[0] === v) ? ` style="font-family:${esc(v)}"` : '';
 function sel_(obj, key, label, options, opts = {}){
   const id = 'f' + (++fid);
-  const n = el(`<select id="${id}">${options.map(([v, l]) => `<option value="${esc(v)}">${esc(l)}</option>`).join('')}</select>`);
+  const n = el(`<select id="${id}">${options.map(([v, l]) => `<option value="${esc(v)}"${fontStyle(v)}>${esc(l)}</option>`).join('')}</select>`);
   n.value = String(obj[key]);
   n.onchange = () => { const v = n.value; obj[key] = typeof obj[key] === 'number' ? Number(v) : v; changed(opts); };
   return field(label, n);
@@ -1153,9 +1177,17 @@ function paletteEditor(){
     w.lastChild.appendChild(c);
   });
   // match colors to a logo or photo: one in the design, or a file on this computer (read here, never stored)
-  const imgs = state.rows.flatMap(r => r.cols.flatMap(c => c.blocks)).filter(b => b.type === 'image' && (/^https?:/i.test(b.url || '') || b.sample));
-  const m = el(`<div class="field"><span>Match colors to a logo or photo</span><div style="display:flex;gap:6px;flex-wrap:wrap">${imgs.map(b => `<button type="button" class="btn sm" data-img="${b.id}">From ${esc(b.label || 'image')}</button>`).join('')}<label class="btn sm">From a file<input type="file" accept="image/*" hidden></label></div><p class="note">A file is only read for its colors. It isn't uploaded or saved.</p></div>`);
-  m.onclick = e => { const b = e.target.closest('[data-img]'); if (b){ const f = find(b.dataset.img); paletteFromImage(/^https?:/i.test(f.b.url || '') ? f.b.url : sampleArt(f.b.sample), p => { applyPalette(p); toast('Colors matched.', UNDO); }); } };
+  // one button per picture (the same logo used twice is one button), with a thumbnail; repeated names get numbered
+  const imgs = [], named = {};
+  state.rows.flatMap(r => r.cols.flatMap(c => c.blocks)).forEach(b => {
+    if (b.type !== 'image') return;
+    const src = /^https?:/i.test(b.url || '') && !usesField(b.url) ? b.url : b.sample ? sampleArt(b.sample) : '';
+    if (!src || imgs.some(x => x.src === src)) return;
+    const base = b.label || 'image'; named[base] = (named[base] || 0) + 1;
+    imgs.push({ src, label:named[base] > 1 ? base + ' ' + named[base] : base });
+  });
+  const m = el(`<div class="field"><span>Match colors to a logo or photo</span><div style="display:flex;gap:6px;flex-wrap:wrap">${imgs.map((x, i) => `<button type="button" class="btn sm" data-img="${i}"><img src="${esc(x.src)}" alt="" width="18" height="18" referrerpolicy="no-referrer" style="object-fit:contain;background:#fff;border-radius:3px;vertical-align:middle;margin-right:6px">From ${esc(x.label)}</button>`).join('')}<label class="btn sm">From a file<input type="file" accept="image/*" hidden></label></div><p class="note">A file is only read for its colors. It isn't uploaded or saved.</p></div>`);
+  m.onclick = e => { const b = e.target.closest('[data-img]'); if (b) paletteFromImage(imgs[+b.dataset.img].src, p => { applyPalette(p); toast('Colors matched.', UNDO); }); };
   m.querySelector('input').onchange = e => { const f = e.target.files[0]; if (f) readImage(f, 300, d => paletteFromImage(d, p => { applyPalette(p); toast('Colors matched to your logo.', UNDO); })); };
   return [w, m];
 }
@@ -1190,13 +1222,7 @@ function renderInspector(){
   if (f.kind === 'row'){
     const r = f.r, ri = state.rows.indexOf(r) + 1;
     head(`Row ${ri}`, 'A row holds side-by-side columns. Stack rows to build any layout.');
-    const nc = { n:r.cols.length };
-    const cnt = segs(nc, 'n', 'Columns', [[1,'1'],[2,'2'],[3,'3'],[4,'4']]);
-    cnt.querySelector('.seg').addEventListener('click', () => {
-      while (r.cols.length < nc.n) r.cols.push(mkCol([]));
-      while (r.cols.length > nc.n) removeCol(r, r.cols[r.cols.length - 1]);
-      changed({ list:true, insp:true });
-    });
+    const cnt = colCount(r, 'Columns');
     [grp('Columns', cnt, r.cols.length > 1 ? [row(num(r, 'gap', 'Gap between', 0, 60), sel_(r, 'valign', 'Line up', [['top','Top'],['middle','Middle'],['bottom','Bottom']]))] : null,
         r.cols.map((c, i) => num(c, 'width', `Column ${i + 1} width (0 = auto)`, 0, 500, 2, { list:true })),
         chk(r, 'full', 'Stretch row to full signature width')),
@@ -1207,7 +1233,7 @@ function renderInspector(){
   if (f.kind === 'col'){
     const c = f.c;
     head(colName(f.r, c), 'Select a block in this column to edit it, or add one from the left.');
-    Pn.append(grp('Size', num(c, 'width', 'Width (0 = auto)', 0, 500, 2, { list:true })),
+    Pn.append(grp('Layout', colCount(f.r, 'Columns in this row'), num(c, 'width', 'Width (0 = auto)', 0, 500, 2, { list:true })),
       grp('Background', chk(c, 'bgOn', 'Fill this column', { insp:true }), c.bgOn ? [color(c, 'bg', 'Color'), row(num(c, 'pad', 'Padding', 0, 40), num(c, 'radius', 'Corner radius', 0, 30))] : num(c, 'pad', 'Padding', 0, 40)));
     return;
   }
@@ -1217,6 +1243,12 @@ function renderInspector(){
     sel_({ to:f.c.id }, 'to', 'Position', allCols().map(x => [x.c.id, colName(x.r, x.c)])),
     segs(b, 'align', 'Alignment', ALIGN), row(num(b, 'pt', 'Space above', -20, 60), num(b, 'pb', 'Space below', -20, 60))
   ];
+  place.push(colCount(f.r, 'Columns in this row'));
+  if (f.i > 0 && f.r.cols.length < 4){
+    const sp = el('<button type="button" class="btn sm">Move this and the blocks below into a new column</button>');
+    sp.onclick = () => { const moved = f.c.blocks.splice(f.i); moved[0].inline = false; f.r.cols.splice(f.r.cols.indexOf(f.c) + 1, 0, mkCol(moved)); changed({ list:true, insp:true }); };
+    place.push(sp);
+  }
   // side by side: this block joins the one above it in a row
   const beside = f.i > 0;
   if (beside && b.type !== 'button') place.push(chk(b, 'inline', 'Sit beside the block above (side by side)', { insp:true, list:true }));
@@ -1768,7 +1800,7 @@ const swatches = p => (p || []).map(c => `<span style="display:inline-block;widt
 function renderHome(){
   if (view !== 'home') return;
   const count = id => templates.filter(t => (t.companyId || '') === id).length;
-  if (libCo !== 'all' && libCo !== 'none' && !coById(libCo)) libCo = 'all';
+  if (libCo !== 'all' && !coById(libCo)) libCo = 'all';
   const co = coById(libCo), q = libQ.trim().toLowerCase();
   const row = (id, label, n, sw) => `<button type="button" class="bitem${libCo === id ? ' sel' : ''}" data-co="${id}">${sw || ''}<span class="nm">${label}</span><span class="note">${n}</span></button>`;
   $('#cos').innerHTML = `<p class="label" style="margin:0 6px 6px">Library</p>
@@ -1776,10 +1808,10 @@ function renderHome(){
     <p class="label" style="margin:14px 6px 6px;display:flex;align-items:center">Companies<span class="spacer"></span><button class="btn sm ghost" data-a="co-form" type="button">+ New</button></p>
     ${coForm ? `<div class="card cur" style="margin:0 2px 6px"><input id="co-new" type="text" placeholder="Company name" aria-label="Company name"><div class="row"><button class="btn sm primary" data-a="co-create" type="button">Create</button><button class="btn sm" data-a="co-cancel" type="button">Cancel</button></div></div>` : ''}
     ${ownCos().map(c => row(c.id, esc(c.name), count(c.id), `<span class="sw" style="background:${esc((c.palette || ['#c4cad4'])[0])}"></span>`)).join('')}
-    ${ownCos().length ? row('none', 'No company', count('')) : `<p class="note" style="margin:0 6px">Add a company to keep its signatures and brand together.</p>`}
+    ${ownCos().length ? '' : `<p class="note" style="margin:0 6px">Add a company to keep its signatures and brand together.</p>`}
     ${sharedCos().length ? `<p class="label" style="margin:14px 6px 6px">Shared with me</p>` + sharedCos().map(c => row(c.id, esc(c.name), count(c.id), `<span class="sw" style="background:${esc((c.palette || ['#c4cad4'])[0])}"></span>`)).join('') : ''}`;
 
-  const list = templates.filter(t => (libCo === 'all' || (t.companyId || '') === (libCo === 'none' ? '' : libCo)) &&
+  const list = templates.filter(t => (libCo === 'all' || (t.companyId || '') === libCo) &&
     (!q || (t.name + ' ' + ((coById(t.companyId) || {}).name || '') + ' ' + ((t.state.team && t.state.team.people) || []).map(p => Object.values(p.values).filter(v => !/^data:/.test(v)).join(' ')).join(' ')).toLowerCase().includes(q)));
   const moveOpts = cur => `<option value="">No company</option>` + ownCos().map(c => `<option value="${c.id}"${c.id === cur ? ' selected' : ''}>${esc(c.name)}</option>`).join('');
   const cards = list.map(t => {
@@ -1798,7 +1830,7 @@ function renderHome(){
       <div class="field"><span>Company name</span><input id="bk-name" type="text" value="${esc(co.name)}"></div>
       <div class="field"><span>Logo link</span><input id="bk-logourl" type="text" placeholder="https://…/logo.png" value="${esc(co.logoUrl || '')}"><div class="row" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:4px">${co.logoUrl ? `<img src="${esc(co.logoUrl)}" alt="" referrerpolicy="no-referrer" style="max-width:110px;max-height:34px;object-fit:contain">` : ''}<button class="btn sm" type="button" data-a="co-match"${co.logoUrl ? '' : ' disabled'}>Match colors to logo</button></div></div>
       <div class="field"><span>Brand colors</span><div style="display:flex;gap:6px;flex-wrap:wrap">${(co.palette || STYLE0.palette).map((c, i) => `<input type="color" data-bkc="${i}" value="${esc(c)}" aria-label="Brand color ${i + 1}" style="width:36px;height:30px;padding:0;border:1px solid var(--line);border-radius:6px;background:none">`).join('')}</div></div>
-      <div class="field"><span>Font</span><select id="bk-font"><option value="">Keep each signature's font</option>${FONTS.map(f => `<option value="${esc(f[0])}"${f[0] === co.font ? ' selected' : ''}>${esc(f[1])}</option>`).join('')}</select></div>
+      <div class="field"><span>Font</span><select id="bk-font"><option value="">Keep each signature's font</option>${FONTS.map(f => `<option value="${esc(f[0])}"${fontStyle(f[0])}${f[0] === co.font ? ' selected' : ''}>${esc(f[1])}</option>`).join('')}</select></div>
       <div class="field"><span>Signatures</span><div class="row" style="display:flex;gap:6px;flex-wrap:wrap">${co.sh ? '' : `<button class="btn sm primary" data-a="co-applyall" type="button"${count(co.id) ? '' : ' disabled'}>Update all ${count(co.id)} with this brand</button>`}<button class="btn sm" data-a="co-done" type="button">Done</button></div></div>
     </div>` : '';
   const head = co ? `<div class="cohead">${co.logoUrl ? `<img class="logo" src="${esc(co.logoUrl)}" alt="${esc(co.name)} logo" referrerpolicy="no-referrer">` : ''}
@@ -1809,7 +1841,7 @@ function renderHome(){
       <button class="btn" data-a="co-brand" type="button">${brandOpen ? 'Close brand kit' : 'Edit brand kit'}</button>
       <button class="${coDelArm === co.id ? 'btn danger' : 'btn ghost'}" data-a="co-del" type="button">${coDelArm === co.id ? `Confirm: delete ${esc(co.name)}` : 'Delete company'}</button></div>
       ${coDelArm === co.id ? `<p class="note">Its ${count(co.id)} signature${count(co.id) === 1 ? '' : 's'} will be kept under "No company"${(members[co.id] || []).length ? ', and the people it\'s shared with lose access' : ''}.</p>` : ''}${shareOpen ? sharePanel(co) : ''}`}${brandKit}`
-    : `<div class="cohead"><div class="grow"><h1>${libCo === 'none' ? 'Signatures without a company' : 'All signatures'}</h1></div></div>`;
+    : `<div class="cohead"><div class="grow"><h1>All signatures</h1></div></div>`;
 
   let body;
   if (!libReady) body = `<div class="empty">Loading your library…</div>`;
