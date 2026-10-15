@@ -2010,6 +2010,12 @@ function initAuth(){
   if (!window.supabase){ $('#acctbtn').hidden = true; return; } // library didn't load: guest mode only
   sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth:{ flowType:'pkce', detectSessionInUrl:true, persistSession:true, autoRefreshToken:true } });
   sb.auth.onAuthStateChange((ev, session) => { setTimeout(() => setUser(session ? session.user : null), 0); });
+  // only offer Google once it's switched on in the project (otherwise Supabase shows a raw error page)
+  fetch(SUPABASE_URL + '/auth/v1/settings', { headers:{ apikey:SUPABASE_KEY } }).then(r => r.json())
+    .then(j => { googleOn = !!(j.external && j.external.google); if ($('#dlg-acct').open && authStep === 'email') drawAccount(); }).catch(() => {});
+  // coming back from a failed or cancelled Google / email sign-in
+  const q = new URLSearchParams(location.search + '&' + location.hash.slice(1));
+  if (q.get('error_description')){ toast("Sign-in didn't finish: " +q.get('error_description')); history.replaceState(null, '', location.pathname); }
 }
 async function setUser(u){
   if ((u && u.id) === (user && user.id)) { renderAccount(); return; }
@@ -2043,7 +2049,7 @@ function renderAccount(){
   b.title = user ? 'Your account' : 'Sign in to keep your signatures on every device';
   b.classList.toggle('primary', false);
 }
-let authStep = 'email', authEmail = '', authBusy = false, delAcct = false, resendAt = 0, codeOpen = false;
+let authStep = 'email', authEmail = '', authBusy = false, delAcct = false, resendAt = 0, codeOpen = false, googleOn = false;
 function openAccount(){ authStep = user ? 'account' : 'email'; delAcct = false; drawAccount(); $('#dlg-acct').showModal(); const i = $('#dlg-acct input'); if (i) i.focus(); }
 function drawAccount(){
   const B = $('#acctbody');
@@ -2055,9 +2061,11 @@ function drawAccount(){
     return;
   }
   if (authStep === 'email'){
-    B.innerHTML = `<p>Sign in to keep your signatures in your account and use them on any device. No password: we email you a sign-in code.</p>
+    B.innerHTML = `<p>Sign in to keep your signatures in your account and use them on any device.</p>
+      ${googleOn ? `<button class="btn googlebtn" type="button" data-a="google">${G('fab','google')}Continue with Google</button>
+      <div class="orline"><span>or use your email</span></div>` : ''}
       <form id="authform" class="field" style="gap:8px"><span>Email</span><input id="authemail" type="email" autocomplete="email" required value="${esc(authEmail)}" placeholder="you@example.com">
-      <div class="row" style="display:flex;gap:8px"><button class="btn primary" type="submit"${authBusy ? ' disabled' : ''}>${authBusy ? 'Sending…' : 'Email me a code'}</button></div></form>
+      <div class="row" style="display:flex;gap:8px"><button class="btn" type="submit"${authBusy ? ' disabled' : ''}>${authBusy ? 'Sending…' : 'Email me a sign-in link'}</button></div></form>
       <p class="note">Signing in is optional. Without it, everything stays in this browser.</p>`;
     return;
   }
@@ -2095,6 +2103,11 @@ $('#acctbody').addEventListener('click', async e => {
   const a = e.target.closest('[data-a]'); if (!a) return;
   const act = a.dataset.a;
   if (act === 'resend') sendCode();
+  if (act === 'google'){
+    // leaves for Google and comes back here signed in (the code in the return URL is exchanged automatically)
+    const { error } = await sb.auth.signInWithOAuth({ provider:'google', options:{ redirectTo:location.origin + location.pathname } });
+    if (error) toast(/not enabled|provider/i.test(error.message) ? "Google sign-in isn't switched on yet. Use your email for now." : 'Could not start Google sign-in: ' + error.message);
+  }
   if (act === 'otheremail'){ authStep = 'email'; drawAccount(); $('#authemail').focus(); }
   if (act === 'signout'){ await saveNow(); await sb.auth.signOut(); $('#dlg-acct').close(); toast('Signed out. Your signatures stay in your account.'); }
   if (act === 'delacct'){ delAcct = true; drawAccount(); $('#delconfirm').focus(); }
