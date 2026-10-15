@@ -103,6 +103,7 @@ $$;
 revoke all on function public.shared_companies(), public.shared_signatures(), public.member_perms(uuid, text),
   public.save_shared_signature(uuid, text, text, jsonb), public.save_shared_team(uuid, text, jsonb),
   public.save_shared_company(uuid, text, jsonb), public.leave_shared_company(uuid, text), public.my_email() from public, anon;
+revoke execute on function public.member_perms(uuid, text) from authenticated; -- helper for the save_* functions only
 grant execute on function public.shared_companies(), public.shared_signatures(),
   public.save_shared_signature(uuid, text, text, jsonb), public.save_shared_team(uuid, text, jsonb),
   public.save_shared_company(uuid, text, jsonb), public.leave_shared_company(uuid, text), public.my_email() to authenticated;
