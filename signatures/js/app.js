@@ -350,6 +350,15 @@ function presets(){
               T('School', 'Westbrook University', { size:13, weight:600, color:'#1d4ed8', pb:8 }),
               mk('contact', { items:[{ icon:I('fas','envelope'), text:pn.email, link:'mailto:' + pn.email }, { icon:I('fab','linkedin'), text:pn.web, link:'https://' + pn.web }], size:12, iconSize:11, iconColor:'#1d4ed8', pb:0 })]])
     ])},
+    // the Student layout in UMass Amherst maroon, with a maroon rule like the university's own letterhead
+    { key:'umass', cat:'Personal', name:'UMass Amherst', state:newState('UMass Amherst', { font:FONTS[0][0], color:'#1a1a1a', link:'#881c1c', palette:['#881c1c','#1a1a1a','#5c5c5c','#f4e6e6','#f7f4f4'] }, [
+      mkRow([[T('Name', 'Maya Brennan', { size:17, weight:700, color:'#1a1a1a', pb:1, tag:'she/her', tagPos:'after' }),
+              T('Title', 'B.B.A. Candidate, Class of 2030', { size:13, color:'#5c5c5c' }),
+              T('School', 'Isenberg School of Management', { size:13, color:'#5c5c5c', pb:2 }),
+              T('University', 'UMASS AMHERST', { size:12, weight:700, spacing:1.5, color:'#881c1c', pb:8 }),
+              mk('divider', { width:30, thickness:2, color:'#881c1c', pb:8 }),
+              mk('contact', { items:[{ icon:I('fas','envelope'), text:'mbrennan@umass.edu', link:'mailto:mbrennan@umass.edu' }, { icon:I('fab','linkedin'), text:'linkedin.com/in/mayabrennan', link:'https://linkedin.com/in/mayabrennan' }], size:12, iconSize:11, iconColor:'#881c1c', pb:0 })]])
+    ])},
     { key:'freelance', cat:'Personal', name:'Freelancer', state:newState('Freelancer', { font:FONTS[2][0], palette:['#15803d','#14241a','#5c6b61','#dcfce7','#f3f7f4'] }, [
       mkRow([[photo(th, 'TL', '#dcfce7', '#15803d', { width:60, pb:0 })],
              [T('Name', `**${th.name}**  Freelance copywriter`, { size:14, color:'#14241a', pb:4 }),
@@ -2234,7 +2243,21 @@ $('#personbody').addEventListener('submit', async e => {
 });
 
 /* ---------- boot ---------- */
-$('#brandmark').innerHTML = G('fas', 'signature');
+// light/dark switch shared with the rest of jackjaillet.com (localStorage "theme"; dark is the default)
+function paintTheme(){
+  const light = document.documentElement.dataset.theme === 'light';
+  $('#themebtn').innerHTML = light ? G('fas', 'moon') : G('fas', 'sun');
+  $('#themebtn').setAttribute('aria-label', light ? 'Switch to dark mode' : 'Switch to light mode');
+  const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = light ? '#f7f8fa' : '#10131a';
+}
+$('#themebtn').onclick = () => {
+  const light = document.documentElement.dataset.theme !== 'light';
+  if (light) document.documentElement.dataset.theme = 'light'; else delete document.documentElement.dataset.theme;
+  try { localStorage.setItem('theme', light ? 'light' : 'dark'); } catch (e) {}
+  paintTheme();
+  if (view === 'home') renderHome();
+};
+paintTheme();
 $('#back').innerHTML = G('fas', 'arrow-left') + ' All signatures';
 const PTOKEN = new URLSearchParams(location.search).get('p');
 if (PTOKEN) initPerson(PTOKEN);

@@ -10,14 +10,18 @@
 <meta property="og:description" content="Free, open-source email signature builder. No account, nothing uploaded.">
 <meta property="og:url" content="https://jackjaillet.com/signatures/">
 <meta property="og:type" content="website">
-<meta name="theme-color" content="#2453e6">
-<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#10131a">
+<link rel="icon" type="image/png" href="/assets/favicon.png">
+<link rel="apple-touch-icon" href="/assets/favicon.png">
+<script src="js/theme.js"></script>
 <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
 <div class="app" id="app" data-view="home">
   <header class="top">
-    <button type="button" class="brand" id="go-home" title="All signatures"><span class="mark" id="brandmark"></span>Signature Studio</button>
+    <a class="sitebrand" href="/" title="Back to jackjaillet.com"><img src="/assets/favicon.png" alt="" width="32" height="32"><span>Jack Jaillet</span></a>
+    <span class="crumb" aria-hidden="true">/</span>
+    <button type="button" class="brand" id="go-home" title="All signatures">Signature Studio</button>
     <div class="hbar person-only"><span class="spacer"></span><a class="btn sm ghost" href="./">Make your own signature</a></div>
     <div class="hbar home-only">
       <input id="homeq" class="search top-search" type="search" placeholder="Search signatures, companies or people" aria-label="Search signatures">
@@ -44,6 +48,7 @@
       </div>
       <button id="copygmail" class="btn primary" type="button">Copy for Gmail</button>
     </div>
+    <button type="button" class="themebtn" id="themebtn" aria-label="Switch to light mode" title="Light or dark"></button>
   </header>
 
   <main id="view-home" class="home">
@@ -135,7 +140,7 @@
     <p><b>If you sign in,</b> your signatures and companies are saved to your account so you can use them on any device. They're stored with <a href="https://supabase.com" target="_blank" rel="noopener">Supabase</a> (servers in the US), and only you can see them. Your email address is used only to sign you in. You can delete your account and everything in it at any time from <b>Account</b>. If you share a company, the people you add can see its signatures (and its employee details, if you allow that), and they see your email address as the owner. This page has no analytics or tracking either way.</p>
     <p><b>Images and icons.</b> Images are used by link and never uploaded here. In a finished signature, icons are loaded from <a href="https://iconify.design" target="_blank" rel="noopener">Iconify</a> through <a href="https://images.weserv.nl" target="_blank" rel="noopener">images.weserv.nl</a>, and cropped photos through images.weserv.nl. When someone opens your email, their mail app fetches those images from those services and your image hosts, which can see the request.</p>
     <p><b>Fair use.</b> Only make signatures for yourself or for organizations you're allowed to represent.</p>
-    <p><b>Open source.</b> MIT license. Icons by <a href="https://fontawesome.com" target="_blank" rel="noopener">Font Awesome Free</a> (CC BY 4.0). IBM Plex fonts (SIL Open Font License). <a href="https://github.com/Legolife9/jack-jaillet-website" target="_blank" rel="noopener">View the code on GitHub</a>.</p>
+    <p><b>Open source.</b> MIT license. Icons by <a href="https://fontawesome.com" target="_blank" rel="noopener">Font Awesome Free</a> (CC BY 4.0). Instrument Sans, Playfair Display and IBM Plex Mono fonts (SIL Open Font License). <a href="https://github.com/Legolife9/jack-jaillet-website" target="_blank" rel="noopener">View the code on GitHub</a>.</p>
   </div>
 </div></dialog>
 

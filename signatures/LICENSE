@@ -24,4 +24,4 @@ This license covers the files in this signatures/ folder that were written for
 Signature Studio. Bundled third-party files keep their own licenses:
 - vendor/fontawesome/: Font Awesome Free 6.5.2 (icons CC BY 4.0, code MIT), see vendor/fontawesome/LICENSE.txt
 - vendor/supabase.js: supabase-js 2.45.4 (MIT), Copyright (c) Supabase
-- fonts/: IBM Plex (SIL Open Font License 1.1), see fonts/OFL.txt
+- fonts/: Instrument Sans, Playfair Display and IBM Plex Mono (SIL Open Font License 1.1), see fonts/OFL.txt
