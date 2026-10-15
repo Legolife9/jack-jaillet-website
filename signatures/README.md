@@ -9,7 +9,7 @@ A free, open-source email signature builder for people and teams. Live at **[jac
 
 ## Privacy
 
-Everything stays in your browser (`localStorage`). There are no accounts, no server, no analytics, and no uploads: images are used by link. Use **Export backup** to save a copy or move to another computer. Clearing your browser data deletes your signatures.
+Accounts are optional. Without one, everything stays in your browser (`localStorage`) and nothing you type is sent anywhere; use **Export backup** to keep a copy. If you sign in (email code, no password), your signatures and companies are saved to your account in [Supabase](https://supabase.com) so they follow you across devices. Row-level security means each account can only read and change its own rows, and **Account > Delete account** removes the account and everything in it. There are no analytics and no uploads: images are used by link.
 
 When someone opens an email with your signature, their mail app loads:
 
@@ -35,9 +35,14 @@ Then open http://localhost:8000/. (Opening `index.html` straight from disk mostl
 | `js/app.js` | The whole app: templates, editor, email renderer, library |
 | `css/app.css` | Styles |
 | `vendor/fontawesome/` | Font Awesome Free 6.5.2 icon data |
+| `vendor/supabase.js` | supabase-js 2.45.4 (MIT), for optional accounts |
 | `fonts/` | IBM Plex Sans and Mono |
 
 The email output is built from nested tables with inline styles. That's what Gmail and Outlook render reliably, so keep new blocks to that pattern.
+
+## Accounts backend
+
+The page talks to one Supabase project. Its public URL and publishable key are in `js/app.js`; they are meant to be public, and the database rules do the protecting. The schema is two tables, `signatures` and `companies`, keyed by `(user_id, id)`, with owner-only row-level security, plus a `delete_my_account()` function. To run your own copy, create a Supabase project, apply the same schema, and change the two constants.
 
 ## Contributing
 

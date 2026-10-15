@@ -22,6 +22,7 @@
       <input id="homeq" class="search top-search" type="search" placeholder="Search signatures, companies or people" aria-label="Search signatures">
       <span class="spacer"></span>
       <button id="aboutbtn" class="btn ghost sm" type="button">About &amp; privacy</button>
+      <button id="acctbtn" class="btn sm" type="button">Sign in</button>
       <button id="exportlib" class="btn sm" type="button" title="Download a backup of every signature and company">Export backup</button>
       <label class="btn sm" title="Load a backup file">Import<input id="importlib" type="file" accept=".json,application/json" hidden></label>
       <button id="newsig" class="btn primary" type="button">New signature</button>
@@ -126,17 +127,24 @@
   <header><h2>About Signature Studio</h2><button class="btn sm" id="aboutclose" type="button">Close</button></header>
   <div class="body" style="display:flex;flex-direction:column;gap:12px;line-height:1.55">
     <p>A free, open-source email signature builder by <a href="https://jackjaillet.com" target="_blank" rel="noopener">Jack Jaillet</a>. Design a signature, fill it in for a whole team, and copy it into Gmail, Outlook or Apple Mail.</p>
-    <p><b>Privacy.</b> Everything you make stays in this browser. There are no accounts, nothing you type is sent to a server, and this page has no analytics or tracking. Clearing your browser data deletes your signatures, so use <b>Export backup</b> to keep a copy or to move to another computer.</p>
+    <p><b>Privacy.</b> You don't need an account. Without one, everything you make stays in this browser and nothing you type is sent to a server. Clearing your browser data deletes it, so use <b>Export backup</b> to keep a copy.</p>
+    <p><b>If you sign in,</b> your signatures and companies are saved to your account so you can use them on any device. They're stored with <a href="https://supabase.com" target="_blank" rel="noopener">Supabase</a> (servers in the US), and only you can see them. Your email address is used only to sign you in. You can delete your account and everything in it at any time from <b>Account</b>. This page has no analytics or tracking either way.</p>
     <p><b>Images and icons.</b> Images are used by link and never uploaded here. In a finished signature, icons are loaded from <a href="https://iconify.design" target="_blank" rel="noopener">Iconify</a> through <a href="https://images.weserv.nl" target="_blank" rel="noopener">images.weserv.nl</a>, and cropped photos through images.weserv.nl. When someone opens your email, their mail app fetches those images from those services and your image hosts, which can see the request.</p>
     <p><b>Fair use.</b> Only make signatures for yourself or for organizations you're allowed to represent.</p>
     <p><b>Open source.</b> MIT license. Icons by <a href="https://fontawesome.com" target="_blank" rel="noopener">Font Awesome Free</a> (CC BY 4.0). IBM Plex fonts (SIL Open Font License). <a href="https://github.com/Legolife9/jack-jaillet-website" target="_blank" rel="noopener">View the code on GitHub</a>.</p>
   </div>
 </div></dialog>
 
+<dialog id="dlg-acct" style="width:min(480px,calc(100vw - 32px))"><div class="dlg">
+  <header><h2>Account</h2><button class="btn sm" id="acctclose" type="button">Close</button></header>
+  <div class="body" id="acctbody" style="display:flex;flex-direction:column;gap:12px;line-height:1.55"></div>
+</div></dialog>
+
 <div role="status" aria-live="polite"><div id="toast" class="toast" hidden><span></span><button type="button" hidden></button></div></div>
 <script src="vendor/fontawesome/brands.min.js"></script>
 <script src="vendor/fontawesome/solid.min.js"></script>
 <script src="vendor/fontawesome/regular.min.js"></script>
+<script src="vendor/supabase.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

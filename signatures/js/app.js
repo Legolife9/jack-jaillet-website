@@ -1500,35 +1500,68 @@ $('#copygmail').onclick = async () => {
   toast(r.embedded.length ? `Copied${who}. Gmail can't show the sample pictures; see the checks below the preview.` : `Copied${who}. In Gmail: Settings → Signature → paste.`);
 };
 
-/* ---------- library: everything is kept in this browser (localStorage); export/import moves it ---------- */
+/* ---------- library: in this browser (localStorage) for guests, in the account (Supabase) once signed in ---------- */
 let templates = [], companies = [], libReady = false, storageOK = true;
 let libCo = 'all', libQ = '', coForm = false, coDelArm = null, delArm = null, brandOpen = false;
 const LIBKEY = 'sigstudio.templates', COKEY = 'sigstudio.companies';
 const coById = id => companies.find(c => c.id === id);
+// the public project URL and publishable key are meant to be in the page; row-level security keeps each account's rows private
+const SUPABASE_URL = 'https://rizgpvzmazuvidvbpkoa.supabase.co', SUPABASE_KEY = 'sb_publishable_gi6G-cLhq6wYpiB3G7kEsg_G_aI0QKk';
+let sb = null, user = null;
+const cloudErr = e => new Error(/fetch|network/i.test(String(e && e.message)) ? 'you seem to be offline. Your changes will save when you reconnect and retry' : 'the account server said: ' + ((e && e.message) || 'unknown error'));
 async function libSave(id, name, st){
   const doc = { name, state:st, companyId:st.companyId || '', updatedAt:Date.now() };
   const size = JSON.stringify(doc).length;
   if (size > 400000) throw new Error(`this signature is ${Math.round(size / 1024)} KB, which is more than one signature should need`);
   const next = [Object.assign({ id }, doc)].concat(templates.filter(t => t.id !== id));
-  persist(LIBKEY, next); templates = next;
+  if (user){
+    const { error } = await sb.from('signatures').upsert({ user_id:user.id, id, name, company_id:doc.companyId, state:st, updated_at:doc.updatedAt });
+    if (error) throw cloudErr(error);
+  } else persist(LIBKEY, next);
+  templates = next;
   if (view === 'home') renderHome();
 }
 async function libDelete(id){
+  if (user){ const { error } = await sb.from('signatures').delete().eq('id', id); if (error) throw cloudErr(error); }
   templates = templates.filter(t => t.id !== id);
-  persist(LIBKEY, templates);
+  if (!user) persist(LIBKEY, templates);
   if (view === 'home') renderHome();
 }
 async function coSave(co){
   const { id, ...doc } = co; doc.updatedAt = Date.now();
   const next = companies.filter(c => c.id !== id).concat(Object.assign({ id }, doc)).sort((a, b) => a.name.localeCompare(b.name));
-  persist(COKEY, next); companies = next;
+  if (user){ const { error } = await sb.from('companies').upsert({ user_id:user.id, id, data:doc, updated_at:doc.updatedAt }); if (error) throw cloudErr(error); }
+  else persist(COKEY, next);
+  companies = next;
   if (view === 'home') renderHome();
   renderCompanySelect();
 }
 async function coDelete(id){
+  if (user){ const { error } = await sb.from('companies').delete().eq('id', id); if (error) throw cloudErr(error); }
   companies = companies.filter(c => c.id !== id);
-  persist(COKEY, companies);
+  if (!user) persist(COKEY, companies);
   renderHome(); renderCompanySelect();
+}
+// many rows at once (import, moving a browser library into an account)
+async function saveMany(sigs, cos){
+  if (user){
+    if (sigs.length){ const { error } = await sb.from('signatures').upsert(sigs.map(t => ({ user_id:user.id, id:t.id, name:t.name || '', company_id:t.companyId || '', state:t.state, updated_at:t.updatedAt || Date.now() }))); if (error) throw cloudErr(error); }
+    if (cos.length){ const { error } = await sb.from('companies').upsert(cos.map(c => { const { id, ...d } = c; return { user_id:user.id, id, data:d, updated_at:d.updatedAt || Date.now() }; })); if (error) throw cloudErr(error); }
+  }
+  const t2 = sigs.concat(templates.filter(t => !sigs.some(x => x.id === t.id))).sort((a, b) => b.updatedAt - a.updatedAt);
+  const c2 = cos.concat(companies.filter(c => !cos.some(x => x.id === c.id))).sort((a, b) => a.name.localeCompare(b.name));
+  if (!user){ persist(LIBKEY, t2); persist(COKEY, c2); }
+  templates = t2; companies = c2;
+}
+async function loadCloud(){
+  const [s1, s2] = await Promise.all([
+    sb.from('signatures').select('id,name,company_id,state,updated_at').order('updated_at', { ascending:false }),
+    sb.from('companies').select('id,data,updated_at')
+  ]);
+  if (s1.error) throw cloudErr(s1.error);
+  if (s2.error) throw cloudErr(s2.error);
+  templates = s1.data.map(r => ({ id:r.id, name:r.name, state:r.state, companyId:r.company_id, updatedAt:Number(r.updated_at) }));
+  companies = s2.data.map(r => Object.assign({}, r.data, { id:r.id, updatedAt:Number(r.updated_at) })).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 }
 
 // write one list to this browser's storage; a failure is reported, never swallowed
@@ -1552,10 +1585,8 @@ function importLibrary(file){
     if (!sigs.length && !cos.length){ toast("That file isn't a Signature Studio backup."); return; }
     try {
       // same ids are replaced by the backup's copy, everything else is added
-      const t2 = sigs.filter(t => t && t.id && t.state).concat(templates.filter(t => !sigs.some(x => x.id === t.id)));
-      const c2 = cos.filter(c => c && c.id && c.name).concat(companies.filter(c => !cos.some(x => x.id === c.id))).sort((a, b) => a.name.localeCompare(b.name));
-      persist(LIBKEY, t2); persist(COKEY, c2); templates = t2; companies = c2;
-      renderHome(); toast(`Imported ${sigs.length} signature${sigs.length === 1 ? '' : 's'} and ${cos.length} compan${cos.length === 1 ? 'y' : 'ies'}.`);
+      await saveMany(sigs.filter(t => t && t.id && t.state), cos.filter(c => c && c.id && c.name));
+      renderHome(); toast(`Imported ${sigs.length} signature${sigs.length === 1 ? '' : 's'} and ${cos.length} compan${cos.length === 1 ? 'y' : 'ies'}${user ? ' into your account' : ''}.`);
     } catch (e){ toast('Import failed: ' + e.message + '.'); }
   };
   fr.readAsText(file);
@@ -1642,7 +1673,8 @@ function renderHome(){
   if (!libReady) body = `<div class="empty">Loading your library…</div>`;
   else if (!templates.length) body = `<div class="sharecard"><h3>${G('fas','pen-nib')}Start your first signature</h3><p class="note">Pick a layout below. You can change everything about it, and it saves as you go.</p></div>${templateGallery('home')}`;
   else body = `<div class="sgrid">${q ? '' : newCard}${cards}</div>${list.length ? '' : `<div class="empty">${q ? 'No signatures match that search.' : co ? `No signatures for ${esc(co.name)} yet.` : 'Nothing here yet.'}</div>`}`;
-  $('#homemain').innerHTML = head + body;
+  const offer = user && offerMove ? `<div class="sharecard"><h3>${G('fas','cloud-arrow-up')}Move this browser's signatures into your account?</h3><p class="note">${offerMove} signature${offerMove === 1 ? ' is' : 's are'} saved in this browser from before you signed in. Moving them puts them in your account, on every device.</p><div class="row"><button class="btn primary sm" type="button" data-a="move-local">Move them</button><button class="btn sm" type="button" data-a="move-later">Not now</button></div></div>` : '';
+  $('#homemain').innerHTML = offer + head + body;
   wireRemoteImages($('#homemain'));
   const ni = $('#co-new'); if (ni){ ni.focus(); ni.onkeydown = e => { if (e.key === 'Enter') $('#cos [data-a="co-create"]').click(); if (e.key === 'Escape'){ coForm = false; renderHome(); } }; }
   wireBrandKit(co);
@@ -1723,6 +1755,8 @@ $('#homemain').addEventListener('click', async e => {
   if (act !== 'del') delArm = null;
   if (act !== 'co-del') coDelArm = null;
   if (act === 'new') openNew();
+  if (act === 'move-local') moveLocalIntoAccount();
+  if (act === 'move-later'){ offerMove = 0; renderHome(); toast('They stay in this browser. Sign out to see them again.'); }
   if (act === 'blank') createFrom(null, co ? co.id : '');
   if (act === 'open') openSig(t.id, t.state);
   if (act === 'dup'){ const st = clone(t.state); st.name = t.name + ' copy'; try { await libSave(uid() + uid(), st.name, st); toast('Duplicated.'); } catch (er){ toast(er.message); } }
@@ -1753,15 +1787,120 @@ function ago(t){ const s = (Date.now() - t) / 1000; if (s < 60) return 'just now
 
 // key-order-independent JSON, since the store may hand documents back with keys sorted
 const canon = o => JSON.stringify(o, (k, v) => v && typeof v === 'object' && !Array.isArray(v) ? Object.keys(v).sort().reduce((a, x) => (a[x] = v[x], a), {}) : v);
-function initLib(){
+function loadLocal(){
   templates = loadList(LIBKEY).sort((a, b) => b.updatedAt - a.updatedAt); companies = loadList(COKEY);
+}
+function initLib(){
+  loadLocal();
   try { localStorage.setItem('sigstudio.test', '1'); localStorage.removeItem('sigstudio.test'); } catch { storageOK = false; }
   libReady = true; renderHome();
   if (!storageOK) toast("This browser won't let the page save. Your work lasts only until you close the tab, so export a backup.");
+  initAuth();
 }
+
+/* ---------- accounts (optional): sign in with a one-time email code or link ---------- */
+let offerMove = 0; // browser signatures waiting to be moved into a just-signed-in account
+function initAuth(){
+  if (!window.supabase){ $('#acctbtn').hidden = true; return; } // library didn't load: guest mode only
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth:{ flowType:'pkce', detectSessionInUrl:true, persistSession:true, autoRefreshToken:true } });
+  sb.auth.onAuthStateChange((ev, session) => { setTimeout(() => setUser(session ? session.user : null), 0); });
+}
+async function setUser(u){
+  if ((u && u.id) === (user && user.id)) { renderAccount(); return; }
+  if (view === 'editor') await closeEditor();
+  user = u || null;
+  renderAccount();
+  if (!user){ loadLocal(); libReady = true; renderHome(); renderCompanySelect(); return; }
+  libReady = false; renderHome();
+  try { await loadCloud(); } catch (e){ toast('Could not load your account: ' + e.message + '.'); }
+  libReady = true;
+  const local = loadList(LIBKEY), moved = store.get('sigstudio.moved.' + user.id);
+  offerMove = local.length && !moved ? local.length : 0;
+  renderHome(); renderCompanySelect();
+  if (location.search.includes('code=')) history.replaceState(null, '', location.pathname);
+}
+async function moveLocalIntoAccount(){
+  const sigs = loadList(LIBKEY), cos = loadList(COKEY);
+  try {
+    await saveMany(sigs, cos);
+    store.set('sigstudio.moved.' + user.id, Date.now());
+    // they live in the account now; clearing them here stops them showing up again on sign-out
+    persist(LIBKEY, []); persist(COKEY, []);
+    offerMove = 0; renderHome(); renderCompanySelect();
+    toast(`Moved ${sigs.length} signature${sigs.length === 1 ? '' : 's'} into your account.`);
+  } catch (e){ toast('Could not move them: ' + e.message + '.'); }
+}
+function renderAccount(){
+  const b = $('#acctbtn'); if (!b) return;
+  b.textContent = user ? (user.email || 'Account') : 'Sign in';
+  b.title = user ? 'Your account' : 'Sign in to keep your signatures on every device';
+  b.classList.toggle('primary', false);
+}
+let authStep = 'email', authEmail = '', authBusy = false, delAcct = false, resendAt = 0;
+function openAccount(){ authStep = user ? 'account' : 'email'; delAcct = false; drawAccount(); $('#dlg-acct').showModal(); const i = $('#dlg-acct input'); if (i) i.focus(); }
+function drawAccount(){
+  const B = $('#acctbody');
+  if (authStep === 'account'){
+    B.innerHTML = `<p>Signed in as <b>${esc(user.email || '')}</b>. Your signatures and companies are saved to your account, so they're here on any device you sign in on.</p>
+      <div class="row" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" type="button" data-a="signout">Sign out</button></div>
+      <div class="sharecard" style="margin-top:6px"><h3>Delete account</h3><p class="note">Deletes your account and every signature and company in it, for good. Export a backup first if you might want them.</p>
+      ${delAcct ? `<div class="field"><span>Type DELETE to confirm</span><input id="delconfirm" type="text" autocomplete="off"></div><div class="row"><button class="btn danger" type="button" data-a="delacct-go">Delete my account</button><button class="btn" type="button" data-a="delacct-no">Cancel</button></div>` : `<div class="row"><button class="btn ghost danger" type="button" data-a="delacct">Delete account…</button></div>`}</div>`;
+    return;
+  }
+  if (authStep === 'email'){
+    B.innerHTML = `<p>Sign in to keep your signatures in your account and use them on any device. No password: we email you a sign-in code.</p>
+      <form id="authform" class="field" style="gap:8px"><span>Email</span><input id="authemail" type="email" autocomplete="email" required value="${esc(authEmail)}" placeholder="you@example.com">
+      <div class="row" style="display:flex;gap:8px"><button class="btn primary" type="submit"${authBusy ? ' disabled' : ''}>${authBusy ? 'Sending…' : 'Email me a code'}</button></div></form>
+      <p class="note">Signing in is optional. Without it, everything stays in this browser.</p>`;
+    return;
+  }
+  const wait = Math.max(0, Math.ceil((resendAt - Date.now()) / 1000));
+  B.innerHTML = `<p>We sent a sign-in email to <b>${esc(authEmail)}</b>. Enter the code from it, or open the link in it on this device.</p>
+    <form id="codeform" class="field" style="gap:8px"><span>Code</span><input id="authcode" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6,10}" maxlength="10" required placeholder="123456">
+    <div class="row" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" type="submit"${authBusy ? ' disabled' : ''}>${authBusy ? 'Checking…' : 'Sign in'}</button><button class="btn" type="button" data-a="resend"${wait ? ' disabled' : ''}>${wait ? `Resend in ${wait}s` : 'Resend email'}</button><button class="btn ghost" type="button" data-a="otheremail">Use a different email</button></div></form>
+    <p class="note">Can't find it? Check spam. The email comes from Supabase, the service that runs sign-in.</p>`;
+  if (wait) setTimeout(() => { if (authStep === 'code' && $('#dlg-acct').open) drawAccount(); }, 1000);
+}
+async function sendCode(){
+  authBusy = true; drawAccount();
+  const { error } = await sb.auth.signInWithOtp({ email:authEmail, options:{ shouldCreateUser:true, emailRedirectTo:location.origin + location.pathname } });
+  authBusy = false;
+  if (error){ authStep = 'email'; drawAccount(); toast(/rate|many|seconds/i.test(error.message) ? 'Too many emails just now. Wait a minute, then try again.' : 'Could not send the email: ' + error.message); return; }
+  authStep = 'code'; resendAt = Date.now() + 60000; drawAccount(); $('#authcode').focus();
+}
+$('#acctbody').addEventListener('submit', async e => {
+  e.preventDefault();
+  if (e.target.id === 'authform'){ authEmail = $('#authemail').value.trim(); if (authEmail) sendCode(); }
+  if (e.target.id === 'codeform'){
+    const token = $('#authcode').value.trim(); if (!token) return;
+    authBusy = true; drawAccount();
+    const { error } = await sb.auth.verifyOtp({ email:authEmail, token, type:'email' });
+    authBusy = false;
+    if (error){ drawAccount(); $('#authcode').value = token; toast("That code didn't work. Check it, or resend a new one."); return; }
+    $('#dlg-acct').close(); toast('Signed in.');
+  }
+});
+$('#acctbody').addEventListener('click', async e => {
+  const a = e.target.closest('[data-a]'); if (!a) return;
+  const act = a.dataset.a;
+  if (act === 'resend') sendCode();
+  if (act === 'otheremail'){ authStep = 'email'; drawAccount(); $('#authemail').focus(); }
+  if (act === 'signout'){ await saveNow(); await sb.auth.signOut(); $('#dlg-acct').close(); toast('Signed out. Your signatures stay in your account.'); }
+  if (act === 'delacct'){ delAcct = true; drawAccount(); $('#delconfirm').focus(); }
+  if (act === 'delacct-no'){ delAcct = false; drawAccount(); }
+  if (act === 'delacct-go'){
+    if ($('#delconfirm').value.trim() !== 'DELETE'){ toast('Type DELETE to confirm.'); return; }
+    const { error } = await sb.rpc('delete_my_account');
+    if (error){ toast('Could not delete the account: ' + error.message); return; }
+    await sb.auth.signOut(); $('#dlg-acct').close(); toast('Your account and everything in it is deleted.');
+  }
+});
+$('#acctbtn').onclick = openAccount;
+$('#acctclose').onclick = () => $('#dlg-acct').close();
+
 // another tab changed the library: pick it up, and refresh the open signature if nothing is waiting to save here
 addEventListener('storage', e => {
-  if (e.key !== LIBKEY && e.key !== COKEY) return;
+  if (user || (e.key !== LIBKEY && e.key !== COKEY)) return;
   templates = loadList(LIBKEY).sort((a, b) => b.updatedAt - a.updatedAt); companies = loadList(COKEY);
   const mine = view === 'editor' && sigId && templates.find(t => t.id === sigId);
   if (mine && saveStatus === 'saved' && !saving){ const remote = migrate(mine.state); if (canon(remote) !== canon(state)){ state = remote; lastSnap = snapshot(); if (sel !== 'style' && !find(sel)) sel = 'style'; renderAll(); toast('Updated with changes from another tab.'); } }
