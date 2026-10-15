@@ -22,21 +22,22 @@
 
   var loaded = false;
   function load() {
-    if (loaded) return;
+    // Said no, then yes, without leaving the page: GA is already here, so just switch it back on.
+    if (loaded) { gtag("consent", "update", { analytics_storage: "granted" }); gtag("event", "page_view"); return; }
     loaded = true;
     window.dataLayer = window.dataLayer || [];
     window.gtag = function () { window.dataLayer.push(arguments); };
     gtag("consent", "default", { analytics_storage: "granted", ad_storage: "denied", ad_user_data: "denied", ad_personalization: "denied" });
     gtag("js", new Date());
     // Query strings are dropped (campaign utm_ tags kept) so private Signature Studio
-    // links (?p=...) never reach Google, from this page or as a referrer.
+    // links (?p=...) never reach Google, from this page or as a referrer. "set" makes
+    // every event on the page use the cleaned addresses, not just the first page view.
     var utm = location.search.slice(1).split("&").filter(function (kv) { return /^utm_/.test(kv); }).join("&");
-    gtag("config", GA_ID, {
+    gtag("set", {
       page_location: location.origin + location.pathname + (utm ? "?" + utm : ""),
-      page_referrer: document.referrer.split(/[?#]/)[0],
-      allow_google_signals: false,
-      allow_ad_personalization_signals: false
+      page_referrer: document.referrer.split(/[?#]/)[0]
     });
+    gtag("config", GA_ID, { allow_google_signals: false, allow_ad_personalization_signals: false });
     var s = document.createElement("script");
     s.async = true;
     s.src = "https://www.googletagmanager.com/gtag/js?id=" + GA_ID;
