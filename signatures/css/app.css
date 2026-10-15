@@ -297,3 +297,12 @@ button.brand:hover{background:var(--panel2)}
 .memrow .grow{flex:1 1 260px;min-width:0;overflow-wrap:anywhere}
 .memperms{display:flex;gap:4px 14px;flex-wrap:wrap;margin-top:4px}
 .sharepanel select,.sharepanel input[type=email]{width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--panel2)}
+
+/* a person's own signature page */
+.app:not([data-view="person"]) .person-only,.app[data-view="person"] .home-only,.app[data-view="person"] .ed-only{display:none!important}
+.personview{overflow:auto;display:flex;justify-content:center;padding:28px 16px 48px}
+.personview .pwrap{width:100%;max-width:760px}
+.ptitle{font-size:22px;margin:0;text-wrap:balance}
+.personview .mail{max-width:none}
+.personview .field input{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:var(--panel2)}
+.chkline code{font-size:11px;overflow-wrap:anywhere}

@@ -6,6 +6,7 @@ A free, open-source email signature builder for people and teams. Live at **[jac
 - Make it a team signature: use fields like `{{name}}` and `{{title}}`, then paste your staff list from a spreadsheet.
 - Copy it into Gmail, Outlook, or Apple Mail, or download the HTML.
 - Keep work grouped by company, each with its own brand kit (logo, colors, font).
+- Give each person on a team a private link to their own signature, with copy buttons and setup steps (and, if you allow it, a form to update their own details). No account needed for them.
 - Share a company with other people by email, choosing what each can do: see employees, edit employees, edit the design, edit the brand kit.
 
 ## Privacy

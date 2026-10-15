@@ -18,6 +18,7 @@
 <div class="app" id="app" data-view="home">
   <header class="top">
     <button type="button" class="brand" id="go-home" title="All signatures"><span class="mark" id="brandmark"></span>Signature Studio</button>
+    <div class="hbar person-only"><span class="spacer"></span><a class="btn sm ghost" href="./">Make your own signature</a></div>
     <div class="hbar home-only">
       <input id="homeq" class="search top-search" type="search" placeholder="Search signatures, companies or people" aria-label="Search signatures">
       <span class="spacer"></span>
@@ -49,6 +50,8 @@
     <aside class="cos" id="cos" aria-label="Companies"></aside>
     <section class="homemain" id="homemain"></section>
   </main>
+
+  <main id="view-person" class="personview" hidden><div class="pwrap" id="personbody"></div></main>
 
   <main id="view-editor" hidden>
     <div id="step-design" class="work" role="tabpanel" aria-labelledby="nav-design">

@@ -728,9 +728,16 @@ let fitT;
 addEventListener('resize', () => { clearTimeout(fitT); fitT = setTimeout(() => fitThumbs(document), 150); });
 function wireRemoteImages(root){
   root.querySelectorAll('.rimg img').forEach(img => {
-    const swap = () => { const sp = img.parentElement; if (sp && sp.dataset.ph) sp.outerHTML = sp.dataset.ph; };
+    const swap = () => { const sp = img.parentElement; if (sp && sp.dataset.ph){ if (root.id === 'sig') noteBroken(img.getAttribute('src')); sp.outerHTML = sp.dataset.ph; } };
     if (img.complete && img.naturalWidth === 0) swap(); else img.addEventListener('error', swap, { once:true });
   });
+}
+// an image link that didn't load gets its own warning under the preview
+function noteBroken(src){
+  const box = $('#checks'); if (!box || [...box.querySelectorAll('[data-broken]')].some(x => x.dataset.broken === src)) return;
+  const short = src.length > 70 ? src.slice(0, 67) + '…' : src;
+  box.insertAdjacentHTML('afterbegin', `<div class="chkline warn" data-broken="${esc(src)}"><span class="dot"></span><span>An image link didn't load: <code>${esc(short)}</code>. Check the address, and that the image is public (not behind a login).</span></div>`);
+  box.querySelectorAll('.chkline.ok').forEach(x => x.remove());
 }
 function markSel(){ document.querySelectorAll('#sig [data-bid],#sig [data-cid],#sig [data-rid]').forEach(el => el.classList.toggle('on', (el.dataset.bid || el.dataset.cid || el.dataset.rid) === sel)); }
 // double-click text in the preview to jump straight to editing it
@@ -1480,6 +1487,22 @@ async function copyText(t, ta){
 /* ---------- step 3: share (every way out, in one place) ---------- */
 const dlOK = true;
 let sharePid = null, showCode = false;
+// private per-person links: only for my own saved signatures while signed in
+const validEmail = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v || '').trim());
+const linksOK = () => !!(user && sb && sigId && !(curSig() || {}).sh);
+async function personLinks(ps){
+  await saveNow();
+  const { data, error } = await sb.from('person_links')
+    .upsert(ps.map(p => ({ owner:user.id, sig_id:sigId, person_id:p.id, can_edit:!!state.team.selfEdit })), { onConflict:'owner,sig_id,person_id' })
+    .select('person_id,token');
+  if (error) throw cloudErr(error);
+  return ps.map(p => toolUrl() + '?p=' + (data.find(d => d.person_id === p.id) || {}).token);
+}
+function mailtoFor(p, url){
+  const first = (p.values.name || '').trim().split(/\s+/)[0] || 'there';
+  const body = `Hi ${first},\n\nHere's your email signature: ${url}\n\nOpen the link, click "Copy for Gmail" (or Outlook), then paste it into your email signature settings. The page has step-by-step instructions.${state.team.selfEdit ? ' You can also update your own details there.' : ''}\n`;
+  return `mailto:${encodeURIComponent(p.values.email.trim())}?subject=${encodeURIComponent('Your email signature')}&body=${encodeURIComponent(body)}`;
+}
 const STEPS = {
   gmail:['Click <b>Copy for Gmail</b>.','In Gmail open <b>Settings → See all settings → General</b>.','Under <b>Signature</b> click <b>Create new</b>, name it, click in the box and paste (Ctrl+V or ⌘V).','Pick it under <b>Signature defaults</b>, then click <b>Save Changes</b> at the bottom.'],
   outlook:['Click <b>Copy for Outlook / Apple Mail</b>.','<b>Outlook:</b> Settings → Mail → Compose and reply (desktop: File → Options → Mail → Signatures), add a signature and paste.','<b>Apple Mail:</b> Settings → Signatures, add one, paste, and untick "Always match my default message font".']
@@ -1503,14 +1526,24 @@ function renderShare(){
       <p class="note">Icons are packed into the signature itself. Images come from their links, same as Gmail.</p>
       <div class="row"><button class="btn" data-a="copy-embed" type="button">Copy for Outlook / Apple Mail</button>${dlOK ? '<button class="btn" data-a="dl" type="button">Download .html</button>' : ''}</div></div>
     ${ps.length ? `<div class="sharecard"><h3>${G('fas','users')}Everyone at once</h3>
-      <div class="teamlist">${ps.map((p, i) => `<div><span class="grow">${esc(personLabel(p, i))}${p.values.email ? ` <span class="note">${esc(p.values.email)}</span>` : ''}</span><button class="btn sm" data-a="copy-p" data-pid="${p.id}" type="button">Copy</button></div>`).join('')}</div>
+      ${linksOK() ? `<p class="note">Give each person their own private link. It shows only their signature, with a Copy button and setup steps, and needs no account.</p>
+      <label class="chk"><input type="checkbox" id="selfedit"${state.team.selfEdit ? ' checked' : ''}>Let people update their own details (title, phone, photo link…) from their link</label>` : `<p class="note">Sign in to give each person a private link to their own signature.</p>`}
+      <div class="teamlist">${ps.map((p, i) => `<div><span class="grow">${esc(personLabel(p, i))}${p.values.email ? ` <span class="note">${esc(p.values.email)}</span>` : ''}</span>${linksOK() ? `<button class="btn sm" data-a="plink" data-pid="${p.id}" type="button">Copy their link</button>${validEmail(p.values.email) ? `<button class="btn sm ghost" data-a="pmail" data-pid="${p.id}" type="button">Email it</button>` : ''}` : ''}<button class="btn sm" data-a="copy-p" data-pid="${p.id}" type="button">Copy signature</button></div>`).join('')}</div>
+      ${linksOK() ? '<div class="row"><button class="btn sm" data-a="plink-all" type="button">Copy everyone\'s links</button></div>' : ''}
       <div class="row">${dlOK ? '<button class="btn sm" data-a="dlteam" type="button">Download all signatures</button><button class="btn sm" data-a="csv" type="button">Download CSV</button>' : ''}</div></div>` : ''}
     <div class="sharecard"><h3>${G('fas','code')}HTML and plain text</h3>
       <div class="row"><button class="btn sm" data-a="copy-html" type="button">Copy HTML code</button><button class="btn sm" data-a="copy-text" type="button">Copy plain text</button><button class="btn sm ghost" data-a="code" type="button">${showCode ? 'Hide code' : 'Show code'}</button></div>
       ${showCode ? `<textarea class="code" id="xcode" readonly aria-label="Signature HTML">${esc(g.html)}</textarea>` : ''}</div>
   </div>`;
 }
-$('#share').addEventListener('change', e => { if (e.target.id === 'sharep'){ sharePid = e.target.value; state.team.active = sharePid; changed(); } });
+$('#share').addEventListener('change', async e => {
+  if (e.target.id === 'sharep'){ sharePid = e.target.value; state.team.active = sharePid; changed(); }
+  if (e.target.id === 'selfedit'){
+    state.team.selfEdit = e.target.checked; changed();
+    const { error } = await sb.from('person_links').update({ can_edit:state.team.selfEdit }).eq('sig_id', sigId);
+    toast(error ? 'Could not update existing links: ' + error.message : state.team.selfEdit ? 'People can now update their own details from their link.' : 'Links are now view only.');
+  }
+});
 $('#share').addEventListener('click', async e => {
   const a = e.target.closest('[data-a]'); if (!a) return;
   const act = a.dataset.a, pid = sharePid || undefined;
@@ -1525,6 +1558,21 @@ $('#share').addEventListener('click', async e => {
   if (act === 'dl'){ const p = personFor(state, pid); render(state, 'preview'); saveFile(slug((p && p.values.name) || state.name || 'signature') + '-signature.html', `<!doctype html><html><head><meta charset="utf-8"><title>${esc(state.name)}</title></head><body>${render(state, 'embed', pid).html}</body></html>`); }
   if (act === 'dlteam') downloadTeam();
   if (act === 'csv') downloadCsv();
+  if (act === 'plink' || act === 'pmail'){
+    const p = state.team.people.find(x => x.id === a.dataset.pid);
+    try {
+      const [u] = await personLinks([p]);
+      if (act === 'pmail'){ location.href = mailtoFor(p, u); return; }
+      const ok = await copyText(u); toast(ok ? `Copied ${personLabel(p, 0)}'s private link.` : u);
+    } catch (er){ toast('Could not make the link: ' + er.message); }
+  }
+  if (act === 'plink-all'){
+    try {
+      const ps = state.team.people, urls = await personLinks(ps);
+      const text = ps.map((p, i) => `${personLabel(p, i)}${p.values.email ? ' <' + p.values.email + '>' : ''}: ${urls[i]}`).join('\n');
+      const ok = await copyText(text); toast(ok ? `Copied ${ps.length} links, one per line.` : 'Copy was blocked.');
+    } catch (er){ toast('Could not make the links: ' + er.message); }
+  }
 });
 $('#copygmail').onclick = async () => {
   const r = render(state, 'gmail');
@@ -2091,11 +2139,64 @@ $('#undo').onclick = undo; $('#redo').onclick = redo;
 // don't lose a pending save when the tab closes
 addEventListener('pagehide', () => { if (saveStatus !== 'saved') saveNow(); });
 
+/* ---------- a person's own signature page (?p=link), no account needed ---------- */
+let personData = null, personToken = '';
+async function initPerson(token){
+  personToken = token;
+  $('#app').dataset.view = 'person';
+  $('#view-home').hidden = true; $('#view-editor').hidden = true; $('#view-person').hidden = false;
+  document.title = 'Your email signature | Signature Studio';
+  const B = $('#personbody');
+  B.innerHTML = '<p class="note">Loading your signature…</p>';
+  if (!window.supabase){ B.innerHTML = '<div class="sharecard"><h3>Couldn\'t load</h3><p class="note">This page needs an internet connection to show your signature. Reload to try again.</p></div>'; return; }
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth:{ persistSession:false, detectSessionInUrl:false, autoRefreshToken:false } });
+  const { data, error } = await sb.rpc('person_signature', { p_token:token });
+  if (error){ B.innerHTML = `<div class="sharecard"><h3>This link isn't working</h3><p class="note">${esc(error.message)}</p></div>`; return; }
+  personData = data; drawPerson();
+}
+function drawPerson(){
+  const st = migrate(personData.state), p = st.team.people[0], pid = p.id, fields = st.team.fields;
+  const g = render(st, 'gmail', pid), sample = g.embedded.length;
+  const first = (p.values.name || '').trim().split(/\s+/)[0];
+  $('#personbody').innerHTML = `
+    <h1 class="ptitle">${first ? esc(first) + ', here\'s' : 'Here\'s'} your email signature</h1>
+    <p class="note">From <b>${esc(personData.name || 'your team')}</b>. Copy it, then paste it into your email settings.</p>
+    <div class="mail"><div class="mailbody"><div class="dash">--</div><div class="sigwrap" id="psig">${render(st, 'preview', pid).html}</div></div></div>
+    ${sample ? chkHtml([['warn', 'Some pictures in this signature are samples that email apps can\'t show. Ask whoever sent this link to replace them.']]) : ''}
+    <div class="sharecard"><h3>${G('fab','google')}Gmail</h3><ol class="steps note">${STEPS.gmail.map(x => `<li>${x}</li>`).join('')}</ol>
+      <div class="row"><button class="btn primary" type="button" data-a="p-gmail">Copy for Gmail</button></div></div>
+    <div class="sharecard"><h3>${G('fas','envelope-open-text')}Outlook and Apple Mail</h3><ol class="steps note">${STEPS.outlook.map(x => `<li>${x}</li>`).join('')}</ol>
+      <div class="row"><button class="btn" type="button" data-a="p-embed">Copy for Outlook / Apple Mail</button></div></div>
+    ${personData.can_edit ? `<form class="sharecard" id="pform"><h3>${G('fas','user-pen')}Your details</h3><p class="note">Fix anything that's out of date. Saving updates your signature for everyone who manages it.</p>
+      ${fields.map(f => `<div class="field"><span>${esc(f.label)}</span><input type="text" name="${esc(f.key)}" value="${esc(p.values[f.key] || '')}"${f.type === 'image' ? ' placeholder="https://… link to your photo"' : ''}></div>`).join('')}
+      <div class="row"><button class="btn primary" type="submit">Save my details</button></div></form>` : ''}
+    <p class="note" style="margin-top:8px">Made with <a href="./">Signature Studio</a>, a free email signature builder.</p>`;
+  wireRemoteImages($('#psig'));
+}
+$('#personbody').addEventListener('click', async e => {
+  const a = e.target.closest('[data-a]'); if (!a || !personData) return;
+  const st = migrate(personData.state), pid = st.team.people[0].id;
+  if (a.dataset.a === 'p-gmail'){ const ok = await copyRich(render(st, 'gmail', pid).html, plainText(st, pid)); toast(ok ? 'Copied. Now paste it into Gmail\'s signature settings.' : 'Copy was blocked. Select the signature above and copy it.'); }
+  if (a.dataset.a === 'p-embed'){ render(st, 'preview', pid); const ok = await copyRich(render(st, 'embed', pid).html, plainText(st, pid)); toast(ok ? 'Copied. Now paste it into your signature settings.' : 'Copy was blocked.'); }
+});
+$('#personbody').addEventListener('submit', async e => {
+  if (e.target.id !== 'pform') return;
+  e.preventDefault();
+  const values = Object.fromEntries(new FormData(e.target).entries());
+  const btn = e.target.querySelector('button[type=submit]'); btn.disabled = true; btn.textContent = 'Saving…';
+  const { error } = await sb.rpc('person_update', { p_token:personToken, p_values:values });
+  if (error){ btn.disabled = false; btn.textContent = 'Save my details'; toast(error.message); return; }
+  const r = await sb.rpc('person_signature', { p_token:personToken });
+  if (!r.error){ personData = r.data; drawPerson(); }
+  toast('Saved. Your signature is up to date.');
+});
+
 /* ---------- boot ---------- */
 $('#brandmark').innerHTML = G('fas', 'signature');
 $('#back').innerHTML = G('fas', 'arrow-left') + ' All signatures';
-showView('home');
-initLib();
+const PTOKEN = new URLSearchParams(location.search).get('p');
+if (PTOKEN) initPerson(PTOKEN);
+else { showView('home'); initLib(); }
 $('#exportlib').onclick = exportLibrary;
 $('#importlib').onchange = e => { const f = e.target.files[0]; if (f) importLibrary(f); e.target.value = ''; };
 $('#aboutbtn').onclick = () => $('#dlg-about').showModal();
