@@ -245,7 +245,7 @@ function presets(){
     /* ---------- Business ---------- */
     { key:'split', cat:'Business', name:'Photo + details', state:newState('Photo + details', {}, [
       mkRow([[photo(mo, 'MO', '#dfe7fd', '#2453e6', { align:'center', pb:0 })],
-             [T('Name', mo.name, { size:19, weight:700, pb:2 }), T('Title', 'Program Coordinator', { size:13, color:'#5b6470' }), T('Company', 'Fernhill Studio', { size:13, weight:700, color:'#2453e6', pb:10 }),
+             [T('Name', mo.name, { size:19, weight:700, pb:2, tag:'she/her', tagPos:'after' }), T('Title', 'Program Coordinator', { size:13, color:'#5b6470' }), T('Company', 'Fernhill Studio', { size:13, weight:700, color:'#2453e6', pb:10 }),
               mk('contact', { items:contacts(mo), pb:10 }), mk('social', { items:socials(), size:12, pb:10 }),
               btn('Book a meeting', I('far','calendar'), 'https://calendly.com', '#2453e6', { padX:14 })]], { divW:2, divC:'#2453e6' }),
       mkRow([fine('This message may contain confidential information intended only for the recipient.')], { pt:14 })
@@ -286,20 +286,20 @@ function presets(){
 
     /* ---------- Creative ---------- */
     { key:'creative', cat:'Creative', name:'Creative portfolio', state:newState('Creative portfolio', { font:FONTS[4][0], color:'#16161d', palette:['#e0245e','#16161d','#6e6e7a','#fde7ef','#f5f5f7'] }, [
-      mkRow([[T('Name', 'THEO LINDQVIST', { size:22, weight:800, spacing:3, color:'#16161d' }),
+      mkRow([[T('Name', 'THEO LINDQVIST', { size:22, weight:800, spacing:3, color:'#16161d', tag:'he/him', tagPos:'after', tagColor:'#e0245e' }),
               T('Title', 'Brand & motion designer', { size:13, color:'#e0245e', weight:600, pb:10 }),
               mk('contact', { items:plain(contacts(th, 2)), layout:'inline', sep:'/', size:12, color:'#6e6e7a', pb:12 }),
               mk('social', { items:socials('dribbble','behance','instagram','vimeo-v'), shape:'none', color:'#16161d', size:17, gap:14, pb:12 }),
               btn('See my work', I('fas','arrow-right'), 'https://' + th.web, '#16161d', { iconPos:'right', radius:999, padX:18 })]])
     ])},
     { key:'right', cat:'Creative', name:'Photo on the right', state:newState('Photo on the right', { font:FONTS[4][0] }, [
-      mkRow([[T('Name', mo.name, { size:19, weight:700, pb:2 }), T('Title', 'Program Coordinator', { size:13, color:'#5b6470' }), T('Company', 'Fernhill Studio', { size:13, weight:700, color:'#2453e6', pb:8 }),
+      mkRow([[T('Name', mo.name, { size:19, weight:700, pb:2, tag:'she/her', tagPos:'after' }), T('Title', 'Program Coordinator', { size:13, color:'#5b6470' }), T('Company', 'Fernhill Studio', { size:13, weight:700, color:'#2453e6', pb:8 }),
               mk('contact', { items:contacts(mo), iconShape:'circle', iconColor:'#ffffff', iconBg:'#2453e6', iconSize:10, iconPad:5, pb:0 })],
              [photo(mo, 'MO', '#dfe7fd', '#2453e6', { shape:'rounded', radius:14, width:110, crop:{ aspect:'4:5', zoom:1, x:50, y:30 }, pb:0 })]], { gap:24 })
     ])},
     { key:'dark', cat:'Creative', name:'Dark card', state:newState('Dark card', { bgOn:true, bg:'#111827', color:'#e5e7eb', link:'#6ee7b7', pad:20, br:14, palette:['#34d399','#111827','#9ca3af','#1f2937','#e5e7eb'] }, [
       mkRow([[photo(kw, 'KW', '#1f2937', '#34d399', { width:76, pb:0 })],
-             [T('Name', kw.name, { size:18, weight:700, color:'#f9fafb', pb:1 }), T('Title', 'Founding Engineer, Tidepool', { size:13, color:'#9ca3af', pb:10 }),
+             [T('Name', kw.name, { size:18, weight:700, color:'#f9fafb', pb:1, tag:'he/him', tagPos:'after', tagColor:'#9ca3af' }), T('Title', 'Founding Engineer, Tidepool', { size:13, color:'#9ca3af', pb:10 }),
               mk('contact', { items:contacts(kw, 2), size:12, iconSize:11, iconColor:'#34d399', color:'#e5e7eb', pb:10 }),
               mk('social', { items:socials('github','linkedin-in','x-twitter'), shape:'rounded', bg:'#1f2937', color:'#34d399', size:13, pad:7, pb:0 })]], { gap:18 })
     ])},
@@ -309,7 +309,7 @@ function presets(){
     ])},
     { key:'creator', cat:'Creative', name:'Podcast & creator', state:newState('Podcast & creator', { palette:['#7c3aed','#1e1b2e','#6b6880','#ede9fe','#f6f5fb'] }, [
       mkRow([[photo(nj, 'NJ', '#ede9fe', '#7c3aed', { width:80, shape:'rounded', radius:16, pb:0 })],
-             [T('Name', nj.name, { size:17, weight:700, color:'#1e1b2e', pb:1 }), T('Title', 'Host of *The Long Commute*', { size:13, color:'#6b6880', pb:8 }),
+             [T('Name', nj.name, { size:17, weight:700, color:'#1e1b2e', pb:1, tag:'she/they', tagPos:'after', tagColor:'#7c3aed' }), T('Title', 'Host of *The Long Commute*', { size:13, color:'#6b6880', pb:8 }),
               mk('social', { items:socials('spotify','apple','youtube','tiktok'), shape:'circle', bg:'#7c3aed', size:12, pad:7, pb:0 })]], { gap:16 }),
       mkRow([[btn('New episode every Tuesday', I('fas','headphones'), 'https://' + nj.web, '#ede9fe', { color:'#5b21b6', radius:8, padY:8 })]], { pt:12 })
     ])},
@@ -325,7 +325,7 @@ function presets(){
     ])},
     { key:'clinic', cat:'Industry', name:'Healthcare', state:newState('Healthcare', { palette:['#0e7490','#0f2a33','#5a7079','#e0f2f7','#f3f8fa'] }, [
       mkRow([[photo(ab, 'AB', '#e0f2f7', '#0e7490', { width:84, pb:0 })],
-             [T('Name', `${ab.name}, MD`, { size:17, weight:700, color:'#0f2a33', pb:1 }), T('Title', 'Family Medicine, Brightwater Family Clinic', { size:13, color:'#5a7079', pb:8 }),
+             [T('Name', `${ab.name}, MD`, { size:17, weight:700, color:'#0f2a33', pb:1, tag:'she/her', tagPos:'after' }), T('Title', 'Family Medicine, Brightwater Family Clinic', { size:13, color:'#5a7079', pb:8 }),
               mk('contact', { items:contacts(ab, 4), iconShape:'circle', iconBg:'#e0f2f7', iconColor:'#0e7490', iconSize:10, iconPad:5, size:12, pb:10 }),
               btn('Book an appointment', I('far','calendar-plus'), 'https://' + ab.web, '#0e7490', { radius:20 })]], { gap:18 }),
       mkRow([fine('This email may contain protected health information. If you received it in error, please delete it and tell the sender.')], { pt:12 })
@@ -337,7 +337,7 @@ function presets(){
     ])},
     { key:'nonprofit', cat:'Industry', name:'Nonprofit', state:newState('Nonprofit', { palette:['#c2410c','#2b1d16','#6b5d55','#ffedd5','#faf6f3'] }, [
       mkRow([[mk('image', { label:'Logo', sample:'l|RIVERBEND|#c2410c', width:140, pb:8 }),
-              T('Name', lb.name, { size:16, weight:700, color:'#2b1d16', pb:1 }), T('Title', 'Volunteer Coordinator, Riverbend Food Share', { size:13, color:'#6b5d55', pb:8 }),
+              T('Name', lb.name, { size:16, weight:700, color:'#2b1d16', pb:1, tag:'he/him', tagPos:'after' }), T('Title', 'Volunteer Coordinator, Riverbend Food Share', { size:13, color:'#6b5d55', pb:8 }),
               mk('contact', { items:contacts(lb, 3), layout:'inline', size:12, iconSize:11, iconColor:'#c2410c', pb:12 }),
               btn('Donate', I('fas','heart'), 'https://' + lb.web + '/give', '#c2410c', { radius:6 }),
               btn('Volunteer', I('fas','hand-holding-heart'), 'https://' + lb.web + '/volunteer', '#ffffff', { inline:true, color:'#c2410c', borderColor:'#c2410c', borderW:1, radius:6 })]])
@@ -345,7 +345,7 @@ function presets(){
 
     /* ---------- Personal ---------- */
     { key:'student', cat:'Personal', name:'Student', state:newState('Student', { palette:['#1d4ed8','#172033','#5b6475','#e1e9fd','#f3f5f9'] }, [
-      mkRow([[T('Name', `${pn.name} (she/her)`, { size:16, weight:700, color:'#172033', pb:1 }),
+      mkRow([[T('Name', pn.name, { size:16, weight:700, color:'#172033', pb:1, tag:'she/her', tagPos:'after' }),
               T('Title', 'B.S. Computer Science, Class of 2027', { size:13, color:'#5b6475' }),
               T('School', 'Westbrook University', { size:13, weight:600, color:'#1d4ed8', pb:8 }),
               mk('contact', { items:[{ icon:I('fas','envelope'), text:pn.email, link:'mailto:' + pn.email }, { icon:I('fab','linkedin'), text:pn.web, link:'https://' + pn.web }], size:12, iconSize:11, iconColor:'#1d4ed8', pb:0 })]])
