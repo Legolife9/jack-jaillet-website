@@ -32,6 +32,7 @@
       <input id="tname" class="tname" type="text" aria-label="Signature name" placeholder="Name this signature">
       <select id="tcompany" aria-label="Company" title="Which company this signature belongs to" style="padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--panel2);max-width:180px"></select>
       <button id="savestate" class="savestate" type="button" aria-live="polite"></button>
+      <span id="shbanner" class="shbanner" hidden></span>
       <button id="undo" class="btn ghost sm" type="button" title="Undo (Ctrl+Z)">Undo</button>
       <button id="redo" class="btn ghost sm" type="button" title="Redo (Ctrl+Y)">Redo</button>
       <span class="spacer"></span>
@@ -128,7 +129,7 @@
   <div class="body" style="display:flex;flex-direction:column;gap:12px;line-height:1.55">
     <p>A free, open-source email signature builder by <a href="https://jackjaillet.com" target="_blank" rel="noopener">Jack Jaillet</a>. Design a signature, fill it in for a whole team, and copy it into Gmail, Outlook or Apple Mail.</p>
     <p><b>Privacy.</b> You don't need an account. Without one, everything you make stays in this browser and nothing you type is sent to a server. Clearing your browser data deletes it, so use <b>Export backup</b> to keep a copy.</p>
-    <p><b>If you sign in,</b> your signatures and companies are saved to your account so you can use them on any device. They're stored with <a href="https://supabase.com" target="_blank" rel="noopener">Supabase</a> (servers in the US), and only you can see them. Your email address is used only to sign you in. You can delete your account and everything in it at any time from <b>Account</b>. This page has no analytics or tracking either way.</p>
+    <p><b>If you sign in,</b> your signatures and companies are saved to your account so you can use them on any device. They're stored with <a href="https://supabase.com" target="_blank" rel="noopener">Supabase</a> (servers in the US), and only you can see them. Your email address is used only to sign you in. You can delete your account and everything in it at any time from <b>Account</b>. If you share a company, the people you add can see its signatures (and its employee details, if you allow that), and they see your email address as the owner. This page has no analytics or tracking either way.</p>
     <p><b>Images and icons.</b> Images are used by link and never uploaded here. In a finished signature, icons are loaded from <a href="https://iconify.design" target="_blank" rel="noopener">Iconify</a> through <a href="https://images.weserv.nl" target="_blank" rel="noopener">images.weserv.nl</a>, and cropped photos through images.weserv.nl. When someone opens your email, their mail app fetches those images from those services and your image hosts, which can see the request.</p>
     <p><b>Fair use.</b> Only make signatures for yourself or for organizations you're allowed to represent.</p>
     <p><b>Open source.</b> MIT license. Icons by <a href="https://fontawesome.com" target="_blank" rel="noopener">Font Awesome Free</a> (CC BY 4.0). IBM Plex fonts (SIL Open Font License). <a href="https://github.com/Legolife9/jack-jaillet-website" target="_blank" rel="noopener">View the code on GitHub</a>.</p>

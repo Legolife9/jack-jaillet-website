@@ -602,6 +602,8 @@ async function saveNow(){
   if (!state || !sigId) return;
   if (saving) await saving; // one write at a time per signature
   if (saveStatus === 'saved') return;
+  const p = permsOf(curSig());
+  if (!p.edit_design && !p.edit_people){ saveStatus = 'saved'; updateHead(); return; } // view only: nothing to save
   const id = sigId, snap = snapshot(), st = JSON.parse(snap);
   saveStatus = 'saving'; updateHead();
   saving = libSave(id, st.name || 'Untitled signature', st)
@@ -636,7 +638,18 @@ function updateHead(){
 }
 $('#savestate').onclick = () => { if (saveStatus === 'error'){ saveStatus = 'pending'; saveNow(); } };
 $('#tname').oninput = () => { state.name = $('#tname').value; queueSave(); };
+function applyPerms(){
+  const t = curSig(), p = permsOf(t), V = $('#view-editor');
+  V.classList.toggle('ro-design', !p.edit_design);
+  $('#tname').readOnly = !p.edit_design;
+  $('#nav-people').hidden = !p.view_people;
+  if (!p.view_people && step === 'people') setStep('design');
+  const b = $('#shbanner');
+  b.hidden = !(t && t.sh);
+  if (t && t.sh) b.textContent = `Shared by ${t.sh.ownerEmail}. ${permWords(p)}.`;
+}
 function renderAll(){
+  applyPerms();
   $('#tname').value = state.name || '';
   renderList(); renderInspector(); renderPreview(); updateHead(); renderCompanySelect();
   if (step === 'people') renderPeople();
@@ -696,6 +709,23 @@ function renderPreview(){
   renderPersonSelect();
 }
 // hosted images: show the real one when this view can load it, otherwise the stand-in box
+// every thumbnail is scaled to fit its frame (wide and tall signatures alike), then centered
+function fitThumbs(root){
+  root.querySelectorAll('.pv, .thumb2').forEach(box => {
+    const inner = box.firstElementChild; if (!inner) return;
+    const fit = () => {
+      const W = box.clientWidth, H = box.clientHeight; if (!W || !H) return;
+      inner.style.transform = 'none';
+      const w = inner.offsetWidth, h = inner.offsetHeight; if (!w || !h) return;
+      const s = Math.min((W - 28) / w, (H - 28) / h, 1);
+      inner.style.transform = `translate(${Math.round((W - w * s) / 2)}px, ${Math.round((H - h * s) / 2)}px) scale(${s})`;
+    };
+    fit();
+    inner.querySelectorAll('img').forEach(i => { if (!i.complete) i.addEventListener('load', fit, { once:true }); });
+  });
+}
+let fitT;
+addEventListener('resize', () => { clearTimeout(fitT); fitT = setTimeout(() => fitThumbs(document), 150); });
 function wireRemoteImages(root){
   root.querySelectorAll('.rimg img').forEach(img => {
     const swap = () => { const sp = img.parentElement; if (sp && sp.dataset.ph) sp.outerHTML = sp.dataset.ph; };
@@ -1317,6 +1347,10 @@ function renderPeople(){
   </div>`;
   if (keep){ const k = document.getElementById(keep); if (k){ k.focus(); const v = k.value || ''; try { k.setSelectionRange(v.length, v.length); } catch {} } }
   const nf = $('#tnewf'); if (nf) nf.onkeydown = e => { if (e.key === 'Enter') Pn.querySelector('[data-a="addf"]').click(); };
+  if (!permsOf(curSig()).edit_people){
+    Pn.querySelectorAll('input, textarea, button').forEach(x => { if (!/^(copy|toshare)$/.test(x.dataset.a || '') && x.type !== 'radio') x.disabled = true; });
+    Pn.querySelector('.pwrap h2').insertAdjacentHTML('afterend', '<p class="note"><b>View only.</b> You can preview and copy each person\'s signature, but not change the list.</p>');
+  }
 }
 $('#people').addEventListener('input', e => {
   const t = e.target; if (!t.dataset.pid || !t.dataset.k) return;
@@ -1505,11 +1539,24 @@ let templates = [], companies = [], libReady = false, storageOK = true;
 let libCo = 'all', libQ = '', coForm = false, coDelArm = null, delArm = null, brandOpen = false;
 const LIBKEY = 'sigstudio.templates', COKEY = 'sigstudio.companies';
 const coById = id => companies.find(c => c.id === id);
+// companies and signatures someone shared with me carry .sh = { owner, ownerEmail, rid (their real id), perms }
+const FULL = { view_people:true, edit_people:true, edit_design:true, edit_brand:true };
+const shId = (owner, id) => 'sh~' + owner + '~' + id;
+const ownCos = () => companies.filter(c => !c.sh), sharedCos = () => companies.filter(c => c.sh);
+const permsOf = x => (x && x.sh ? x.sh.perms : FULL);
+const curSig = () => templates.find(t => t.id === sigId);
+function permWords(p){
+  if (p.edit_design && p.edit_people && p.edit_brand) return 'Can edit everything';
+  const can = [p.edit_design && 'design', p.edit_people && 'employees', p.edit_brand && 'brand kit'].filter(Boolean);
+  return can.length ? 'Can edit ' + can.join(', ') : p.view_people ? 'View only' : 'View design only';
+}
 // the public project URL and publishable key are meant to be in the page; row-level security keeps each account's rows private
 const SUPABASE_URL = 'https://rizgpvzmazuvidvbpkoa.supabase.co', SUPABASE_KEY = 'sb_publishable_gi6G-cLhq6wYpiB3G7kEsg_G_aI0QKk';
 let sb = null, user = null;
 const cloudErr = e => new Error(/fetch|network/i.test(String(e && e.message)) ? 'you seem to be offline. Your changes will save when you reconnect and retry' : 'the account server said: ' + ((e && e.message) || 'unknown error'));
 async function libSave(id, name, st){
+  const shT = templates.find(t => t.id === id && t.sh);
+  if (shT) return saveShared(shT, name, st);
   const doc = { name, state:st, companyId:st.companyId || '', updatedAt:Date.now() };
   const size = JSON.stringify(doc).length;
   if (size > 400000) throw new Error(`this signature is ${Math.round(size / 1024)} KB, which is more than one signature should need`);
@@ -1521,6 +1568,17 @@ async function libSave(id, name, st){
   templates = next;
   if (view === 'home') renderHome();
 }
+// a signature someone shared with me: the server checks the permission again and keeps what I may not change
+async function saveShared(t, name, st){
+  const p = t.sh.perms, args = { p_owner:t.sh.owner, p_id:t.sh.rid };
+  let res;
+  if (p.edit_design) res = await sb.rpc('save_shared_signature', Object.assign(args, { p_name:name, p_state:st }));
+  else if (p.edit_people) res = await sb.rpc('save_shared_team', Object.assign(args, { p_team:st.team }));
+  else throw new Error('this signature is view only');
+  if (res.error) throw cloudErr(res.error);
+  Object.assign(t, { name:p.edit_design ? name : t.name, state:st, updatedAt:Number(res.data) || Date.now() });
+  if (view === 'home') renderHome();
+}
 async function libDelete(id){
   if (user){ const { error } = await sb.from('signatures').delete().eq('id', id); if (error) throw cloudErr(error); }
   templates = templates.filter(t => t.id !== id);
@@ -1528,6 +1586,14 @@ async function libDelete(id){
   if (view === 'home') renderHome();
 }
 async function coSave(co){
+  if (co.sh){
+    if (!co.sh.perms.edit_brand) throw new Error('you can view this company but not change its brand kit');
+    const { id, sh, updatedAt, ...data } = co;
+    const { error } = await sb.rpc('save_shared_company', { p_owner:sh.owner, p_id:sh.rid, p_data:data });
+    if (error) throw cloudErr(error);
+    if (view === 'home') renderHome();
+    return;
+  }
   const { id, ...doc } = co; doc.updatedAt = Date.now();
   const next = companies.filter(c => c.id !== id).concat(Object.assign({ id }, doc)).sort((a, b) => a.name.localeCompare(b.name));
   if (user){ const { error } = await sb.from('companies').upsert({ user_id:user.id, id, data:doc, updated_at:doc.updatedAt }); if (error) throw cloudErr(error); }
@@ -1554,14 +1620,24 @@ async function saveMany(sigs, cos){
   templates = t2; companies = c2;
 }
 async function loadCloud(){
-  const [s1, s2] = await Promise.all([
+  const [s1, s2, s3, s4] = await Promise.all([
     sb.from('signatures').select('id,name,company_id,state,updated_at').order('updated_at', { ascending:false }),
-    sb.from('companies').select('id,data,updated_at')
+    sb.from('companies').select('id,data,updated_at'),
+    sb.rpc('shared_companies'),
+    sb.rpc('shared_signatures')
   ]);
-  if (s1.error) throw cloudErr(s1.error);
-  if (s2.error) throw cloudErr(s2.error);
-  templates = s1.data.map(r => ({ id:r.id, name:r.name, state:r.state, companyId:r.company_id, updatedAt:Number(r.updated_at) }));
-  companies = s2.data.map(r => Object.assign({}, r.data, { id:r.id, updatedAt:Number(r.updated_at) })).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  for (const r of [s1, s2, s3, s4]) if (r.error) throw cloudErr(r.error);
+  const own = s1.data.map(r => ({ id:r.id, name:r.name, state:r.state, companyId:r.company_id, updatedAt:Number(r.updated_at) }));
+  const ownC = s2.data.map(r => Object.assign({}, r.data, { id:r.id, updatedAt:Number(r.updated_at) }));
+  const shC = s3.data.map(r => Object.assign({}, r.data, { id:shId(r.owner, r.id), updatedAt:Number(r.updated_at), sh:{ owner:r.owner, ownerEmail:r.owner_email, rid:r.id,
+    perms:{ view_people:r.can_view_people, edit_people:r.can_edit_people, edit_design:r.can_edit_design, edit_brand:r.can_edit_brand } } }));
+  const shS = s4.data.map(r => {
+    const c = shC.find(x => x.sh.owner === r.owner && x.sh.rid === r.company_id);
+    const st = Object.assign({}, r.state, { companyId:shId(r.owner, r.company_id) });
+    return { id:shId(r.owner, r.id), name:r.name, state:st, companyId:st.companyId, updatedAt:Number(r.updated_at), sh:Object.assign({}, c.sh, { rid:r.id }) };
+  });
+  templates = own.concat(shS).sort((a, b) => b.updatedAt - a.updatedAt);
+  companies = ownC.sort((a, b) => (a.name || '').localeCompare(b.name || '')).concat(shC.sort((a, b) => (a.name || '').localeCompare(b.name || '')));
 }
 
 // write one list to this browser's storage; a failure is reported, never swallowed
@@ -1573,7 +1649,7 @@ function loadList(key){ try { const v = JSON.parse(localStorage.getItem(key)); r
 
 /* backup: one JSON file with every signature and company */
 function exportLibrary(){
-  const data = { app:'signature-studio', format:1, exportedAt:new Date().toISOString(), signatures:templates, companies };
+  const data = { app:'signature-studio', format:1, exportedAt:new Date().toISOString(), signatures:templates.filter(t => !t.sh), companies:ownCos() };
   saveFile('signature-studio-backup-' + new Date().toISOString().slice(0, 10) + '.json', JSON.stringify(data, null, 2));
   toast(`Exported ${templates.length} signature${templates.length === 1 ? '' : 's'} and ${companies.length} compan${companies.length === 1 ? 'y' : 'ies'}.`);
 }
@@ -1611,7 +1687,10 @@ function applyBrandIn(st, co){
 /* header: which company the open signature belongs to */
 function renderCompanySelect(){
   const s = $('#tcompany'); if (!s || !state) return;
-  s.innerHTML = `<option value="">No company</option>` + companies.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+  const t = curSig();
+  if (t && t.sh){ const c = coById(t.companyId); s.innerHTML = `<option>${esc(c ? c.name : 'Shared')}</option>`; s.disabled = true; return; }
+  s.disabled = false;
+  s.innerHTML = `<option value="">No company</option>` + ownCos().map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
   s.value = coById(state.companyId) ? state.companyId : '';
 }
 $('#tcompany').onchange = e => {
@@ -1639,19 +1718,22 @@ function renderHome(){
     ${row('all', 'All signatures', templates.length, `<span class="ic">${G('fas','layer-group')}</span>`)}
     <p class="label" style="margin:14px 6px 6px;display:flex;align-items:center">Companies<span class="spacer"></span><button class="btn sm ghost" data-a="co-form" type="button">+ New</button></p>
     ${coForm ? `<div class="card cur" style="margin:0 2px 6px"><input id="co-new" type="text" placeholder="Company name" aria-label="Company name"><div class="row"><button class="btn sm primary" data-a="co-create" type="button">Create</button><button class="btn sm" data-a="co-cancel" type="button">Cancel</button></div></div>` : ''}
-    ${companies.map(c => row(c.id, esc(c.name), count(c.id), `<span class="sw" style="background:${esc((c.palette || ['#c4cad4'])[0])}"></span>`)).join('')}
-    ${companies.length ? row('none', 'No company', count('')) : `<p class="note" style="margin:0 6px">Add a company to keep its signatures and brand together.</p>`}`;
+    ${ownCos().map(c => row(c.id, esc(c.name), count(c.id), `<span class="sw" style="background:${esc((c.palette || ['#c4cad4'])[0])}"></span>`)).join('')}
+    ${ownCos().length ? row('none', 'No company', count('')) : `<p class="note" style="margin:0 6px">Add a company to keep its signatures and brand together.</p>`}
+    ${sharedCos().length ? `<p class="label" style="margin:14px 6px 6px">Shared with me</p>` + sharedCos().map(c => row(c.id, esc(c.name), count(c.id), `<span class="sw" style="background:${esc((c.palette || ['#c4cad4'])[0])}"></span>`)).join('') : ''}`;
 
   const list = templates.filter(t => (libCo === 'all' || (t.companyId || '') === (libCo === 'none' ? '' : libCo)) &&
     (!q || (t.name + ' ' + ((coById(t.companyId) || {}).name || '') + ' ' + ((t.state.team && t.state.team.people) || []).map(p => Object.values(p.values).filter(v => !/^data:/.test(v)).join(' ')).join(' ')).toLowerCase().includes(q)));
-  const moveOpts = cur => `<option value="">No company</option>` + companies.map(c => `<option value="${c.id}"${c.id === cur ? ' selected' : ''}>${esc(c.name)}</option>`).join('');
+  const moveOpts = cur => `<option value="">No company</option>` + ownCos().map(c => `<option value="${c.id}"${c.id === cur ? ' selected' : ''}>${esc(c.name)}</option>`).join('');
   const cards = list.map(t => {
     const ppl = (t.state.team && t.state.team.people.length) || 0, tc = coById(t.companyId);
     return `<div class="scard" data-tid="${t.id}">
       <button type="button" class="thumb2" data-a="open" aria-label="Open ${esc(t.name)}"><div>${thumbOf(t)}</div></button>
       <div class="meta"><div class="t" title="${esc(t.name)}">${esc(t.name)}</div>
         <div class="m">${tc && libCo === 'all' ? esc(tc.name) + '. ' : ''}${ppl ? `${ppl} ${ppl > 1 ? 'people' : 'person'}. ` : ''}Edited ${ago(t.updatedAt)}</div>
-        <div class="row"><button class="btn sm" data-a="open" type="button">Open</button><button class="btn sm" data-a="dup" type="button">Duplicate</button>${companies.length ? `<select data-move aria-label="Company for ${esc(t.name)}">${moveOpts(t.companyId || '')}</select>` : ''}<button class="${delArm === t.id ? 'btn sm danger' : 'iconbtn'}" data-a="del" type="button" aria-label="Delete ${esc(t.name)}" title="Delete">${delArm === t.id ? 'Confirm delete' : G('far','trash-can')}</button></div></div></div>`;
+        ${t.sh ? `<div class="m"><span class="badge ok">Shared</span> by ${esc(t.sh.ownerEmail)}. ${permWords(t.sh.perms)}.</div>
+        <div class="row"><button class="btn sm" data-a="open" type="button">Open</button><button class="btn sm" data-a="dup" type="button" title="Copy it into your own library">Make a copy</button></div></div></div>`
+        : `<div class="row"><button class="btn sm" data-a="open" type="button">Open</button><button class="btn sm" data-a="dup" type="button">Duplicate</button>${ownCos().length ? `<select data-move aria-label="Company for ${esc(t.name)}">${moveOpts(t.companyId || '')}</select>` : ''}<button class="${delArm === t.id ? 'btn sm danger' : 'iconbtn'}" data-a="del" type="button" aria-label="Delete ${esc(t.name)}" title="Delete">${delArm === t.id ? 'Confirm delete' : G('far','trash-can')}</button></div></div></div>`}`;
   }).join('');
   const newCard = `<button type="button" class="newcard" data-a="new">${G('fas','plus')}<span>New signature${co ? ' for ' + esc(co.name) : ''}</span></button>`;
 
@@ -1660,22 +1742,26 @@ function renderHome(){
       <div class="field"><span>Logo link</span><input id="bk-logourl" type="text" placeholder="https://…/logo.png" value="${esc(co.logoUrl || '')}"><div class="row" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:4px">${co.logoUrl ? `<img src="${esc(co.logoUrl)}" alt="" referrerpolicy="no-referrer" style="max-width:110px;max-height:34px;object-fit:contain">` : ''}<button class="btn sm" type="button" data-a="co-match"${co.logoUrl ? '' : ' disabled'}>Match colors to logo</button></div></div>
       <div class="field"><span>Brand colors</span><div style="display:flex;gap:6px;flex-wrap:wrap">${(co.palette || STYLE0.palette).map((c, i) => `<input type="color" data-bkc="${i}" value="${esc(c)}" aria-label="Brand color ${i + 1}" style="width:36px;height:30px;padding:0;border:1px solid var(--line);border-radius:6px;background:none">`).join('')}</div></div>
       <div class="field"><span>Font</span><select id="bk-font"><option value="">Keep each signature's font</option>${FONTS.map(f => `<option value="${esc(f[0])}"${f[0] === co.font ? ' selected' : ''}>${esc(f[1])}</option>`).join('')}</select></div>
-      <div class="field"><span>Signatures</span><div class="row" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn sm primary" data-a="co-applyall" type="button"${count(co.id) ? '' : ' disabled'}>Update all ${count(co.id)} with this brand</button><button class="btn sm" data-a="co-done" type="button">Done</button></div></div>
+      <div class="field"><span>Signatures</span><div class="row" style="display:flex;gap:6px;flex-wrap:wrap">${co.sh ? '' : `<button class="btn sm primary" data-a="co-applyall" type="button"${count(co.id) ? '' : ' disabled'}>Update all ${count(co.id)} with this brand</button>`}<button class="btn sm" data-a="co-done" type="button">Done</button></div></div>
     </div>` : '';
   const head = co ? `<div class="cohead">${co.logoUrl ? `<img class="logo" src="${esc(co.logoUrl)}" alt="${esc(co.name)} logo" referrerpolicy="no-referrer">` : ''}
       <div class="grow"><h1>${esc(co.name)}</h1><div style="display:flex;gap:4px;align-items:center;margin-top:6px">${swatches(co.palette)}<span class="note" style="margin-left:6px">${esc((FONTS.find(f => f[0] === co.font) || ['', ''])[1])}</span></div></div>
+      ${co.sh ? `${co.sh.perms.edit_brand ? `<button class="btn" data-a="co-brand" type="button">${brandOpen ? 'Close brand kit' : 'Edit brand kit'}</button>` : ''}<button class="btn ghost" data-a="co-leave" type="button">${coDelArm === co.id ? 'Confirm: leave' : 'Leave'}</button></div>
+      <p class="note">Shared with you by <b>${esc(co.sh.ownerEmail)}</b>. ${permWords(co.sh.perms)}. Only they can add or delete signatures here.</p>`
+      : `<button class="btn" data-a="co-share" type="button">${shareOpen ? 'Close sharing' : 'Share'}</button>
       <button class="btn" data-a="co-brand" type="button">${brandOpen ? 'Close brand kit' : 'Edit brand kit'}</button>
       <button class="${coDelArm === co.id ? 'btn danger' : 'btn ghost'}" data-a="co-del" type="button">${coDelArm === co.id ? `Confirm: delete ${esc(co.name)}` : 'Delete company'}</button></div>
-      ${coDelArm === co.id ? `<p class="note">Its ${count(co.id)} signature${count(co.id) === 1 ? '' : 's'} will be kept under "No company".</p>` : ''}${brandKit}`
+      ${coDelArm === co.id ? `<p class="note">Its ${count(co.id)} signature${count(co.id) === 1 ? '' : 's'} will be kept under "No company"${(members[co.id] || []).length ? ', and the people it\'s shared with lose access' : ''}.</p>` : ''}${shareOpen ? sharePanel(co) : ''}`}${brandKit}`
     : `<div class="cohead"><div class="grow"><h1>${libCo === 'none' ? 'Signatures without a company' : 'All signatures'}</h1></div></div>`;
 
   let body;
   if (!libReady) body = `<div class="empty">Loading your library…</div>`;
   else if (!templates.length) body = `<div class="sharecard"><h3>${G('fas','pen-nib')}Start your first signature</h3><p class="note">Pick a layout below. You can change everything about it, and it saves as you go.</p></div>${templateGallery('home')}`;
-  else body = `<div class="sgrid">${q ? '' : newCard}${cards}</div>${list.length ? '' : `<div class="empty">${q ? 'No signatures match that search.' : co ? `No signatures for ${esc(co.name)} yet.` : 'Nothing here yet.'}</div>`}`;
+  else body = `<div class="sgrid">${q || (co && co.sh) ? '' : newCard}${cards}</div>${list.length ? '' : `<div class="empty">${q ? 'No signatures match that search.' : co ? `No signatures for ${esc(co.name)} yet.` : 'Nothing here yet.'}</div>`}`;
   const offer = user && offerMove ? `<div class="sharecard"><h3>${G('fas','cloud-arrow-up')}Move this browser's signatures into your account?</h3><p class="note">${offerMove} signature${offerMove === 1 ? ' is' : 's are'} saved in this browser from before you signed in. Moving them puts them in your account, on every device.</p><div class="row"><button class="btn primary sm" type="button" data-a="move-local">Move them</button><button class="btn sm" type="button" data-a="move-later">Not now</button></div></div>` : '';
   $('#homemain').innerHTML = offer + head + body;
   wireRemoteImages($('#homemain'));
+  fitThumbs($('#homemain'));
   const ni = $('#co-new'); if (ni){ ni.focus(); ni.onkeydown = e => { if (e.key === 'Enter') $('#cos [data-a="co-create"]').click(); if (e.key === 'Escape'){ coForm = false; renderHome(); } }; }
   wireBrandKit(co);
 }
@@ -1701,15 +1787,16 @@ function templateGallery(where){
 }
 function openNew(){
   const s = $('#newco');
-  s.innerHTML = `<option value="">No company</option>` + companies.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
-  s.value = coById(libCo) ? libCo : '';
-  drawNew(); $('#dlg-new').showModal();
+  s.innerHTML = `<option value="">No company</option>` + ownCos().map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+  s.value = coById(libCo) && !coById(libCo).sh ? libCo : '';
+  $('#dlg-new').showModal(); drawNew();
 }
 function drawNew(){
   const co = coById($('#newco').value);
   $('#newcats').innerHTML = PRESET_CATS.map(c => `<button type="button" data-cat="${c}" aria-pressed="${c === tplCat}">${c}</button>`).join('');
   $('#newnote').textContent = co ? `Templates start with ${co.name}'s colors, font and logo. Sample details are placeholders.` : 'Sample details are placeholders; swap in your own.';
   $('#newgrid').innerHTML = templateGallery('dialog');
+  fitThumbs($('#newgrid'));
 }
 $('#newco').onchange = drawNew;
 $('#newcats').onclick = e => { const b = e.target.closest('[data-cat]'); if (b){ tplCat = b.dataset.cat; drawNew(); } };
@@ -1720,8 +1807,8 @@ $('#newsig').onclick = openNew;
 const blankState = () => newState('Untitled signature', {}, [mkRow([[mk('text', { label:'Name', text:'Your Name', size:18, weight:700 }), mk('text', { label:'Title', text:'Job title, Company', size:13, color:'#5b6470' })]])]);
 async function createFrom(p, coId){
   let st = migrate(p ? p.state : blankState());
-  const co = coById(coId);
-  if (co){ applyBrandIn(st, co); st.name = `${co.name}: ${st.name}`; } else st.companyId = '';
+  const co = coById(coId), mine = co && !co.sh;
+  if (mine){ applyBrandIn(st, co); st.name = `${co.name}: ${st.name}`; } else st.companyId = '';
   const id = uid() + uid();
   try { await libSave(id, st.name, st); } catch (e){ toast('Could not create it: ' + e.message); return; }
   openSig(id, st);
@@ -1759,13 +1846,32 @@ $('#homemain').addEventListener('click', async e => {
   if (act === 'move-later'){ offerMove = 0; renderHome(); toast('They stay in this browser. Sign out to see them again.'); }
   if (act === 'blank') createFrom(null, co ? co.id : '');
   if (act === 'open') openSig(t.id, t.state);
-  if (act === 'dup'){ const st = clone(t.state); st.name = t.name + ' copy'; try { await libSave(uid() + uid(), st.name, st); toast('Duplicated.'); } catch (er){ toast(er.message); } }
+  if (act === 'dup'){ const st = clone(t.state); st.name = t.name + ' copy'; if (t.sh) st.companyId = ''; try { await libSave(uid() + uid(), st.name, st); toast('Duplicated.'); } catch (er){ toast(er.message); } }
   if (act === 'del'){
     if (delArm !== t.id){ delArm = t.id; renderHome(); return; }
     delArm = null; const keep = clone(t);
     try { await libDelete(t.id); toast(`Deleted "${t.name}".`, { label:'Undo', fn:async () => { await libSave(keep.id, keep.name, keep.state); toast('Restored.'); } }); } catch { toast('Could not delete. Try again.'); }
   }
-  if (act === 'co-brand'){ brandOpen = !brandOpen; renderHome(); }
+  if (act === 'co-brand'){ brandOpen = !brandOpen; shareOpen = false; renderHome(); }
+  if (act === 'co-share'){
+    if (!user){ toast('Sign in to share companies.'); openAccount(); return; }
+    shareOpen = !shareOpen; brandOpen = false; renderHome();
+    if (shareOpen){ try { await loadMembers(co); renderHome(); } catch (er){ toast(er.message); } }
+  }
+  if (act === 'co-leave'){
+    if (coDelArm !== co.id){ coDelArm = co.id; renderHome(); return; }
+    coDelArm = null;
+    const { error } = await sb.rpc('leave_shared_company', { p_owner:co.sh.owner, p_id:co.sh.rid });
+    if (error){ toast('Could not leave: ' + error.message); return; }
+    await loadCloud(); libCo = 'all'; renderHome(); toast(`You left ${co.name}.`);
+  }
+  if (act === 'mem-remove'){
+    const em = a.dataset.email;
+    const { error } = await sb.from('company_members').delete().eq('company_id', co.id).eq('email', em);
+    if (error){ toast('Could not remove them: ' + error.message); return; }
+    await loadMembers(co); renderHome(); toast(`${em} no longer has access.`);
+  }
+  if (act === 'mem-invite'){ const ok = await copyText(inviteText(co, a.dataset.email)); toast(ok ? 'Invite message copied. Paste it into an email or chat.' : 'Copy was blocked.'); }
   if (act === 'co-done'){ brandOpen = false; renderHome(); }
   if (act === 'co-applyall'){
     const list = templates.filter(x => x.companyId === co.id); let n = 0;
@@ -1783,6 +1889,58 @@ $('#homemain').addEventListener('click', async e => {
   }
 });
 $('#homeq').oninput = e => { libQ = e.target.value; renderHome(); };
+
+/* ---------- sharing a company (owner side) ---------- */
+let shareOpen = false, lastInvite = '';
+const members = {};
+const ROLES = [
+  ['view', 'Can view', { can_view_people:true, can_edit_people:false, can_edit_design:false, can_edit_brand:false }],
+  ['design', 'View design only (no employee details)', { can_view_people:false, can_edit_people:false, can_edit_design:false, can_edit_brand:false }],
+  ['people', 'Can edit employees', { can_view_people:true, can_edit_people:true, can_edit_design:false, can_edit_brand:false }],
+  ['all', 'Can edit everything', { can_view_people:true, can_edit_people:true, can_edit_design:true, can_edit_brand:true }]
+];
+const PERMS = [['can_view_people', 'See employees'], ['can_edit_people', 'Edit employees'], ['can_edit_design', 'Edit design'], ['can_edit_brand', 'Edit brand kit']];
+async function loadMembers(co){
+  const { data, error } = await sb.from('company_members').select('*').eq('company_id', co.id).order('created_at');
+  if (error) throw cloudErr(error);
+  members[co.id] = data;
+}
+const toolUrl = () => location.origin + location.pathname;
+const inviteText = (co, email) => `I shared the "${co.name}" email signatures with you on Signature Studio. Open ${toolUrl()} and sign in with ${email} to see them.`;
+function sharePanel(co){
+  const list = members[co.id];
+  const rows = (list || []).map(m => `<div class="memrow" data-email="${esc(m.email)}"><div class="grow"><b>${esc(m.email)}</b><div class="memperms">${PERMS.map(([k, l]) => `<label class="chk"><input type="checkbox" data-perm="${k}"${m[k] ? ' checked' : ''}>${l}</label>`).join('')}</div></div>
+    <div class="row"><button class="btn sm" type="button" data-a="mem-invite" data-email="${esc(m.email)}">Copy invite</button><a class="btn sm ghost" href="mailto:${encodeURIComponent(m.email)}?subject=${encodeURIComponent('Email signatures for ' + co.name)}&body=${encodeURIComponent(inviteText(co, m.email))}">Email invite</a><button class="btn sm ghost danger" type="button" data-a="mem-remove" data-email="${esc(m.email)}">Remove</button></div></div>`).join('');
+  return `<div class="sharecard sharepanel"><h3>${G('fas','user-plus')}Share ${esc(co.name)}</h3>
+    <p class="note">People you add see this company and its signatures after they sign in with that email. They can't share it, delete it, or add new signatures. Change what each person can do below; it takes effect the next time they open the page.</p>
+    <form id="shareform" class="row" style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+      <div class="field" style="flex:1 1 220px"><span>Email</span><input id="share-email" type="email" required placeholder="name@company.com" autocomplete="off"></div>
+      <div class="field"><span>Access</span><select id="share-role">${ROLES.map(([v, l]) => `<option value="${v}">${l}</option>`).join('')}</select></div>
+      <button class="btn primary" type="submit">Share</button></form>
+    ${lastInvite ? `<div class="chkline ok"><span class="dot"></span><span>Shared. They won't get an email from us, so send them the invite: <button class="btn sm" type="button" data-a="mem-invite" data-email="${esc(lastInvite)}">Copy invite</button></span></div>` : ''}
+    ${list ? (rows ? `<div class="memlist">${rows}</div>` : '<p class="note">Not shared with anyone yet.</p>') : '<p class="note">Loading…</p>'}</div>`;
+}
+$('#homemain').addEventListener('submit', async e => {
+  if (e.target.id !== 'shareform') return;
+  e.preventDefault();
+  const co = coById(libCo), email = $('#share-email').value.trim().toLowerCase(), role = ROLES.find(r => r[0] === $('#share-role').value)[2];
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ toast('Enter an email address.'); return; }
+  if (user && email === (user.email || '').toLowerCase()){ toast("That's your own email."); return; }
+  const { error } = await sb.from('company_members').upsert(Object.assign({ company_owner:user.id, company_id:co.id, email }, role));
+  if (error){ toast('Could not share: ' + error.message); return; }
+  lastInvite = email; await loadMembers(co); renderHome();
+  toast(`Shared ${co.name} with ${email}.`);
+});
+$('#homemain').addEventListener('change', async e => {
+  const cb = e.target.closest('[data-perm]'); if (!cb) return;
+  const co = coById(libCo), em = cb.closest('[data-email]').dataset.email, k = cb.dataset.perm, patch = { [k]:cb.checked };
+  // editing employees needs seeing them; hiding them takes editing away too
+  if (k === 'can_edit_people' && cb.checked) patch.can_view_people = true;
+  if (k === 'can_view_people' && !cb.checked) patch.can_edit_people = false;
+  const { error } = await sb.from('company_members').update(patch).eq('company_id', co.id).eq('email', em);
+  if (error){ toast('Could not change that: ' + error.message); cb.checked = !cb.checked; return; }
+  await loadMembers(co); renderHome(); toast('Access updated.');
+});
 function ago(t){ const s = (Date.now() - t) / 1000; if (s < 60) return 'just now'; if (s < 3600) return Math.floor(s / 60) + ' min ago'; if (s < 86400) return Math.floor(s / 3600) + ' h ago'; return new Date(t).toLocaleDateString(); }
 
 // key-order-independent JSON, since the store may hand documents back with keys sorted
@@ -1810,6 +1968,7 @@ async function setUser(u){
   if (view === 'editor') await closeEditor();
   user = u || null;
   renderAccount();
+  if (user && $('#dlg-acct').open && authStep !== 'account'){ $('#dlg-acct').close(); toast('Signed in as ' + (user.email || 'you') + '.'); }
   if (!user){ loadLocal(); libReady = true; renderHome(); renderCompanySelect(); return; }
   libReady = false; renderHome();
   try { await loadCloud(); } catch (e){ toast('Could not load your account: ' + e.message + '.'); }
@@ -1836,7 +1995,7 @@ function renderAccount(){
   b.title = user ? 'Your account' : 'Sign in to keep your signatures on every device';
   b.classList.toggle('primary', false);
 }
-let authStep = 'email', authEmail = '', authBusy = false, delAcct = false, resendAt = 0;
+let authStep = 'email', authEmail = '', authBusy = false, delAcct = false, resendAt = 0, codeOpen = false;
 function openAccount(){ authStep = user ? 'account' : 'email'; delAcct = false; drawAccount(); $('#dlg-acct').showModal(); const i = $('#dlg-acct input'); if (i) i.focus(); }
 function drawAccount(){
   const B = $('#acctbody');
@@ -1855,10 +2014,14 @@ function drawAccount(){
     return;
   }
   const wait = Math.max(0, Math.ceil((resendAt - Date.now()) / 1000));
-  B.innerHTML = `<p>We sent a sign-in email to <b>${esc(authEmail)}</b>. Enter the code from it, or open the link in it on this device.</p>
-    <form id="codeform" class="field" style="gap:8px"><span>Code</span><input id="authcode" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6,10}" maxlength="10" required placeholder="123456">
-    <div class="row" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" type="submit"${authBusy ? ' disabled' : ''}>${authBusy ? 'Checking…' : 'Sign in'}</button><button class="btn" type="button" data-a="resend"${wait ? ' disabled' : ''}>${wait ? `Resend in ${wait}s` : 'Resend email'}</button><button class="btn ghost" type="button" data-a="otheremail">Use a different email</button></div></form>
-    <p class="note">Can't find it? Check spam. The email comes from Supabase, the service that runs sign-in.</p>`;
+  B.innerHTML = `<h3 style="margin:0;font-size:17px">Check your email</h3>
+    <p>We emailed a sign-in link to <b>${esc(authEmail)}</b>. Open the link on this device and you'll be signed in here. You can close this box.</p>
+    <div class="row" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" type="button" data-a="resend"${wait ? ' disabled' : ''}>${wait ? `Resend in ${wait}s` : 'Resend email'}</button><button class="btn ghost" type="button" data-a="otheremail">Use a different email</button></div>
+    <p class="note">Can't find it? Check spam. The email comes from Supabase, the service that runs sign-in.</p>
+    <details${codeOpen ? ' open' : ''} id="codedetails"><summary class="note" style="cursor:pointer">Reading email on a different device? Sign in with the code instead</summary>
+      <form id="codeform" class="field" style="gap:8px;margin-top:8px"><span>Code from the email</span><input id="authcode" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6,10}" maxlength="10" required placeholder="123456">
+      <div class="row" style="display:flex;gap:8px"><button class="btn primary" type="submit"${authBusy ? ' disabled' : ''}>${authBusy ? 'Checking…' : 'Sign in with code'}</button></div></form></details>`;
+  const det = $('#codedetails'); if (det) det.ontoggle = () => { codeOpen = det.open; };
   if (wait) setTimeout(() => { if (authStep === 'code' && $('#dlg-acct').open) drawAccount(); }, 1000);
 }
 async function sendCode(){
@@ -1866,7 +2029,7 @@ async function sendCode(){
   const { error } = await sb.auth.signInWithOtp({ email:authEmail, options:{ shouldCreateUser:true, emailRedirectTo:location.origin + location.pathname } });
   authBusy = false;
   if (error){ authStep = 'email'; drawAccount(); toast(/rate|many|seconds/i.test(error.message) ? 'Too many emails just now. Wait a minute, then try again.' : 'Could not send the email: ' + error.message); return; }
-  authStep = 'code'; resendAt = Date.now() + 60000; drawAccount(); $('#authcode').focus();
+  authStep = 'code'; codeOpen = false; resendAt = Date.now() + 60000; drawAccount();
 }
 $('#acctbody').addEventListener('submit', async e => {
   e.preventDefault();
@@ -1876,7 +2039,7 @@ $('#acctbody').addEventListener('submit', async e => {
     authBusy = true; drawAccount();
     const { error } = await sb.auth.verifyOtp({ email:authEmail, token, type:'email' });
     authBusy = false;
-    if (error){ drawAccount(); $('#authcode').value = token; toast("That code didn't work. Check it, or resend a new one."); return; }
+    if (error){ codeOpen = true; drawAccount(); $('#authcode').value = token; toast("That code didn't work. Check it, or resend a new one."); return; }
     $('#dlg-acct').close(); toast('Signed in.');
   }
 });
@@ -1914,7 +2077,7 @@ document.addEventListener('keydown', e => {
   if (mod && k === 'z' && !typing){ e.preventDefault(); e.shiftKey ? redo() : undo(); }
   if (mod && k === 'y' && !typing){ e.preventDefault(); redo(); }
   if (mod && k === 's'){ e.preventDefault(); saveNow().then(() => toast(saveStatus === 'saved' ? 'Saved.' : 'Not saved: ' + saveErr)); }
-  if (step !== 'design' || typing) return;
+  if (step !== 'design' || typing || !permsOf(curSig()).edit_design) return;
   if (k === 'delete' || k === 'backspace'){
     const f = find(sel);
     if (f && f.kind === 'block'){ e.preventDefault(); f.c.blocks.splice(f.i, 1); sel = 'style'; toast('Block deleted.', UNDO); changed({ list:true, insp:true }); }

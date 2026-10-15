@@ -6,6 +6,7 @@ A free, open-source email signature builder for people and teams. Live at **[jac
 - Make it a team signature: use fields like `{{name}}` and `{{title}}`, then paste your staff list from a spreadsheet.
 - Copy it into Gmail, Outlook, or Apple Mail, or download the HTML.
 - Keep work grouped by company, each with its own brand kit (logo, colors, font).
+- Share a company with other people by email, choosing what each can do: see employees, edit employees, edit the design, edit the brand kit.
 
 ## Privacy
 
@@ -42,7 +43,7 @@ The email output is built from nested tables with inline styles. That's what Gma
 
 ## Accounts backend
 
-The page talks to one Supabase project. Its public URL and publishable key are in `js/app.js`; they are meant to be public, and the database rules do the protecting. The schema is two tables, `signatures` and `companies`, keyed by `(user_id, id)`, with owner-only row-level security, plus a `delete_my_account()` function. To run your own copy, create a Supabase project, apply the same schema, and change the two constants.
+The page talks to one Supabase project. Its public URL and publishable key are in `js/app.js`; they are meant to be public, and the database rules do the protecting. The schema is `signatures` and `companies` (keyed by `(user_id, id)`, owner-only row-level security), `company_members` for sharing, and a few security-definer functions: `shared_companies`/`shared_signatures` (which strip employee data for people without that permission), `save_shared_signature`, `save_shared_team`, `save_shared_company`, `leave_shared_company` and `delete_my_account`. Permissions are enforced in those functions, not just in the page. To run your own copy, create a Supabase project, apply the same schema, and change the two constants.
 
 ## Contributing
 

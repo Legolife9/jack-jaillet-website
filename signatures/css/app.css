@@ -94,7 +94,7 @@ header.top{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 1
 .pcard{border:1px solid var(--line);border-radius:8px;background:var(--canvas);padding:0;overflow:hidden;text-align:left;display:flex;flex-direction:column}
 .pcard:hover{border-color:var(--accent)}
 .pcard .pv{height:84px;overflow:hidden;position:relative;pointer-events:none}
-.pcard .pv>div{transform:scale(.42);transform-origin:0 0;width:238%;padding:10px}
+
 .pcard .pn{font-size:12px;padding:6px 8px;border-top:1px solid var(--line);background:var(--panel);color:var(--ink);font-weight:500}
 .note{font-size:12px;color:var(--muted);line-height:1.5;margin:0}
 .empty{border:1px dashed var(--line);border-radius:8px;padding:14px;color:var(--muted);font-size:13px}
@@ -233,22 +233,21 @@ button.brand:hover{background:var(--panel2)}
 .cohead .grow{flex:1;min-width:200px}
 .brandkit{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
 .brandkit .field input[type=text],.brandkit select{width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--panel2)}
-.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
 .scard{border:1px solid var(--line);border-radius:12px;background:var(--panel);overflow:hidden;display:flex;flex-direction:column}
 .scard:hover{border-color:var(--accent)}
-.scard .thumb2{height:150px;overflow:hidden;background:var(--canvas);border:0;padding:0;text-align:left;cursor:pointer;display:block;width:100%;position:relative}
-.scard .thumb2>div{position:absolute;top:0;left:0;transform:scale(.56);transform-origin:0 0;width:178%;padding:14px;pointer-events:none}
+.scard .thumb2{height:200px;overflow:hidden;background:var(--canvas);border:0;padding:0;text-align:left;cursor:pointer;display:block;width:100%;position:relative}
+.scard .thumb2>div,.pcard .pv>div,.tgrid .pcard .pv>div{position:absolute;top:0;left:0;transform-origin:0 0;width:max-content;max-width:600px;padding:0;pointer-events:none}
 .scard .meta{padding:10px 12px 12px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:6px}
 .scard .t{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .scard .m{font-size:12px;color:var(--muted)}
 .scard .row{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
 .scard select{flex:1;min-width:0;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--panel2);font-size:12px}
-.newcard{border:1.5px dashed var(--line);border-radius:12px;background:transparent;min-height:228px;display:grid;place-items:center;color:var(--muted);font-weight:600;gap:6px;align-content:center}
+.newcard{border:1.5px dashed var(--line);border-radius:12px;background:transparent;min-height:278px;display:grid;place-items:center;color:var(--muted);font-weight:600;gap:6px;align-content:center}
 .newcard:hover{border-color:var(--accent);color:var(--accent)}
 .newcard svg{width:22px;height:22px;fill:currentColor}
-.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
-.tgrid .pcard .pv{height:118px}
-.tgrid .pcard .pv>div{transform:scale(.5);width:200%}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.tgrid .pcard .pv{height:150px}
 
 .step2{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);min-height:0;height:100%}
 .step2>.pane2{overflow:auto;background:var(--panel);border-right:1px solid var(--line);min-width:0}
@@ -288,3 +287,13 @@ button.brand:hover{background:var(--panel2)}
 [hidden]{display:none!important}
 #view-editor:not([hidden]){display:grid;min-height:0}
 #view-editor>*{min-height:0}
+
+/* sharing */
+.shbanner{font-size:12px;padding:3px 8px;border-radius:20px;background:var(--accent-soft);color:var(--ink);white-space:nowrap;max-width:320px;overflow:hidden;text-overflow:ellipsis}
+#view-editor.ro-design #step-design .pane.left,#view-editor.ro-design #step-design .pane.right{pointer-events:none;opacity:.5}
+.memlist{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.memrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 12px;border-bottom:1px solid var(--line)}
+.memrow:last-child{border-bottom:0}
+.memrow .grow{flex:1 1 260px;min-width:0;overflow-wrap:anywhere}
+.memperms{display:flex;gap:4px 14px;flex-wrap:wrap;margin-top:4px}
+.sharepanel select,.sharepanel input[type=email]{width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--panel2)}
