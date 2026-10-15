@@ -11,7 +11,7 @@ A free, open-source email signature builder for people and teams. Live at **[jac
 
 ## Privacy
 
-Accounts are optional. Without one, everything stays in your browser (`localStorage`) and nothing you type is sent anywhere; use **Export backup** to keep a copy. If you sign in (with Google, no password), your signatures and companies are saved to your account in [Supabase](https://supabase.com) so they follow you across devices. Row-level security means each account can only read and change its own rows, and **Account > Delete account** removes the account and everything in it. There are no analytics and no uploads: images are used by link.
+Accounts are optional. Without one, everything stays in your browser (`localStorage`) and nothing you type is sent anywhere; use **Export backup** to keep a copy. If you sign in (with Google, no password), your signatures and companies are saved to your account in [Supabase](https://supabase.com) so they follow you across devices. Row-level security means each account can only read and change its own rows, and **Account > Delete account** removes the account and everything in it. There are no uploads: images are used by link. Google Analytics loads only if a visitor accepts the site's cookie banner (`/js/footer.js`), and query strings are stripped first so personal links never reach it. See the [privacy policy](https://jackjaillet.com/privacy) and [terms](https://jackjaillet.com/terms).
 
 When someone opens an email with your signature, their mail app loads:
 

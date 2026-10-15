@@ -1391,6 +1391,10 @@ a.org-item:hover { color: var(--ink); text-decoration: none; }
 .prose h2 + p { margin-top: 0; }
 .prose h2 ~ h2 { margin-top: var(--space-10); }
 .prose .note { margin-top: var(--space-10); font-size: 0.95rem; }
+.prose > .note:first-child { margin-top: 0; }
+.prose ul { list-style: disc; padding-left: 1.25em; margin-bottom: var(--space-5); color: var(--ink-2); }
+.prose li { margin-bottom: var(--space-3); }
+.prose li strong { color: var(--ink); }
 
 .mt-4 { margin-top: var(--space-4); }
 .mt-6 { margin-top: var(--space-6); }
@@ -1569,8 +1573,33 @@ a.org-item:hover { color: var(--ink); text-decoration: none; }
   min-width: 0;
 }
 .footer-links a { word-break: break-word; }
-.footer-links a { color: var(--ink-2); font-size: 0.95rem; display: inline-block; padding: 12px 0; }
-.footer-links a:hover { color: var(--ink); }
+.footer-links a,
+.footer-links button { color: var(--ink-2); font: inherit; font-size: 0.95rem; display: inline-block; padding: 12px 0; background: none; border: 0; cursor: pointer; }
+.footer-links a:hover,
+.footer-links button:hover { color: var(--ink); text-decoration: underline; }
+
+/* Cookie choice (js/footer.js). Signature Studio repeats this in its own app.css. */
+.consent {
+  position: fixed;
+  z-index: 100;
+  left: var(--space-4);
+  right: var(--space-4);
+  bottom: var(--space-4);
+  max-width: 34rem;
+  margin-left: auto;
+  padding: var(--space-4) var(--space-5);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-4);
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+.consent p { flex: 1 1 16rem; font-size: 0.95rem; color: var(--ink-2); }
+.consent-actions { display: flex; gap: var(--space-2); }
 .site-footer small { color: var(--ink-2); font-size: 0.9rem; }
 
 /* ---------- reveal motion ---------- */
