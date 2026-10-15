@@ -1845,7 +1845,7 @@ function renderHome(){
 
   let body;
   if (!libReady) body = `<div class="empty">Loading your library…</div>`;
-  else if (!templates.length) body = `<div class="sharecard"><h3>${G('fas','pen-nib')}Start your first signature</h3><p class="note">Pick a layout below. You can change everything about it, and it saves as you go.</p></div>${templateGallery('home')}`;
+  else if (!templates.length) body = `<div class="sharecard"><h3>${G('fas','pen-nib')}Start your first signature</h3><p class="note">Pick a layout below. You can change everything about it, and it saves as you go.</p></div>${templateGallery('home', co)}`;
   else body = `<div class="sgrid">${q || (co && co.sh) ? '' : newCard}${cards}</div>${list.length ? '' : `<div class="empty">${q ? 'No signatures match that search.' : co ? `No signatures for ${esc(co.name)} yet.` : 'Nothing here yet.'}</div>`}`;
   const offer = user && offerMove ? `<div class="sharecard"><h3>${G('fas','cloud-arrow-up')}Move this browser's signatures into your account?</h3><p class="note">${offerMove} signature${offerMove === 1 ? ' is' : 's are'} saved in this browser from before you signed in. Moving them puts them in your account, on every device.</p><div class="row"><button class="btn primary sm" type="button" data-a="move-local">Move them</button><button class="btn sm" type="button" data-a="move-later">Not now</button></div></div>` : '';
   $('#homemain').innerHTML = offer + head + body;
@@ -1867,11 +1867,14 @@ function wireBrandKit(co){
 
 /* templates: a gallery used on the empty home screen and in the New signature dialog */
 let presetCache = null, tplCat = 'All';
-function templateGallery(where){
-  if (!presetCache){ presetCache = presets(); presetCache.forEach(p => p.thumb = render(migrate(p.state), 'preview').html.replace(/ data-(bid|cid|rid)="[^"]*"/g, '')); }
+function templateGallery(where, co){
+  const thumbOf = st => render(st, 'preview').html.replace(/ data-(bid|cid|rid)="[^"]*"/g, '');
+  if (!presetCache){ presetCache = presets(); presetCache.forEach(p => p.thumb = thumbOf(migrate(p.state))); }
   const shown = presetCache.filter(p => tplCat === 'All' || p.cat === tplCat);
+  // with one of your companies picked, previews wear its brand kit, just as createFrom will start them
+  const brand = co && !co.sh ? p => thumbOf(applyBrandIn(migrate(p.state), co)) : p => p.thumb;
   const cats = `<div class="seg" role="group" aria-label="Template category">${PRESET_CATS.map(c => `<button type="button" data-cat="${c}" aria-pressed="${c === tplCat}">${c}</button>`).join('')}</div>`;
-  const grid = `<div class="tgrid">${shown.map(p => `<button type="button" class="pcard" data-preset="${p.key}" title="Start from ${esc(p.name)}"><div class="pv"><div>${p.thumb}</div></div><div class="pn">${esc(p.name)}</div></button>`).join('')}</div>`;
+  const grid = `<div class="tgrid">${shown.map(p => `<button type="button" class="pcard" data-preset="${p.key}" title="Start from ${esc(p.name)}"><div class="pv"><div>${brand(p)}</div></div><div class="pn">${esc(p.name)}</div></button>`).join('')}</div>`;
   return where === 'home' ? `${cats}${grid}<div><button class="btn sm" data-a="blank" type="button">Start blank</button></div>` : grid;
 }
 function openNew(){
@@ -1884,7 +1887,8 @@ function drawNew(){
   const co = coById($('#newco').value);
   $('#newcats').innerHTML = PRESET_CATS.map(c => `<button type="button" data-cat="${c}" aria-pressed="${c === tplCat}">${c}</button>`).join('');
   $('#newnote').textContent = co ? `Templates start with ${co.name}'s colors, font and logo. Sample details are placeholders.` : 'Sample details are placeholders; swap in your own.';
-  $('#newgrid').innerHTML = templateGallery('dialog');
+  $('#newgrid').innerHTML = templateGallery('dialog', co);
+  wireRemoteImages($('#newgrid'));
   fitThumbs($('#newgrid'));
 }
 $('#newco').onchange = drawNew;
