@@ -1604,3 +1604,15 @@ a.org-item:hover { color: var(--ink); text-decoration: none; }
   .ext-icon { display: none; }
   .job-org a::after { content: " (" attr(href) ")"; font-size: 0.85em; color: #555; word-break: break-all; }
 }
+
+/* ---------- services ---------- */
+
+.services-lede { margin-top: 20px; max-width: 38em; }
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 520px));
+  gap: var(--space-4);
+}
+/* the highlight cards name their bento areas; here they just flow */
+.services-grid .hl { grid-area: auto; min-height: 240px; }
+.services-grid .hl-cta + .hl-cta { margin-top: 0; }

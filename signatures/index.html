@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Signature Studio | Free email signature builder</title>
+<meta name="description" content="Free, open-source email signature builder for people and teams. Design once, fill it in for everyone, and copy it into Gmail, Outlook or Apple Mail. No account, nothing uploaded.">
+<link rel="canonical" href="https://jackjaillet.com/signatures/">
+<meta property="og:title" content="Signature Studio">
+<meta property="og:description" content="Free, open-source email signature builder. No account, nothing uploaded.">
+<meta property="og:url" content="https://jackjaillet.com/signatures/">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#2453e6">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div class="app" id="app" data-view="home">
+  <header class="top">
+    <button type="button" class="brand" id="go-home" title="All signatures"><span class="mark" id="brandmark"></span>Signature Studio</button>
+    <div class="hbar home-only">
+      <input id="homeq" class="search top-search" type="search" placeholder="Search signatures, companies or people" aria-label="Search signatures">
+      <span class="spacer"></span>
+      <button id="aboutbtn" class="btn ghost sm" type="button">About &amp; privacy</button>
+      <button id="exportlib" class="btn sm" type="button" title="Download a backup of every signature and company">Export backup</button>
+      <label class="btn sm" title="Load a backup file">Import<input id="importlib" type="file" accept=".json,application/json" hidden></label>
+      <button id="newsig" class="btn primary" type="button">New signature</button>
+    </div>
+    <div class="hbar ed-only">
+      <button id="back" class="btn ghost sm" type="button" title="Back to all signatures"></button>
+      <input id="tname" class="tname" type="text" aria-label="Signature name" placeholder="Name this signature">
+      <select id="tcompany" aria-label="Company" title="Which company this signature belongs to" style="padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--panel2);max-width:180px"></select>
+      <button id="savestate" class="savestate" type="button" aria-live="polite"></button>
+      <button id="undo" class="btn ghost sm" type="button" title="Undo (Ctrl+Z)">Undo</button>
+      <button id="redo" class="btn ghost sm" type="button" title="Redo (Ctrl+Y)">Redo</button>
+      <span class="spacer"></span>
+      <div class="stepnav" role="tablist" aria-label="Steps">
+        <button id="nav-design" role="tab" aria-selected="true" aria-controls="step-design" type="button"><span class="num">1</span>Design</button>
+        <button id="nav-people" role="tab" aria-selected="false" aria-controls="step-people" type="button"><span class="num">2</span>People</button>
+        <button id="nav-share" role="tab" aria-selected="false" aria-controls="step-share" type="button"><span class="num">3</span>Share</button>
+      </div>
+      <button id="copygmail" class="btn primary" type="button">Copy for Gmail</button>
+    </div>
+  </header>
+
+  <main id="view-home" class="home">
+    <aside class="cos" id="cos" aria-label="Companies"></aside>
+    <section class="homemain" id="homemain"></section>
+  </main>
+
+  <main id="view-editor" hidden>
+    <div id="step-design" class="work" role="tabpanel" aria-labelledby="nav-design">
+      <aside class="pane left">
+        <div class="section">
+          <p class="label">Add a block</p>
+          <div class="addgrid" id="addgrid"></div>
+        </div>
+        <div class="section" style="padding-bottom:0"><p class="label">Layout &amp; layers</p></div>
+        <ul class="blist" id="blist"></ul>
+        <div class="addrow" id="addrow"></div>
+      </aside>
+      <div class="stagehost" id="stage-design">
+        <div class="stage" id="stage">
+          <div class="stagebar">
+            <div class="seg" role="group" aria-label="Preview background">
+              <button id="pv-light" aria-pressed="true" type="button">Light</button>
+              <button id="pv-dark" aria-pressed="false" type="button">Dark</button>
+            </div>
+            <div class="seg" role="group" aria-label="Preview width">
+              <button id="pv-desk" aria-pressed="true" type="button">Desktop</button>
+              <button id="pv-phone" aria-pressed="false" type="button">Phone</button>
+            </div>
+            <select id="pv-person" aria-label="Preview as person" hidden></select>
+            <span class="spacer"></span>
+            <span id="meter" class="meter"></span>
+          </div>
+          <div class="mail" id="mail">
+            <div class="mailhead"><div><b>To:</b> client@example.com</div><div><b>Subject:</b> Following up on Thursday</div></div>
+            <div class="mailbody">
+              <div>Hi Sam,<br><br>Thanks again for the time on Thursday. The revised timeline is attached.<br><br>Best,</div>
+              <div class="dash">--</div>
+              <div class="sigwrap" id="sig"></div>
+            </div>
+          </div>
+          <div class="checks" id="checks"></div>
+        </div>
+      </div>
+      <aside class="pane right"><div class="insp" id="insp"></div></aside>
+    </div>
+    <div id="step-people" class="step2" role="tabpanel" aria-labelledby="nav-people" hidden>
+      <section class="pane2" id="people"></section>
+      <div class="stagehost" id="stage-people"></div>
+    </div>
+    <div id="step-share" class="step2" role="tabpanel" aria-labelledby="nav-share" hidden>
+      <section class="pane2" id="share"></section>
+      <div class="stagehost" id="stage-share"></div>
+    </div>
+  </main>
+</div>
+
+<dialog id="dlg-icons"><div class="dlg">
+  <header><h2>Choose an icon</h2>
+    <input id="isearch" class="search" type="search" placeholder="Search 2,000+ icons: phone, linkedin, calendar…">
+    <button class="btn sm" id="iclose" type="button">Close</button></header>
+  <header style="padding-top:0">
+    <div class="seg" id="isets" role="group" aria-label="Icon set">
+      <button data-set="all" aria-pressed="true" type="button">All</button><button data-set="fab" aria-pressed="false" type="button">Brands</button><button data-set="fas" aria-pressed="false" type="button">Solid</button><button data-set="far" aria-pressed="false" type="button">Outline</button><button data-set="custom" aria-pressed="false" type="button">My icons</button>
+    </div>
+    <span class="spacer"></span>
+    <form id="iaddform" style="display:flex;gap:6px;flex-wrap:wrap"><input id="iaddurl" type="url" class="search" placeholder="Icon link (PNG), e.g. from Flaticon" aria-label="Icon image link" style="flex:1 1 220px"><button class="btn sm" type="submit">Add icon</button></form>
+  </header>
+  <div class="body"><div class="igrid" id="igrid"></div><p class="note" id="inote"></p></div>
+  <footer><span class="note">Your own icon: copy the image address of a PNG (from Flaticon or your site) and add it above. Use PNG, since Gmail doesn't show SVG. Built-in icons are Font Awesome Free (CC BY 4.0).</span></footer>
+</div></dialog>
+
+<dialog id="dlg-new" style="width:min(980px,calc(100vw - 32px))"><div class="dlg">
+  <header><h2>New signature</h2>
+    <label class="note" for="newco">File under</label>
+    <select id="newco" style="padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:var(--panel2)"></select>
+    <button class="btn sm" id="newclose" type="button">Close</button></header>
+  <header style="padding-top:0"><div class="seg" id="newcats" role="group" aria-label="Template category"></div><span class="spacer"></span><button class="btn sm" id="newblank" type="button">Start blank</button></header>
+  <div class="body"><p class="note" id="newnote" style="margin-bottom:10px"></p><div class="tgrid" id="newgrid"></div></div>
+</div></dialog>
+
+<dialog id="dlg-about"><div class="dlg">
+  <header><h2>About Signature Studio</h2><button class="btn sm" id="aboutclose" type="button">Close</button></header>
+  <div class="body" style="display:flex;flex-direction:column;gap:12px;line-height:1.55">
+    <p>A free, open-source email signature builder by <a href="https://jackjaillet.com" target="_blank" rel="noopener">Jack Jaillet</a>. Design a signature, fill it in for a whole team, and copy it into Gmail, Outlook or Apple Mail.</p>
+    <p><b>Privacy.</b> Everything you make stays in this browser. There are no accounts, nothing you type is sent to a server, and this page has no analytics or tracking. Clearing your browser data deletes your signatures, so use <b>Export backup</b> to keep a copy or to move to another computer.</p>
+    <p><b>Images and icons.</b> Images are used by link and never uploaded here. In a finished signature, icons are loaded from <a href="https://iconify.design" target="_blank" rel="noopener">Iconify</a> through <a href="https://images.weserv.nl" target="_blank" rel="noopener">images.weserv.nl</a>, and cropped photos through images.weserv.nl. When someone opens your email, their mail app fetches those images from those services and your image hosts, which can see the request.</p>
+    <p><b>Fair use.</b> Only make signatures for yourself or for organizations you're allowed to represent.</p>
+    <p><b>Open source.</b> MIT license. Icons by <a href="https://fontawesome.com" target="_blank" rel="noopener">Font Awesome Free</a> (CC BY 4.0). IBM Plex fonts (SIL Open Font License). <a href="https://github.com/Legolife9/jack-jaillet-website" target="_blank" rel="noopener">View the code on GitHub</a>.</p>
+  </div>
+</div></dialog>
+
+<div role="status" aria-live="polite"><div id="toast" class="toast" hidden><span></span><button type="button" hidden></button></div></div>
+<script src="vendor/fontawesome/brands.min.js"></script>
+<script src="vendor/fontawesome/solid.min.js"></script>
+<script src="vendor/fontawesome/regular.min.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
