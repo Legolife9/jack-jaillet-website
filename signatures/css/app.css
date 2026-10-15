@@ -312,3 +312,4 @@ button.brand:hover{background:var(--panel2)}
 .googlebtn svg{width:15px;height:15px}
 .orline{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px}
 .orline::before,.orline::after{content:"";flex:1;border-top:1px solid var(--line)}
+.gsiwrap{min-height:44px;display:flex;justify-content:center}

@@ -2062,11 +2062,12 @@ function drawAccount(){
   }
   if (authStep === 'email'){
     B.innerHTML = `<p>Sign in to keep your signatures in your account and use them on any device.</p>
-      ${googleOn ? `<button class="btn googlebtn" type="button" data-a="google">${G('fab','google')}Continue with Google</button>
+      ${googleOn ? `<div id="gsibtn" class="gsiwrap"><span class="note">Loading Google sign-in…</span></div>
       <div class="orline"><span>or use your email</span></div>` : ''}
       <form id="authform" class="field" style="gap:8px"><span>Email</span><input id="authemail" type="email" autocomplete="email" required value="${esc(authEmail)}" placeholder="you@example.com">
       <div class="row" style="display:flex;gap:8px"><button class="btn" type="submit"${authBusy ? ' disabled' : ''}>${authBusy ? 'Sending…' : 'Email me a sign-in link'}</button></div></form>
       <p class="note">Signing in is optional. Without it, everything stays in this browser.</p>`;
+    mountGoogle();
     return;
   }
   const wait = Math.max(0, Math.ceil((resendAt - Date.now()) / 1000));
@@ -2079,6 +2080,39 @@ function drawAccount(){
       <div class="row" style="display:flex;gap:8px"><button class="btn primary" type="submit"${authBusy ? ' disabled' : ''}>${authBusy ? 'Checking…' : 'Sign in with code'}</button></div></form></details>`;
   const det = $('#codedetails'); if (det) det.ontoggle = () => { codeOpen = det.open; };
   if (wait) setTimeout(() => { if (authStep === 'code' && $('#dlg-acct').open) drawAccount(); }, 1000);
+}
+/* Google's own sign-in button (Google Identity Services). Because the popup comes from this page,
+   Google names jackjaillet.com, not the Supabase address. Google's script loads only when the
+   sign-in box opens. Supabase checks the ID token, matched to a one-time nonce. */
+const GOOGLE_CLIENT_ID = '177957739990-5jnfagsstcbia381oek4lbg9vf4qmv0s.apps.googleusercontent.com';
+let gsiLoading = null;
+function loadGsi(){
+  return gsiLoading || (gsiLoading = new Promise((res, rej) => {
+    const sc = document.createElement('script');
+    sc.src = 'https://accounts.google.com/gsi/client'; sc.async = true;
+    sc.onload = res; sc.onerror = () => { gsiLoading = null; rej(new Error("Google sign-in couldn't load")); };
+    document.head.appendChild(sc);
+  }));
+}
+const hexOf = buf => [...new Uint8Array(buf)].map(x => x.toString(16).padStart(2, '0')).join('');
+async function mountGoogle(){
+  const box = $('#gsibtn'); if (!box) return;
+  try {
+    await loadGsi();
+    const raw = hexOf(crypto.getRandomValues(new Uint8Array(16)));
+    const hashed = hexOf(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw)));
+    google.accounts.id.initialize({
+      client_id:GOOGLE_CLIENT_ID, nonce:hashed, ux_mode:'popup', context:'signin', itp_support:true,
+      callback:async resp => {
+        const { error } = await sb.auth.signInWithIdToken({ provider:'google', token:resp.credential, nonce:raw });
+        if (error) toast("Google sign-in didn't finish: " + error.message);
+      }
+    });
+    if (!document.body.contains(box)) return;
+    box.innerHTML = '';
+    const dark = document.documentElement.dataset.theme === 'dark' || (!document.documentElement.dataset.theme && matchMedia('(prefers-color-scheme: dark)').matches);
+    google.accounts.id.renderButton(box, { type:'standard', theme:dark ? 'filled_black' : 'outline', size:'large', text:'continue_with', shape:'rectangular', logo_alignment:'center', width:Math.min(400, Math.max(220, box.clientWidth || 320)) });
+  } catch (e){ box.innerHTML = `<p class="note">${esc(e.message)}. Use your email instead.</p>`; }
 }
 async function sendCode(){
   authBusy = true; drawAccount();
@@ -2103,11 +2137,6 @@ $('#acctbody').addEventListener('click', async e => {
   const a = e.target.closest('[data-a]'); if (!a) return;
   const act = a.dataset.a;
   if (act === 'resend') sendCode();
-  if (act === 'google'){
-    // leaves for Google and comes back here signed in (the code in the return URL is exchanged automatically)
-    const { error } = await sb.auth.signInWithOAuth({ provider:'google', options:{ redirectTo:location.origin + location.pathname } });
-    if (error) toast(/not enabled|provider/i.test(error.message) ? "Google sign-in isn't switched on yet. Use your email for now." : 'Could not start Google sign-in: ' + error.message);
-  }
   if (act === 'otheremail'){ authStep = 'email'; drawAccount(); $('#authemail').focus(); }
   if (act === 'signout'){ await saveNow(); await sb.auth.signOut(); $('#dlg-acct').close(); toast('Signed out. Your signatures stay in your account.'); }
   if (act === 'delacct'){ delAcct = true; drawAccount(); $('#delconfirm').focus(); }
