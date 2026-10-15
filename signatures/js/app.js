@@ -2058,6 +2058,9 @@ function renderAccount(){
   b.title = user ? 'Your account' : 'Sign in to keep your signatures on every device';
   b.classList.toggle('primary', false);
 }
+// Email sign-in stays off until a mail sender (SMTP, e.g. Resend) is set up in Supabase;
+// Supabase's built-in sender only reaches the project's own team. Flip to true then.
+const EMAIL_SIGNIN = false;
 let authStep = 'email', authEmail = '', authBusy = false, delAcct = false, resendAt = 0, codeOpen = false, googleOn = false;
 function openAccount(){ authStep = user ? 'account' : 'email'; delAcct = false; drawAccount(); $('#dlg-acct').showModal(); const i = $('#dlg-acct input'); if (i) i.focus(); }
 function drawAccount(){
@@ -2071,10 +2074,10 @@ function drawAccount(){
   }
   if (authStep === 'email'){
     B.innerHTML = `<p>Sign in to keep your signatures in your account and use them on any device.</p>
-      ${googleOn ? `<div id="gsibtn" class="gsiwrap"><span class="note">Loading Google sign-in…</span></div>
-      <div class="orline"><span>or use your email</span></div>` : ''}
+      ${googleOn ? `<div id="gsibtn" class="gsiwrap"><span class="note">Loading Google sign-in…</span></div>` : `<p class="note">Loading sign-in…</p>`}
+      ${EMAIL_SIGNIN ? `${googleOn ? '<div class="orline"><span>or use your email</span></div>' : ''}
       <form id="authform" class="field" style="gap:8px"><span>Email</span><input id="authemail" type="email" autocomplete="email" required value="${esc(authEmail)}" placeholder="you@example.com">
-      <div class="row" style="display:flex;gap:8px"><button class="btn" type="submit"${authBusy ? ' disabled' : ''}>${authBusy ? 'Sending…' : 'Email me a sign-in link'}</button></div></form>
+      <div class="row" style="display:flex;gap:8px"><button class="btn" type="submit"${authBusy ? ' disabled' : ''}>${authBusy ? 'Sending…' : 'Email me a sign-in link'}</button></div></form>` : ''}
       <p class="note">Signing in is optional. Without it, everything stays in this browser.</p>`;
     mountGoogle();
     return;
