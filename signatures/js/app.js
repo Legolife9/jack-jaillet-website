@@ -137,7 +137,7 @@ const DEF = {
   divider:{ label:'Line', thickness:1, style:'solid', color:'#d0d5dd', width:100 },
   spacer: { label:'Space', height:12 },
   contact:{ label:'Contact details', items:[], layout:'stack', sep:'|', iconColor:'#2453e6', iconSize:13, iconBg:'#e8eefc', iconShape:'none', iconPad:4, size:13, color:'', gap:5, labels:false },
-  social: { label:'Icon links', items:[], size:14, color:'#ffffff', bg:'#2453e6', shape:'circle', pad:7, gap:6 },
+  social: { label:'Icon links', items:[], size:14, color:'#ffffff', bg:'#2453e6', shape:'circle', pad:7, gap:6, tsize:12, tcolor:'' },
   button: { label:'Button', text:'Book a call', link:'', bg:'#2453e6', color:'#ffffff', borderW:0, borderColor:'#2453e6', radius:6, padX:16, padY:9, size:13, weight:600, icon:null, iconPos:'left', iconSize:13, inline:false },
   html:   { label:'Custom HTML', html:'<span style="font-size:12px;color:#667085">Custom HTML goes here</span>' }
 };
@@ -221,6 +221,7 @@ const memo = (k, f) => ARTC[k] || (ARTC[k] = f());
 const avatar = (ini, bg, fg) => memo('a' + ini + bg, () => avatarData(ini, bg, fg));
 const logo = (w, c) => memo('l' + w + c, () => logoData(w, c));
 const banner = (t1, t2, bg, fg) => memo('b' + t1 + bg, () => bannerData(t1, t2, bg, fg));
+let samplePeople = []; // filled by presets(); the fictional people withMe() swaps out
 const mark = (ch, t1, t2, c) => memo('m' + ch + t1 + t2 + c, () => markData(ch, t1, t2, c));
 function presets(){
   // sample people are fictional; 555-01xx numbers are reserved for fiction
@@ -249,6 +250,8 @@ function presets(){
   const lb = who({ name:'Luis Becerra', email:'luis@riverbendfoodshare.org', web:'riverbendfoodshare.org', phone:'(512) 555-0186', city:'Austin, TX' });
   const nj = who({ name:'Nadia Jamal', email:'nadia@thelongcommute.fm', web:'thelongcommute.fm' });
   const ow = who({ name:'Oliver Wren', email:'oliver.wren@meridianfreight.com', web:'meridianfreight.com', phone:'(404) 555-0108', city:'Atlanta, GA' });
+  const mb = who({ name:'Maya Brennan', email:'mbrennan@umass.edu', web:'linkedin.com/in/mayabrennan', phone:'(413) 555-0172', city:'Amherst, MA' });
+  samplePeople = [mo, th, ab, df, kw, pn, rh, lb, nj, ow, mb];
 
   return [
     /* ---------- Business ---------- */
@@ -361,14 +364,14 @@ function presets(){
     ])},
     // UMass Amherst maroon: ringed headshot over the university mark, a thin rule, then name with LinkedIn, school, pronouns, contact
     { key:'umass', cat:'Personal', name:'UMass Amherst', state:newState('UMass Amherst', { font:FONTS[0][0], color:'#1a1a1a', link:'#881c1c', palette:['#881c1c','#1a1a1a','#5c5c5c','#f4e6e6','#f7f4f4'] }, [
-      mkRow([[photo({ name:'Maya Brennan' }, 'MB', '#f4e6e6', '#881c1c', { width:110, borderW:3, borderColor:'#881c1c', align:'center', pb:8 }),
+      mkRow([[photo(mb, 'MB', '#f4e6e6', '#881c1c', { width:110, borderW:3, borderColor:'#881c1c', align:'center', pb:8 }),
               mk('image', { label:'Logo', sample:'m|M|UMASS|AMHERST|#881c1c', width:96, align:'center', alt:'UMass Amherst', pb:0 })],
-             [T('Name', 'Maya Brennan', { size:20, weight:700, color:'#881c1c', pb:2 }),
-              mk('social', { items:[{ icon:I('fab','linkedin'), link:'https://linkedin.com/in/mayabrennan' }], inline:true, gapL:8, shape:'none', color:'#0a66c2', size:20, pad:0, pb:2 }),
+             [T('Name', mb.name, { size:20, weight:700, color:'#881c1c', pb:2 }),
+              mk('social', { items:[{ icon:I('fab','linkedin'), link:'https://' + mb.web }], inline:true, gapL:8, shape:'none', color:'#0a66c2', size:20, pad:0, pb:2 }),
               T('School', 'Isenberg School of Management', { size:14, color:'#5c5c5c', pb:1 }),
               T('Degree', 'BBA, 2030', { size:14, color:'#5c5c5c', pb:2 }),
               T('Pronouns', '(She/Her/Hers)', { size:13, italic:true, color:'#8c8c8c', pb:10 }),
-              mk('contact', { items:[{ icon:I('fas','envelope'), text:'mbrennan@umass.edu', link:'mailto:mbrennan@umass.edu' }, { icon:I('fas','phone'), text:'(413) 555-0172', link:'tel:4135550172' }], size:13, iconSize:18, iconColor:'#881c1c', gap:6, pb:0 })]],
+              mk('contact', { items:contacts(mb, 2).reverse(), size:13, iconSize:18, iconColor:'#881c1c', gap:6, pb:0 })]],
         { divW:1, divC:'#555555', gap:20, valign:'middle' })
     ])},
     { key:'freelance', cat:'Personal', name:'Freelancer', state:newState('Freelancer', { font:FONTS[2][0], palette:['#15803d','#14241a','#5c6b61','#dcfce7','#f3f7f4'] }, [
@@ -499,6 +502,10 @@ function renderBlock(b, ctx){
       const cells = b.items.filter(i => i.icon && !(usesField(i.link) && !M(i.link).trim())).map((it, n) => {
         let img = iconImg(it.icon, b.color, b.size, ctx);
         if (b.shape !== 'none') img = `<table ${T0}><tr><td bgcolor="${b.bg}" align="center" style="background:${b.bg};border-radius:${rad};padding:${b.pad}px">${img}</td></tr></table>`;
+        // an optional title beside the icon ("LinkedIn", "Follow us"), linked the same way
+        const t = M(it.text || '').trim(), tc = b.tcolor || S.color;
+        if (t) return `<td style="padding-left:${n ? b.gap : 0}px"><table ${T0} style="border-collapse:collapse"><tr><td valign="middle">${wrapLink(img, it.link, b.color)}</td>` +
+          `<td valign="middle" style="padding-left:6px;font-family:${S.font};font-size:${b.tsize || 12}px;line-height:1.3;color:${tc};white-space:nowrap">${wrapLink(esc(t), it.link, tc)}</td></tr></table></td>`;
         return `<td style="padding-left:${n ? b.gap : 0}px">${wrapLink(img, it.link, b.color)}</td>`;
       }).join('');
       return cells ? `<table ${T0} style="border-collapse:collapse;display:inline-table"><tr>${cells}</tr></table>` : '';
@@ -774,7 +781,10 @@ $('#sig').addEventListener('click', e => {
   if (step !== 'design') return;
   const el = e.target.closest('[data-bid],[data-cid]');
   select(el ? (el.dataset.bid || el.dataset.cid) : 'style');
+  toInspector();
 });
+// on a phone the panes stack, so jump to the settings for whatever was just picked
+const toInspector = () => { if (matchMedia('(max-width:880px)').matches) $('#step-design .pane.right').scrollIntoView({ behavior:'smooth', block:'start' }); };
 function seg2(a, b, on){ $(a).setAttribute('aria-pressed', on); $(b).setAttribute('aria-pressed', !on); }
 $('#pv-light').onclick = () => { $('#mail').classList.remove('dark'); seg2('#pv-light', '#pv-dark', true); };
 $('#pv-dark').onclick = () => { $('#mail').classList.add('dark'); seg2('#pv-light', '#pv-dark', false); };
@@ -889,7 +899,7 @@ $('#blist').addEventListener('click', e => {
   const li = e.target.closest('[data-id]');
   if (!li){ const d = e.target.closest('[data-drop]'); if (d) select(d.dataset.drop); return; }
   const act = e.target.closest('[data-act]');
-  if (!act){ select(li.dataset.id); return; }
+  if (!act){ select(li.dataset.id); toInspector(); return; }
   const f = find(li.dataset.id), k = act.dataset.act;
   if (f.kind === 'row'){
     const i = state.rows.indexOf(f.r);
@@ -1099,7 +1109,7 @@ function itemsEditor(b, kind){
       bar.appendChild(btn);
     });
     card.appendChild(iconField(it, 'icon', 'Icon', kind === 'contact', ref => prefillLink(it, ref)));
-    if (kind === 'contact') card.appendChild(txt(it, 'text', 'Text'));
+    card.appendChild(kind === 'contact' ? txt(it, 'text', 'Text') : txt(it, 'text', 'Title beside the icon (optional)', { ph:'e.g. LinkedIn' }));
     card.appendChild(txt(it, 'link', 'Link (URL, email or phone)', { ph:'https://… or name@site.com' }));
     box.appendChild(card);
   });
@@ -1290,8 +1300,10 @@ function renderInspector(){
           b.iconShape !== 'none' ? row(color(b, 'iconBg', 'Background'), num(b, 'iconPad', 'Padding', 0, 14)) : null));
       break;
     case 'social':
+      if (b.tsize == null) b.tsize = 12;
       Pn.append(grp('Icons', itemsEditor(b, 'social'), chips()),
         grp('Style', row(num(b, 'size', 'Icon size', 8, 48), num(b, 'gap', 'Gap', 0, 30)), color(b, 'color', 'Icon color'),
+          row(num(b, 'tsize', 'Title size', 8, 24), color(b, 'tcolor', 'Title color', 'Default')),
           sel_(b, 'shape', 'Background shape', [['none','None'],['circle','Circle'],['rounded','Rounded square'],['square','Square']], { insp:true }),
           b.shape !== 'none' ? row(color(b, 'bg', 'Background'), num(b, 'pad', 'Padding', 0, 20)) : null));
       break;
@@ -1865,14 +1877,43 @@ function wireBrandKit(co){
   if (mb) mb.onclick = () => paletteFromImage(co.logoUrl, p => { co.palette = p; sv(`${co.name}'s colors now match the logo.`).then(renderHome); });
 }
 
+/* "Preview with your details": the templates' fictional people swapped for the visitor's own
+   name, title, email, phone and website, kept in this browser only */
+const ME_KEY = 'sigstudio.me', ME_FIELDS = [['name','Name'],['pronouns','Pronouns'],['title','Job title'],['email','Email'],['phone','Phone'],['web','Website']];
+const myDetails = () => store.get(ME_KEY) || {};
+const initialsOf = n => n.replace(/^(dr|mr|mrs|ms|mx)\.?\s+/i, '').split(/\s+/).filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase();
+function withMe(st, me){
+  if (!ME_FIELDS.some(([k]) => (me[k] || '').trim())) return st;
+  // text is swapped inside the saved JSON, so names in bold, links (mailto:, tel:) and labels all follow
+  const q = v => JSON.stringify(v).slice(1, -1), digits = v => (v || '').replace(/[^\d+]/g, '');
+  let s = JSON.stringify(st);
+  const swap = (from, to) => { if (from && to && to.trim()) s = s.split(q(from)).join(q(to.trim())); };
+  samplePeople.forEach(w => {
+    swap(w.email, me.email); swap(w.name.toUpperCase(), (me.name || '').toUpperCase()); swap(w.name, me.name);
+    swap(w.phone, me.phone); swap(digits(w.phone), digits(me.phone));
+    if (!/linkedin\.com/.test(w.web)) swap(w.web, me.web); // a LinkedIn link stays on its LinkedIn icon
+  });
+  if ((me.name || '').trim()) s = s.replace(/"a\|[^|"]*\|/g, '"a|' + q(initialsOf(me.name.trim())) + '|');
+  st = JSON.parse(s);
+  const title = (me.title || '').trim(), pro = (me.pronouns || '').trim();
+  st.rows.forEach(r => r.cols.forEach(c => c.blocks.forEach(b => {
+    if (b.type !== 'text') return;
+    if (title && b.label === 'Title') b.text = title;
+    if (pro && b.tag) b.tag = pro;
+    if (pro && b.label === 'Pronouns') b.text = `(${pro})`;
+  })));
+  return st;
+}
+
 /* templates: a gallery used on the empty home screen and in the New signature dialog */
 let presetCache = null, tplCat = 'All';
 function templateGallery(where, co){
   const thumbOf = st => render(st, 'preview').html.replace(/ data-(bid|cid|rid)="[^"]*"/g, '');
   if (!presetCache){ presetCache = presets(); presetCache.forEach(p => p.thumb = thumbOf(migrate(p.state))); }
   const shown = presetCache.filter(p => tplCat === 'All' || p.cat === tplCat);
-  // with one of your companies picked, previews wear its brand kit, just as createFrom will start them
-  const brand = co && !co.sh ? p => thumbOf(applyBrandIn(migrate(p.state), co)) : p => p.thumb;
+  // previews wear the picked company's brand kit and your details, just as createFrom will start them
+  const me = myDetails(), mine = co && !co.sh, personal = ME_FIELDS.some(([k]) => (me[k] || '').trim());
+  const brand = mine || personal ? p => { const st = migrate(p.state); if (mine) applyBrandIn(st, co); return thumbOf(withMe(st, me)); } : p => p.thumb;
   const cats = `<div class="seg" role="group" aria-label="Template category">${PRESET_CATS.map(c => `<button type="button" data-cat="${c}" aria-pressed="${c === tplCat}">${c}</button>`).join('')}</div>`;
   const grid = `<div class="tgrid">${shown.map(p => `<button type="button" class="pcard" data-preset="${p.key}" title="Start from ${esc(p.name)}"><div class="pv"><div>${brand(p)}</div></div><div class="pn">${esc(p.name)}</div></button>`).join('')}</div>`;
   return where === 'home' ? `${cats}${grid}<div><button class="btn sm" data-a="blank" type="button">Start blank</button></div>` : grid;
@@ -1881,12 +1922,20 @@ function openNew(){
   const s = $('#newco');
   s.innerHTML = `<option value="">No company</option>` + ownCos().map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
   s.value = coById(libCo) && !coById(libCo).sh ? libCo : '';
+  $('#newme').innerHTML = `<summary>Preview with your details</summary><div class="mefields">${ME_FIELDS.map(([k, l]) => `<label><span>${l}</span><input type="text" data-me="${k}" value="${esc(myDetails()[k] || '')}"></label>`).join('')}</div><p class="note">Saved only in this browser. Every template fills in with these, and so does the signature you start.</p>`;
   $('#dlg-new').showModal(); drawNew();
 }
+// your details are saved as you type; the previews redraw a moment after you stop
+let meT;
+$('#newme').oninput = e => {
+  const k = e.target.dataset.me; if (!k) return;
+  const me = myDetails(); me[k] = e.target.value; store.set(ME_KEY, me);
+  clearTimeout(meT); meT = setTimeout(drawNew, 250);
+};
 function drawNew(){
   const co = coById($('#newco').value);
   $('#newcats').innerHTML = PRESET_CATS.map(c => `<button type="button" data-cat="${c}" aria-pressed="${c === tplCat}">${c}</button>`).join('');
-  $('#newnote').textContent = co ? `Templates start with ${co.name}'s colors, font and logo. Sample details are placeholders.` : 'Sample details are placeholders; swap in your own.';
+  $('#newnote').textContent = co ? `Templates start with ${co.name}'s colors, font and logo. Sample details are placeholders.` : 'Sample details are placeholders. Add yours below to see every template with them.';
   $('#newgrid').innerHTML = templateGallery('dialog', co);
   wireRemoteImages($('#newgrid'));
   fitThumbs($('#newgrid'));
@@ -1902,6 +1951,7 @@ async function createFrom(p, coId){
   let st = migrate(p ? p.state : blankState());
   const co = coById(coId), mine = co && !co.sh;
   if (mine){ applyBrandIn(st, co); st.name = `${co.name}: ${st.name}`; } else st.companyId = '';
+  if (p) st = withMe(st, myDetails());
   const id = uid() + uid();
   try { await libSave(id, st.name, st); } catch (e){ toast('Could not create it: ' + e.message); return; }
   openSig(id, st);

@@ -1,6 +1,7 @@
 // Jack Jaillet site: shared footer behaviour, loaded on every page (Signature Studio too).
 // Footer year, the current-page marker, and Google Analytics, which loads only after a
-// visitor clicks Accept. The choice is kept in localStorage under "consent".
+// visitor allows it. Europe must opt in (Accept); elsewhere it runs unless the visitor says
+// No thanks. The choice is kept in localStorage under "consent".
 
 (function () {
   // Google Analytics 4 measurement ID, e.g. "G-ABC123XYZ". Empty = no analytics and no banner.
@@ -19,6 +20,12 @@
   var KEY = "consent";
   var choice = function () { try { return localStorage.getItem(KEY); } catch (e) { return null; } };
   var remember = function (v) { try { localStorage.setItem(KEY, v); } catch (e) {} };
+
+  // Europe (EU, EEA, UK, Switzerland and neighbours) is told apart by the device's time zone.
+  // ponytail: time zone, not IP; an unknown zone counts as Europe, so the error is on the safe side.
+  var tz = "";
+  try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ""; } catch (e) {}
+  var optIn = !tz || /^(Europe\/|Atlantic\/(Reykjavik|Canary|Madeira|Azores|Faroe)|Asia\/(Nicosia|Famagusta)|America\/(Guadeloupe|Martinique|Cayenne)|Indian\/(Reunion|Mayotte))/.test(tz);
 
   var loaded = false;
   function load() {
@@ -57,8 +64,9 @@
     });
   }
 
-  // Both answers look the same, so saying no is as easy as saying yes.
-  function ask() {
+  // Both answers look the same, so saying no is as easy as saying yes. "notice" is the
+  // outside-Europe version: analytics are already on and the visitor can turn them off.
+  function ask(notice) {
     var old = document.getElementById("consent");
     if (old) old.remove();
     var b = document.createElement("div");
@@ -67,10 +75,12 @@
     b.setAttribute("role", "region");
     b.setAttribute("aria-label", "Cookie choice");
     b.innerHTML =
-      '<p>May I use Google Analytics cookies to see which pages people visit? Nothing is used for ads. <a href="/privacy#analytics">Privacy policy</a></p>' +
+      (notice
+        ? '<p>This site uses Google Analytics cookies to see which pages people visit. Nothing is used for ads. <a href="/privacy#analytics">Privacy policy</a></p>'
+        : '<p>May I use Google Analytics cookies to see which pages people visit? Nothing is used for ads. <a href="/privacy#analytics">Privacy policy</a></p>') +
       '<div class="consent-actions">' +
       '<button type="button" class="btn btn-small btn-ghost sm" data-consent="denied">No thanks</button>' +
-      '<button type="button" class="btn btn-small btn-ghost sm" data-consent="granted">Accept</button>' +
+      '<button type="button" class="btn btn-small btn-ghost sm" data-consent="granted">' + (notice ? "OK" : "Accept") + "</button>" +
       "</div>";
     b.addEventListener("click", function (e) {
       var v = e.target.getAttribute("data-consent");
@@ -84,10 +94,13 @@
 
   document.querySelectorAll("[data-cookie-settings]").forEach(function (li) {
     li.hidden = false;
-    li.querySelector("button").addEventListener("click", ask);
+    li.querySelector("button").addEventListener("click", function () { ask(false); });
   });
 
   var c = choice();
   if (c === "granted") load();
-  else if (c !== "denied") ask();
+  else if (c !== "denied") {
+    if (!optIn) load();
+    ask(!optIn);
+  }
 })();
