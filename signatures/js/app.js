@@ -2355,8 +2355,7 @@ $('#personbody').addEventListener('submit', async e => {
 // light/dark switch shared with the rest of jackjaillet.com (localStorage "theme"; dark is the default)
 function paintTheme(){
   const light = document.documentElement.dataset.theme === 'light';
-  $('#themebtn').innerHTML = light ? G('fas', 'moon') : G('fas', 'sun');
-  $('#themebtn').setAttribute('aria-label', light ? 'Switch to dark mode' : 'Switch to light mode');
+  $('#themebtn').setAttribute('aria-checked', String(!light));
   const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = light ? '#f7f8fa' : '#10131a';
 }
 $('#themebtn').onclick = () => {
