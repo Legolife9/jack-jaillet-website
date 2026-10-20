@@ -971,8 +971,9 @@ function num(obj, key, label, min, max, step = 1, opts){
   const id = 'f' + (++fid);
   const w = el(`<div class="rng"><input type="range" aria-label="${esc(label)}" min="${min}" max="${max}" step="${step}"><input id="${id}" type="number" min="${min}" max="${max}" step="${step}"></div>`);
   const [r, n] = w.querySelectorAll('input'); r.value = n.value = obj[key];
-  const set = v => { v = Number(v); if (Number.isNaN(v)) return; obj[key] = v; r.value = n.value = v; changed(opts); };
-  r.oninput = () => set(r.value); n.oninput = () => set(n.value);
+  // the typed box isn't rewritten while typing, so "1." can become "1.2"
+  const set = (v, typed) => { if (v === '') return; v = Number(v); if (Number.isNaN(v)) return; obj[key] = v; r.value = v; if (!typed) n.value = v; changed(opts); };
+  r.oninput = () => set(r.value); n.oninput = () => set(n.value, true); n.onblur = () => { n.value = obj[key]; };
   return field(label, w);
 }
 function color(obj, key, label, auto){
