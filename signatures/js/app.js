@@ -446,7 +446,8 @@ function renderBlock(b, ctx){
       const tg = M(b.tag || '').trim();
       const tagH = tg ? `<span style="font-family:${b.font || S.font};font-size:${Math.max(9, Math.round(b.size * .72))}px;font-weight:400;font-style:${b.tagItalic === false ? 'normal' : 'italic'};text-transform:none;letter-spacing:0;color:${b.tagColor || '#667085'}">${esc(tg)}</span>` : '';
       const main = `<span style="${st}">${rich(t, S.link)}</span>`;
-      return wrapLink(tagH ? (b.tagPos === 'after' ? main + '&nbsp;&nbsp;' + tagH : tagH + '&nbsp;&nbsp;' + main) : main, b.link, color);
+      // the line height goes on a block around the text too: an inline span can't make its line shorter than the cell's own line
+      return `<div style="font-size:${b.size}px;line-height:${b.lh}">${wrapLink(tagH ? (b.tagPos === 'after' ? main + '&nbsp;&nbsp;' + tagH : tagH + '&nbsp;&nbsp;' + main) : main, b.link, color)}</div>`;
     }
     case 'image': {
       const { src, remote } = imageSrc(b, ctx);
