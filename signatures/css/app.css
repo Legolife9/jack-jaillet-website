@@ -411,3 +411,22 @@ button.brand:hover{background:var(--panel2)}
   .btn.sm{min-height:36px}
   .iconbtn{width:36px;height:36px}
 }
+
+/* people: one card per person; the one being edited opens into a form */
+.plist{display:flex;flex-direction:column;gap:6px;margin:4px 0 10px}
+.pcard{border:1px solid var(--line);border-radius:10px;background:var(--panel2)}
+.pcard.on{border-color:var(--sel);background:var(--panel)}
+.phead{display:flex;align-items:center;gap:8px;padding:6px 8px}
+.pick{flex:1;min-width:0;display:flex;align-items:center;gap:10px;background:none;border:0;padding:2px;color:inherit;text-align:left;cursor:pointer;font:inherit}
+.pav{flex:none;width:30px;height:30px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:var(--accent-soft);font-size:11px;font-weight:700}
+.pav img{width:100%;height:100%;object-fit:cover}
+.pnm{min-width:0;display:flex;flex-direction:column}
+.pnm b,.pnm .note{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pnm .note{margin:0;font-size:12px}
+.pform{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px;padding:4px 12px 2px}
+.pf{display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.pf input,.pf textarea{text-transform:none;letter-spacing:0;font:inherit;font-size:13px;color:var(--ink);padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--panel2);resize:none;min-height:0;width:100%;box-sizing:border-box}
+.pf textarea{overflow:hidden;line-height:1.35}
+.pf input:focus,.pf textarea:focus{border-color:var(--sel);outline:none}
+.pcard > .note{padding:0 12px 8px}
+.phead .acts2{display:flex;flex-direction:row;align-items:center;gap:2px;flex:none}

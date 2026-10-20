@@ -1395,21 +1395,27 @@ function renderPeople(){
   const tm = state.team, cur = personFor(state), Pn = $('#people');
   const keep = document.activeElement && Pn.contains(document.activeElement) ? document.activeElement.id : null;
   const cols = tm.fields;
-  const photoCell = (p, f) => {
-    const v = p.values[f.key] || '', isUrl = /^https?:/i.test(v);
-    return `<div class="photo">${isUrl ? `<img src="${esc(v)}" alt="" referrerpolicy="no-referrer">` : ''}<input type="text" id="pf-${p.id}-${f.key}" data-pid="${p.id}" data-k="${f.key}" placeholder="https://…/photo.jpg" value="${esc(v)}" aria-label="${esc(f.label)} link for ${esc(personLabel(p, tm.people.indexOf(p)))}" style="min-width:180px"></div>`;
-  };
-  const rows = tm.people.map((p, i) => `<tr class="${p === cur ? 'on' : ''}" data-pid="${p.id}">
-      <td><input type="radio" name="pvp" aria-label="Preview ${esc(personLabel(p, i))}" ${p === cur ? 'checked' : ''} data-pv="${p.id}"></td>
-      ${cols.map(f => `<td>${f.type === 'image' ? photoCell(p, f) : `<input type="text" id="pf-${p.id}-${f.key}" data-pid="${p.id}" data-k="${f.key}" value="${esc(p.values[f.key] || '')}" aria-label="${esc(f.label)} for ${esc(personLabel(p, i))}">`}</td>`).join('')}
-      <td><div class="acts2"><button type="button" class="btn sm" data-a="copy" title="Copy this person's signature for Gmail">Copy</button><button type="button" class="iconbtn" data-a="pdup" title="Duplicate" aria-label="Duplicate ${esc(personLabel(p, i))}">${G('far','copy')}</button><button type="button" class="${delPerson === p.id ? 'btn sm danger' : 'iconbtn'}" data-a="pdel" title="Remove" aria-label="Remove ${esc(personLabel(p, i))}">${delPerson === p.id ? 'Confirm' : G('far','trash-can')}</button></div></td></tr>`).join('');
+  const one = v => String(v || '').replace(/\s*\n\s*/g, ' ').trim();
+  // text boxes take Enter for a new line (it shows as a line break in the signature)
+  const box = (p, f, i) => f.type === 'image'
+    ? `<input type="text" id="pf-${p.id}-${f.key}" data-pid="${p.id}" data-k="${f.key}" placeholder="https://…/photo.jpg" value="${esc(p.values[f.key] || '')}" aria-label="${esc(f.label)} link for ${esc(personLabel(p, i))}">`
+    : `<textarea id="pf-${p.id}-${f.key}" data-pid="${p.id}" data-k="${f.key}" rows="${String(p.values[f.key] || '').split('\n').length}" aria-label="${esc(f.label)} for ${esc(personLabel(p, i))}">${esc(p.values[f.key] || '')}</textarea>`;
+  const photoOf = p => { const f = cols.find(x => x.type === 'image'), v = f && p.values[f.key]; return /^https?:/i.test(v || '') ? `<img src="${esc(v)}" alt="" referrerpolicy="no-referrer">` : esc((one(p.values.name) || '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()); };
+  const rows = tm.people.map((p, i) => {
+    const on = p === cur, sub = cols.filter(f => f.key !== 'name' && f.type !== 'image').map(f => one(p.values[f.key])).filter(Boolean)[0] || '';
+    return `<div class="pcard${on ? ' on' : ''}" data-pid="${p.id}">
+      <div class="phead"><button type="button" class="pick" data-a="pick" aria-expanded="${on}" aria-label="Edit and preview ${esc(personLabel(p, i))}"><span class="pav">${photoOf(p)}</span><span class="pnm"><b>${esc(one(personLabel(p, i)))}</b><span class="note">${esc(sub)}</span></span></button>
+        <div class="acts2"><button type="button" class="btn sm" data-a="copy" title="Copy this person's signature for Gmail">Copy</button><button type="button" class="iconbtn" data-a="pdup" title="Duplicate" aria-label="Duplicate ${esc(personLabel(p, i))}">${G('far','copy')}</button><button type="button" class="${delPerson === p.id ? 'btn sm danger' : 'iconbtn'}" data-a="pdel" title="Remove" aria-label="Remove ${esc(personLabel(p, i))}">${delPerson === p.id ? 'Confirm' : G('far','trash-can')}</button></div></div>
+      ${on ? `<div class="pform">${cols.map(f => `<label class="pf"><span>${esc(f.label)}</span>${box(p, f, i)}</label>`).join('')}</div><p class="note" style="margin:6px 0 0">Press Enter in a box to put the rest on a new line.</p>` : ''}
+    </div>`;
+  }).join('');
   Pn.innerHTML = `<div class="pwrap">
     <h2>People</h2>
     <p class="note">One design, a signature for everyone. Fields like <code>{{name}}</code> in the design fill in from each row. Blank fields are left out of that person's signature.</p>
     ${tm.people.length ? '' : `<div class="sharecard"><h3>${G('fas','users')}Make this a team signature</h3><p class="note">Convert turns the name, title, email, phone and photo in this design into fields and keeps the current details as the first person.</p><div class="row"><button class="btn primary sm" data-a="convert" type="button">Convert this design</button><button class="btn sm" data-a="add" type="button">Add a person</button><button class="btn sm" data-a="import" type="button">Paste from a spreadsheet</button></div></div>`}
     <div class="field"><span>Fields</span><div class="chips">${cols.map(f => `<span class="chip" style="display:inline-flex;gap:4px;align-items:center">{{${f.key}}}${f.type === 'image' ? ' (image)' : ''}<button type="button" class="iconbtn" data-rmf="${f.key}" aria-label="Remove field ${esc(f.label)}">${G('fas','xmark')}</button></span>`).join('')}</div>
       <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap"><input id="tnewf" type="text" placeholder="New field, e.g. Pronouns" aria-label="New field name" style="flex:1;min-width:140px;padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:var(--panel2)"><label class="chk" style="font-size:12px"><input id="tnewimg" type="checkbox">Image</label><button class="btn sm" data-a="addf" type="button">Add field</button></div></div>
-    ${tm.people.length ? `<div class="tablewrap"><table class="ptable"><thead><tr><th aria-label="Preview"></th>${cols.map(f => `<th>${esc(f.label)}</th>`).join('')}<th></th></tr></thead><tbody>${rows}</tbody></table></div>` : ''}
+    ${tm.people.length ? `<div class="plist">${rows}</div>` : ''}
     <div class="row" style="display:flex;gap:6px;flex-wrap:wrap">${tm.people.length ? '<button class="btn sm" data-a="add" type="button">+ Add person</button><button class="btn sm" data-a="import" type="button">Paste from a spreadsheet</button>' : ''}${tm.people.length && dlOK ? '<button class="btn sm" data-a="csv" type="button">Download CSV</button>' : ''}${tm.people.length ? `<button class="btn sm" type="button" data-a="toshare">Share with everyone →</button>` : ''}</div>
     <div class="sharecard" ${importOpen ? '' : 'hidden'}><h3>${G('fas','table')}Paste from a spreadsheet</h3><p class="note">Copy rows from Excel or Google Sheets, including a header row (Name, Job title, Email, Phone, Photo URL…). New column names become new fields.</p>
       <textarea id="timptext" class="code" style="min-height:110px" aria-label="Spreadsheet rows"></textarea>
@@ -1426,6 +1432,7 @@ $('#people').addEventListener('input', e => {
   const t = e.target; if (!t.dataset.pid || !t.dataset.k) return;
   const p = state.team.people.find(x => x.id === t.dataset.pid); if (!p) return;
   p.values[t.dataset.k] = t.value;
+  if (t.tagName === 'TEXTAREA') t.rows = t.value.split('\n').length;
   state.team.active = p.id;
   changed();
 });
@@ -1435,10 +1442,11 @@ $('#people').addEventListener('change', e => {
 });
 $('#people').addEventListener('click', async e => {
   const a = e.target.closest('[data-a],[data-rmf]'); if (!a) return;
-  const tm = state.team, tr = e.target.closest('tr[data-pid]'), p = tr && tm.people.find(x => x.id === tr.dataset.pid);
+  const tm = state.team, tr = e.target.closest('.pcard[data-pid]'), p = tr && tm.people.find(x => x.id === tr.dataset.pid);
   if (a.dataset.rmf){ const k = a.dataset.rmf; tm.fields = tm.fields.filter(f => f.key !== k); toast(`Removed {{${k}}}. Values stay saved with each person.`, UNDO); changed({ team:true }); return; }
   const act = a.dataset.a;
   if (act !== 'pdel') delPerson = null;
+  if (act === 'pick'){ tm.active = p.id; changed({ team:true }); const f = $(`#pf-${p.id}-${tm.fields[0] ? tm.fields[0].key : 'name'}`); if (f) f.focus(); return; }
   if (act === 'convert'){ const n = convertToTeam(); toast(n ? `Converted ${n} detail${n > 1 ? 's' : ''} to fields. Add more people below.` : 'Nothing to convert automatically. Use the field chips in the design inspector.'); changed({ team:true, list:true, insp:true }); }
   if (act === 'add'){ const np = newPerson({}); tm.people.push(np); tm.active = np.id; changed({ team:true }); const f = $(`#pf-${np.id}-${tm.fields[0] ? tm.fields[0].key : 'name'}`); if (f) f.focus(); }
   if (act === 'addf'){
