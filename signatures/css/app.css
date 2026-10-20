@@ -430,3 +430,4 @@ button.brand:hover{background:var(--panel2)}
 .pf input:focus,.pf textarea:focus{border-color:var(--sel);outline:none}
 .pcard > .note{padding:0 12px 8px}
 .phead .acts2{display:flex;flex-direction:row;align-items:center;gap:2px;flex:none}
+.stage.still .sigwrap [data-bid],.stage.still .sigwrap [data-cid]{cursor:default;outline:none}

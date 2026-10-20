@@ -697,6 +697,8 @@ function setStep(s){
   ['design','people','share'].forEach(k => { $('#step-' + k).hidden = k !== s; $('#nav-' + k).setAttribute('aria-selected', k === s); });
   // one live preview, moved to whichever step is showing
   $('#stage-' + s).appendChild($('#stage'));
+  // blocks in the preview can only be picked while designing
+  $('#stage').classList.toggle('still', s !== 'design');
   if (s === 'people') renderPeople();
   if (s === 'share') renderShare();
 }
@@ -774,7 +776,7 @@ function markSel(){ document.querySelectorAll('#sig [data-bid],#sig [data-cid],#
 // double-click text in the preview to jump straight to editing it
 $('#sig').addEventListener('dblclick', e => {
   const el = e.target.closest('[data-bid]'); if (!el) return;
-  if (step !== 'design') setStep('design');
+  if (step !== 'design') return;
   select(el.dataset.bid);
   const f = $('#insp textarea:not(.code)') || $('#insp .grp input[type=text]');
   if (f){ f.focus(); f.select(); }
