@@ -607,7 +607,9 @@ function find(id){
   return null;
 }
 const allCols = () => state.rows.flatMap(r => r.cols.map(c => ({ r, c })));
-function colName(r, c){ const ri = state.rows.indexOf(r) + 1; return r.cols.length > 1 ? `Row ${ri} · Column ${r.cols.indexOf(c) + 1}` : `Row ${ri}`; }
+const rowName = r => r.label || `Row ${state.rows.indexOf(r) + 1}`;
+const colLabel = (r, c) => c.label || `Column ${r.cols.indexOf(c) + 1}`;
+function colName(r, c){ return r.cols.length > 1 ? `${rowName(r)} · ${colLabel(r, c)}` : rowName(r); }
 
 /* ---------- editor state, history and autosave ---------- */
 // every signature lives in the library from the moment it's created, and edits save themselves
@@ -851,16 +853,16 @@ function blockName(b){
   if (b.type === 'button') return 'Button: ' + b.text;
   return b.label || DEF[b.type].label;
 }
-const ACTS = { up:['fas:arrow-up','Move up'], down:['fas:arrow-down','Move down'], left:['fas:arrow-left','Move left'], right:['fas:arrow-right','Move right'], dup:['far:copy','Duplicate'], del:['far:trash-can','Delete'] };
+const ACTS = { ren:['fas:pen','Rename'], up:['fas:arrow-up','Move up'], down:['fas:arrow-down','Move down'], left:['fas:arrow-left','Move left'], right:['fas:arrow-right','Move right'], dup:['far:copy','Duplicate'], del:['far:trash-can','Delete'] };
 const acts = keys => `<span class="acts">${keys.map(k => { const [g, t] = ACTS[k], [s, n] = g.split(':'); return `<button class="iconbtn" data-act="${k}" title="${t}" aria-label="${t}">${G(s, n)}</button>`; }).join('')}</span>`;
 let dragId = null;
 function renderList(){
   let h = `<li class="bitem${sel === 'style' ? ' sel' : ''}" data-id="style"><span class="ic">${glyph('style')}</span><span class="nm"><b>Signature style</b></span></li>`;
   state.rows.forEach((r, ri) => {
-    h += `<li class="bitem rowh${sel === r.id ? ' sel' : ''}" data-id="${r.id}"><span class="ic">${glyph('row')}</span><span class="nm"><b>Row ${ri + 1}</b> · ${r.cols.length} column${r.cols.length > 1 ? 's' : ''}</span>${acts(['up','down','dup','del'])}</li>`;
+    h += `<li class="bitem rowh${sel === r.id ? ' sel' : ''}" data-id="${r.id}"><span class="ic">${glyph('row')}</span><span class="nm"><b>${esc(rowName(r))}</b> · ${r.cols.length} column${r.cols.length > 1 ? 's' : ''}</span>${acts(['ren','up','down','dup','del'])}</li>`;
     const multi = r.cols.length > 1;
     r.cols.forEach((c, ci) => {
-      if (multi) h += `<li class="bitem colh${sel === c.id ? ' sel' : ''}" data-id="${c.id}" data-drop="${c.id}"><span class="nm">Column ${ci + 1}${c.width ? ` · ${c.width}px` : ''}</span>${acts(['left','right','del'])}</li>`;
+      if (multi) h += `<li class="bitem colh${sel === c.id ? ' sel' : ''}" data-id="${c.id}" data-drop="${c.id}"><span class="nm">${esc(colLabel(r, c))}${c.width ? ` · ${c.width}px` : ''}</span>${acts(['ren','left','right','del'])}</li>`;
       c.blocks.forEach(b => {
         h += `<li class="bitem blk${multi ? ' in' : ''}${sel === b.id ? ' sel' : ''}" data-id="${b.id}" draggable="true"><span class="ic">${glyph(b.type)}</span><span class="nm">${esc(blockName(b))}</span>${acts(['up','down','dup','del'])}</li>`;
       });
@@ -902,6 +904,7 @@ $('#blist').addEventListener('click', e => {
   const act = e.target.closest('[data-act]');
   if (!act){ select(li.dataset.id); toInspector(); return; }
   const f = find(li.dataset.id), k = act.dataset.act;
+  if (k === 'ren'){ renameLayer(li.dataset.id); return; }
   if (f.kind === 'row'){
     const i = state.rows.indexOf(f.r);
     if (k === 'up' && i > 0) [state.rows[i - 1], state.rows[i]] = [state.rows[i], state.rows[i - 1]];
@@ -920,6 +923,8 @@ $('#blist').addEventListener('click', e => {
   }
   changed({ list:true, insp:true });
 });
+function renameLayer(id){ select(id); toInspector(); const n = $('#layername'); if (n){ n.focus(); n.select(); } }
+$('#blist').addEventListener('dblclick', e => { const li = e.target.closest('.rowh,.colh'); if (li && !e.target.closest('[data-act]')) renameLayer(li.dataset.id); });
 const BL = $('#blist');
 BL.addEventListener('dragstart', e => { const li = e.target.closest('.blk'); if (!li) return; dragId = li.dataset.id; li.classList.add('drag'); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', dragId); });
 BL.addEventListener('dragover', e => {
@@ -953,6 +958,7 @@ function field(label, node){
   [node, ...node.querySelectorAll('input,select,textarea')].forEach(x => { if (/INPUT|SELECT|TEXTAREA/.test(x.tagName) && !x.getAttribute('aria-label')) x.setAttribute('aria-label', label); });
   f.appendChild(node); return f;
 }
+function nameField(o, ph){ const w = txt(o, 'label', 'Name', { list:true, ph }); w.querySelector('input').id = 'layername'; return w; }
 function txt(obj, key, label, opts = {}){
   const id = 'f' + (++fid);
   const n = opts.area ? el(`<textarea id="${id}" class="${opts.code ? 'code' : ''}"></textarea>`) : el(`<input id="${id}" type="text" placeholder="${esc(opts.ph || '')}">`);
@@ -1232,7 +1238,8 @@ function renderInspector(){
   const head = (title, sub) => { const h = el(`<div style="display:flex;align-items:center;gap:8px"><h3 style="flex:1">${esc(title)}</h3><button type="button" class="btn sm ghost">Done</button></div>`); h.querySelector('button').onclick = () => select('style'); Pn.appendChild(h); if (sub) Pn.appendChild(note(esc(sub))); };
   if (f.kind === 'row'){
     const r = f.r, ri = state.rows.indexOf(r) + 1;
-    head(`Row ${ri}`, 'A row holds side-by-side columns. Stack rows to build any layout.');
+    head(rowName(r), 'A row holds side-by-side columns. Stack rows to build any layout.');
+    Pn.appendChild(nameField(r, `Row ${ri}`));
     const cnt = colCount(r, 'Columns');
     [grp('Columns', cnt, r.cols.length > 1 ? [row(num(r, 'gap', 'Gap between', 0, 60), sel_(r, 'valign', 'Line up', [['top','Top'],['middle','Middle'],['bottom','Bottom']]))] : null,
         r.cols.map((c, i) => num(c, 'width', `Column ${i + 1} width (0 = auto)`, 0, 500, 2, { list:true })),
@@ -1244,6 +1251,7 @@ function renderInspector(){
   if (f.kind === 'col'){
     const c = f.c;
     head(colName(f.r, c), 'Select a block in this column to edit it, or add one from the left.');
+    Pn.appendChild(nameField(c, `Column ${f.r.cols.indexOf(c) + 1}`));
     Pn.append(grp('Layout', colCount(f.r, 'Columns in this row'), num(c, 'width', 'Width (0 = auto)', 0, 500, 2, { list:true })),
       grp('Background', chk(c, 'bgOn', 'Fill this column', { insp:true }), c.bgOn ? [color(c, 'bg', 'Color'), row(num(c, 'pad', 'Padding', 0, 40), num(c, 'radius', 'Corner radius', 0, 30))] : num(c, 'pad', 'Padding', 0, 40)));
     return;
@@ -1275,9 +1283,9 @@ function renderInspector(){
           color(b, 'tagColor', 'Pronoun color', 'Default'),
           (() => { if (b.tagItalic === undefined) b.tagItalic = true; return chk(b, 'tagItalic', 'Italic pronouns'); })(),
           txt(b, 'link', 'Link the whole line (optional)', { ph:'https://… or name@site.com' }), chips()),
-        grp('Style', row(num(b, 'size', 'Size', 8, 48), sel_(b, 'weight', 'Weight', WEIGHTS)), styleToggles(b), color(b, 'color', 'Color', 'Default'),
+        grp('Style', row(num(b, 'size', 'Size', 6, 48), sel_(b, 'weight', 'Weight', WEIGHTS)), styleToggles(b), color(b, 'color', 'Color', 'Default'),
           sel_(b, 'font', 'Font', [['','Same as signature'], ...FONTS]),
-          row(num(b, 'spacing', 'Letter spacing', 0, 10, .5), num(b, 'lh', 'Line height', .8, 2.4, .05))));
+          row(num(b, 'spacing', 'Letter spacing', 0, 10, .5), num(b, 'lh', 'Line height', .5, 2.4, .05))));
       break;
     case 'image':
       Pn.append(grp('Image', imageEditor(b)),
