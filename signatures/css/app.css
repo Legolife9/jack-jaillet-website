@@ -441,3 +441,11 @@ button.brand:hover{background:var(--panel2)}
 .stage.still .sigwrap [data-bid],.stage.still .sigwrap [data-cid]{cursor:default;outline:none}
 /* keep each section at its full height; a short window scrolls instead of squashing the signature preview */
 .pwrap > *{flex-shrink:0}
+
+/* reframe: the picture inside its frame; drag to move, wheel or slider to zoom */
+.reframe{position:relative;overflow:hidden;background:var(--panel2);border:1px solid var(--line-strong);cursor:grab;touch-action:none;margin:2px 0 6px;max-width:100%}
+.reframe.drag{cursor:grabbing}
+.reframe:focus-visible{outline:2px solid var(--sel);outline-offset:2px}
+.reframe .rf-img{position:absolute;background-size:100% 100%;pointer-events:none}
+.reframe.empty{cursor:default;display:grid;place-items:center}
+.reframe.empty .rf-img{position:static;color:var(--muted);font-size:12px;padding:10px;text-align:center}

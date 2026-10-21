@@ -91,6 +91,13 @@ const ASPECTS = [['orig','Original'],['1:1','Square 1:1'],['4:5','Portrait 4:5']
 const ratioOf = a => { const [w, h] = a.split(':').map(Number); return w / h; };
 let previewQueued = false;
 function queuePreview(){ if (previewQueued) return; previewQueued = true; requestAnimationFrame(() => { previewQueued = false; renderPreview(); }); }
+// the part of a w×h picture a frame shows: cover the frame, zoom in, then slide to the focus point
+function cropRect(w, h, ar, c){
+  let sw = w, sh = w / ar;
+  if (sh > h){ sh = h; sw = h * ar; }
+  sw /= c.zoom || 1; sh /= c.zoom || 1;
+  return { sx:Math.round((w - sw) * c.x / 100), sy:Math.round((h - sh) * c.y / 100), sw:Math.round(sw), sh:Math.round(sh) };
+}
 function cropped(src, crop, outW){
   if (!src || !/^data:image\/(png|jpe?g|webp)/.test(src)) return src;
   if (crop.aspect === 'orig' && crop.zoom <= 1) return src;
@@ -419,8 +426,13 @@ function sampleArt(key){
 }
 // a hosted image, cropped to the chosen frame by images.weserv.nl (a free image service) when a frame is set
 function cropUrl(url, b){
-  if (b.crop.aspect === 'orig') return url;
-  const W = Math.min(800, b.width * 2), H = Math.round(W / ratioOf(b.crop.aspect));
+  const c = b.crop;
+  if (c.aspect === 'orig') return url;
+  const ar = ratioOf(c.aspect), W = Math.min(800, b.width * 2), H = Math.round(W / ar), d = c.dim;
+  if (c.zoom > 1 && d && d.url === url){
+    const r = cropRect(d.w, d.h, ar, c);
+    return 'https://images.weserv.nl/?url=' + encodeURIComponent(url) + `&precrop&cx=${r.sx}&cy=${r.sy}&cw=${r.sw}&ch=${r.sh}&w=${W}&h=${H}&fit=cover`;
+  }
   return 'https://images.weserv.nl/?url=' + encodeURIComponent(url) + `&w=${W}&h=${H}&fit=cover&a=focal-${Math.round(b.crop.x)}-${Math.round(b.crop.y)}`;
 }
 function imageSrc(b, ctx){
@@ -1099,9 +1111,61 @@ function cropEditor(b){
   return [
     sel_(c, 'aspect', 'Crop to', ASPECTS, { insp:true }),
     c.aspect !== 'orig' ? note('Cropping a linked image uses images.weserv.nl, a free image service, so recipients load it from there.') : null,
-    c.aspect !== 'orig' ? row(num(c, 'x', 'Focus left ↔ right', 0, 100), num(c, 'y', 'Focus top ↕ bottom', 0, 100)) : null,
+    c.aspect !== 'orig' ? reframer(b) : null,
     b.shape === 'circle' && c.aspect !== '1:1' ? note('Circles look best with a 1:1 crop.') : null
   ];
+}
+// the picture this block shows right now (the current person's photo for a person field)
+function framedSrc(b){
+  const p = personFor(state), V = p ? p.values : {};
+  if (b.source === 'field'){ const v = String(V[b.field] || '').trim(); return /^https?:\/\//i.test(v) ? v : ''; }
+  const u = String(b.url || '').replace(/\{\{\s*([\w-]+)\s*\}\}/g, (_, k) => V[k] || '').trim();
+  if (/^https?:\/\//i.test(u)) return u;
+  return b.sample ? sampleArt(b.sample) : '';
+}
+function reframer(b){
+  const c = b.crop, src = framedSrc(b), ar = ratioOf(c.aspect);
+  const w = el(`<div class="field"><span>Reframe</span><div class="reframe" tabindex="0" role="application" aria-label="Picture position. Drag, or use the arrow keys; plus and minus zoom."><div class="rf-img"></div></div></div>`);
+  const box = w.querySelector('.reframe'), pic = box.querySelector('.rf-img');
+  const BW = 220, BH = Math.round(BW / ar);
+  box.style.cssText = `width:${BW}px;height:${BH}px;border-radius:${b.shape === 'circle' ? '50%' : b.shape === 'rounded' ? Math.min(b.radius, 30) + 'px' : '4px'}`;
+  if (!src){ box.classList.add('empty'); pic.textContent = 'Add a picture link to reframe it here.'; }
+  let nw = 0, nh = 0;
+  // the picture covers the frame at zoom 1, the same math as the crop itself
+  const paint = () => {
+    if (!nw) return;
+    const cover = Math.max(BW / nw, BH / nh) * (c.zoom || 1), iw = nw * cover, ih = nh * cover;
+    pic.style.cssText = `width:${iw}px;height:${ih}px;left:${-(iw - BW) * c.x / 100}px;top:${-(ih - BH) * c.y / 100}px;background-image:url("${src.replace(/"/g, '%22')}")`;
+    return [iw - BW, ih - BH];
+  };
+  if (src){
+    const im = new Image(); im.referrerPolicy = 'no-referrer';
+    im.onload = () => {
+      nw = im.naturalWidth; nh = im.naturalHeight; paint();
+      // remember the size of a linked picture so zoom works for it in email (see cropUrl)
+      if (/^https?:/.test(src) && b.source !== 'field' && !(c.dim && c.dim.url === src && c.dim.w === nw)){ c.dim = { url:src, w:nw, h:nh }; changed(); }
+    };
+    im.src = src;
+  }
+  const move = (dx, dy) => { const [mx, my] = paint() || [0, 0]; if (mx > 0) c.x = Math.min(100, Math.max(0, c.x - dx / mx * 100)); if (my > 0) c.y = Math.min(100, Math.max(0, c.y - dy / my * 100)); paint(); changed(); };
+  let drag = null;
+  box.onpointerdown = e => { if (!nw) return; drag = [e.clientX, e.clientY]; box.setPointerCapture(e.pointerId); box.classList.add('drag'); };
+  box.onpointermove = e => { if (!drag) return; move(e.clientX - drag[0], e.clientY - drag[1]); drag = [e.clientX, e.clientY]; };
+  box.onpointerup = box.onpointercancel = () => { drag = null; box.classList.remove('drag'); };
+  // zoom needs each picture's size, so it isn't offered for per-person photos
+  const zoomTo = z => { if (b.source === 'field') return; c.zoom = Math.round(Math.min(4, Math.max(1, z)) * 100) / 100; zr.value = c.zoom; paint(); changed(); };
+  box.onwheel = e => { if (!nw) return; e.preventDefault(); zoomTo((c.zoom || 1) * (e.deltaY < 0 ? 1.08 : 1 / 1.08)); };
+  box.onkeydown = e => {
+    const k = { ArrowLeft:[8, 0], ArrowRight:[-8, 0], ArrowUp:[0, 8], ArrowDown:[0, -8] }[e.key];
+    if (k){ e.preventDefault(); move(...k); } else if (e.key === '+' || e.key === '='){ zoomTo((c.zoom || 1) + .1); } else if (e.key === '-'){ zoomTo((c.zoom || 1) - .1); }
+  };
+  const z = el(`<div class="rng"><input type="range" min="1" max="4" step="0.01" aria-label="Zoom"><button type="button" class="btn sm ghost">Reset</button></div>`);
+  const zr = z.querySelector('input'); zr.value = c.zoom || 1;
+  zr.oninput = () => zoomTo(Number(zr.value));
+  z.querySelector('button').onclick = () => { c.x = 50; c.y = 50; zoomTo(1); };
+  if (b.source !== 'field') w.append(field('Zoom', z));
+  else w.append(note('Shows the person picked in the preview. The same position is used for everyone.'));
+  return w;
 }
 function itemsEditor(b, kind){
   const box = el('<div class="items"></div>');
