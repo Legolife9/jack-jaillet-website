@@ -77,7 +77,7 @@ function iconImg(ref, color, size, ctx){
     const r = rasterCache[rasterKey(ref, color, size)];
     src = ctx.mode === 'embed' && r && r !== 'pending' ? r : 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(iconSvg(ref, color));
   }
-  return `<img src="${esc(src)}" width="${w}" height="${size}" alt="" style="display:block;width:${w}px;height:${size}px;border:0">`;
+  return `<img src="${esc(src)}" width="${w}" height="${size}" alt="" style="display:block;width:${w}px;height:${size}px;border:0;margin:0 auto">`;
 }
 function iconChip(ref){
   if (!ref) return '<span class="note">None</span>';
@@ -481,7 +481,7 @@ function renderBlock(b, ctx){
         const img = iconImg(ref, b.iconColor, b.iconSize, ctx);
         if (b.iconShape === 'none') return img;
         const rad = b.iconShape === 'circle' ? '50%' : b.iconShape === 'rounded' ? '4px' : '0';
-        return `<table ${T0}><tr><td bgcolor="${b.iconBg}" style="background:${b.iconBg};border-radius:${rad};padding:${b.iconPad}px">${img}</td></tr></table>`;
+        return `<table ${T0}><tr><td bgcolor="${b.iconBg}" align="center" width="${b.iconSize + 2 * b.iconPad}" style="background:${b.iconBg};border-radius:${rad};padding:${b.iconPad}px 0;width:${b.iconSize + 2 * b.iconPad}px">${img}</td></tr></table>`;
       };
       const ts = `font-family:${S.font};font-size:${b.size}px;color:${color};line-height:1.35`;
       const items = b.items.map(i => Object.assign({}, i, { t:M(i.text) })).filter(i => i.t.trim());
@@ -502,7 +502,7 @@ function renderBlock(b, ctx){
       const rad = b.shape === 'circle' ? '50%' : b.shape === 'rounded' ? '6px' : '0';
       const cells = b.items.filter(i => i.icon && !(usesField(i.link) && !M(i.link).trim())).map((it, n) => {
         let img = iconImg(it.icon, b.color, b.size, ctx);
-        if (b.shape !== 'none') img = `<table ${T0}><tr><td bgcolor="${b.bg}" align="center" style="background:${b.bg};border-radius:${rad};padding:${b.pad}px">${img}</td></tr></table>`;
+        if (b.shape !== 'none') img = `<table ${T0}><tr><td bgcolor="${b.bg}" align="center" width="${b.size + 2 * b.pad}" style="background:${b.bg};border-radius:${rad};padding:${b.pad}px 0;width:${b.size + 2 * b.pad}px">${img}</td></tr></table>`;
         // an optional title beside the icon ("LinkedIn", "Follow us"), linked the same way
         const t = M(it.text || '').trim(), tc = b.tcolor || S.color;
         if (t) return `<td style="padding-left:${n ? b.gap : 0}px"><table ${T0} style="border-collapse:collapse"><tr><td valign="middle">${wrapLink(img, it.link, b.color)}</td>` +
