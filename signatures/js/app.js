@@ -811,10 +811,33 @@ $('#sig').addEventListener('dblclick', e => {
 $('#sig').addEventListener('click', e => {
   e.preventDefault();
   if (step !== 'design') return;
+  if (colDragged){ colDragged = false; return; } // the end of a column drag isn't a click
   const el = e.target.closest('[data-bid],[data-cid]');
   select(el ? (el.dataset.bid || el.dataset.cid) : 'style');
   toInspector();
 });
+// drag a column's right edge in the preview to make it wider or narrower
+const COLMAX = 600;
+let colDrag = null, colDragged = false;
+function colEdge(e){
+  if (step !== 'design') return null;
+  const td = e.target.closest && e.target.closest('#sig [data-cid]'); if (!td) return null;
+  return td.getBoundingClientRect().right - e.clientX < 8 ? td : null;
+}
+$('#sig').addEventListener('pointermove', e => {
+  if (!colDrag){ $('#sig').style.cursor = colEdge(e) ? 'col-resize' : ''; return; }
+  const f = find(colDrag.id); if (!f) return;
+  f.c.width = Math.max(20, Math.min(COLMAX, Math.round(colDrag.w + (e.clientX - colDrag.x) / colDrag.scale)));
+  colDrag.moved = true; changed();
+});
+$('#sig').addEventListener('pointerdown', e => {
+  const td = colEdge(e); if (!td) return;
+  e.preventDefault();
+  const scale = td.getBoundingClientRect().width / td.offsetWidth || 1, f = find(td.dataset.cid);
+  colDrag = { id:td.dataset.cid, x:e.clientX, scale, w:f.c.width || Math.round(td.offsetWidth - 2 * (f.c.pad || 0)) };
+  $('#sig').setPointerCapture(e.pointerId);
+});
+$('#sig').addEventListener('pointerup', () => { if (!colDrag) return; const id = colDrag.id, moved = colDrag.moved; colDrag = null; if (moved){ colDragged = true; select(id); } });
 // on a phone the panes stack, so jump to the settings for whatever was just picked
 const toInspector = () => { if (matchMedia('(max-width:880px)').matches) $('#step-design .pane.right').scrollIntoView({ behavior:'smooth', block:'start' }); };
 function seg2(a, b, on){ $(a).setAttribute('aria-pressed', on); $(b).setAttribute('aria-pressed', !on); }
@@ -1324,7 +1347,7 @@ function renderInspector(){
     Pn.appendChild(nameField(r, `Row ${ri}`));
     const cnt = colCount(r, 'Columns');
     [grp('Columns', cnt, r.cols.length > 1 ? [row(num(r, 'gap', 'Gap between', 0, 60), sel_(r, 'valign', 'Line up', [['top','Top'],['middle','Middle'],['bottom','Bottom']]))] : null,
-        r.cols.map((c, i) => num(c, 'width', `Column ${i + 1} width (0 = auto)`, 0, 500, 2, { list:true })),
+        r.cols.map((c, i) => num(c, 'width', `Column ${i + 1} width (0 = auto)`, 0, COLMAX, 2, { list:true })),
         chk(r, 'full', 'Stretch row to full signature width')),
       r.cols.length > 1 ? grp('Divider between columns', row(num(r, 'divW', 'Thickness (0 = none)', 0, 8), sel_(r, 'divS', 'Style', LSTYLES)), color(r, 'divC', 'Color')) : null,
       grp('Spacing', row(num(r, 'pt', 'Space above', 0, 60), num(r, 'pb', 'Space below', 0, 60)))].filter(Boolean).forEach(g => Pn.appendChild(g));
@@ -1334,7 +1357,7 @@ function renderInspector(){
     const c = f.c;
     head(colName(f.r, c), 'Select a block in this column to edit it, or add one from the left.');
     Pn.appendChild(nameField(c, `Column ${f.r.cols.indexOf(c) + 1}`));
-    Pn.append(grp('Layout', colCount(f.r, 'Columns in this row'), num(c, 'width', 'Width (0 = auto)', 0, 500, 2, { list:true })),
+    Pn.append(grp('Layout', colCount(f.r, 'Columns in this row'), num(c, 'width', 'Width (0 = auto)', 0, COLMAX, 2, { list:true })),
       grp('Background', chk(c, 'bgOn', 'Fill this column', { insp:true }), c.bgOn ? [color(c, 'bg', 'Color'), row(num(c, 'pad', 'Padding', 0, 40), num(c, 'radius', 'Corner radius', 0, 30))] : num(c, 'pad', 'Padding', 0, 40)));
     return;
   }
@@ -1484,7 +1507,7 @@ function renderPeople(){
   const photoOf = p => { const f = cols.find(x => x.type === 'image'), v = f && p.values[f.key]; return /^https?:/i.test(v || '') ? `<img src="${esc(v)}" alt="" referrerpolicy="no-referrer">` : esc((one(p.values.name) || '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()); };
   const rows = tm.people.map((p, i) => {
     const on = p === cur, sub = cols.filter(f => f.key !== 'name' && f.type !== 'image').map(f => one(p.values[f.key])).filter(Boolean)[0] || '';
-    return `<div class="pcard${on ? ' on' : ''}" data-pid="${p.id}">
+    return `<div class="pers${on ? ' on' : ''}" data-pid="${p.id}">
       <div class="phead"><button type="button" class="pick" data-a="pick" aria-expanded="${on}" aria-label="Edit and preview ${esc(personLabel(p, i))}"><span class="pav">${photoOf(p)}</span><span class="pnm"><b>${esc(one(personLabel(p, i)))}</b><span class="note">${esc(sub)}</span></span></button>
         <div class="acts2"><button type="button" class="btn sm" data-a="copy" title="Copy this person's signature for Gmail">Copy</button><button type="button" class="iconbtn" data-a="pdup" title="Duplicate" aria-label="Duplicate ${esc(personLabel(p, i))}">${G('far','copy')}</button><button type="button" class="${delPerson === p.id ? 'btn sm danger' : 'iconbtn'}" data-a="pdel" title="Remove" aria-label="Remove ${esc(personLabel(p, i))}">${delPerson === p.id ? 'Confirm' : G('far','trash-can')}</button></div></div>
       ${on ? `<div class="pform">${cols.map(f => `<label class="pf"><span>${esc(f.label)}</span>${box(p, f, i)}</label>`).join('')}</div><p class="note" style="margin:6px 0 0">Press Enter in a box to put the rest on a new line.</p>` : ''}
@@ -1523,7 +1546,7 @@ $('#people').addEventListener('change', e => {
 });
 $('#people').addEventListener('click', async e => {
   const a = e.target.closest('[data-a],[data-rmf]'); if (!a) return;
-  const tm = state.team, tr = e.target.closest('.pcard[data-pid]'), p = tr && tm.people.find(x => x.id === tr.dataset.pid);
+  const tm = state.team, tr = e.target.closest('.pers[data-pid]'), p = tr && tm.people.find(x => x.id === tr.dataset.pid);
   if (a.dataset.rmf){ const k = a.dataset.rmf; tm.fields = tm.fields.filter(f => f.key !== k); toast(`Removed {{${k}}}. Values stay saved with each person.`, UNDO); changed({ team:true }); return; }
   const act = a.dataset.a;
   if (act !== 'pdel') delPerson = null;

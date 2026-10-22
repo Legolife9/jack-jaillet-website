@@ -422,8 +422,8 @@ button.brand:hover{background:var(--panel2)}
 
 /* people: one card per person; the one being edited opens into a form */
 .plist{display:flex;flex-direction:column;gap:6px;margin:4px 0 10px}
-.pcard{border:1px solid var(--line);border-radius:10px;background:var(--panel2)}
-.pcard.on{border-color:var(--sel);background:var(--panel)}
+.pers{border:1px solid var(--line);border-radius:10px;background:var(--panel2)}
+.pers.on{border-color:var(--sel);background:var(--panel)}
 .phead{display:flex;align-items:center;gap:8px;padding:6px 8px}
 .pick{flex:1;min-width:0;display:flex;align-items:center;gap:10px;background:none;border:0;padding:2px;color:inherit;text-align:left;cursor:pointer;font:inherit}
 .pav{flex:none;width:30px;height:30px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:var(--accent-soft);font-size:11px;font-weight:700}
@@ -436,7 +436,7 @@ button.brand:hover{background:var(--panel2)}
 .pf input,.pf textarea{text-transform:none;letter-spacing:0;font:inherit;font-size:13px;color:var(--ink);padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--panel2);resize:none;min-height:0;width:100%;box-sizing:border-box}
 .pf textarea{overflow:hidden;line-height:1.35}
 .pf input:focus,.pf textarea:focus{border-color:var(--sel);outline:none}
-.pcard > .note{padding:0 12px 8px}
+.pers > .note{padding:0 12px 8px}
 .phead .acts2{display:flex;flex-direction:row;align-items:center;gap:2px;flex:none}
 .stage.still .sigwrap [data-bid],.stage.still .sigwrap [data-cid]{cursor:default;outline:none}
 /* keep each section at its full height; a short window scrolls instead of squashing the signature preview */
@@ -449,3 +449,6 @@ button.brand:hover{background:var(--panel2)}
 .reframe .rf-img{position:absolute;background-size:100% 100%;pointer-events:none}
 .reframe.empty{cursor:default;display:grid;place-items:center}
 .reframe.empty .rf-img{position:static;color:var(--muted);font-size:12px;padding:10px;text-align:center}
+/* the selected column shows a grab bar on its right edge: drag it to change the width */
+.sigwrap [data-cid].on{box-shadow:inset -3px 0 0 var(--sel)}
+.stage.still .sigwrap [data-cid].on{box-shadow:none}
