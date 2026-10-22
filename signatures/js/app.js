@@ -257,6 +257,7 @@ function presets(){
   const lb = who({ name:'Luis Becerra', email:'luis@riverbendfoodshare.org', web:'riverbendfoodshare.org', phone:'(512) 555-0186', city:'Austin, TX' });
   const nj = who({ name:'Nadia Jamal', email:'nadia@thelongcommute.fm', web:'thelongcommute.fm' });
   const ow = who({ name:'Oliver Wren', email:'oliver.wren@meridianfreight.com', web:'meridianfreight.com', phone:'(404) 555-0108', city:'Atlanta, GA' });
+  const ac = who({ name:'Avery Collins', email:'hello@averycollins.photo', web:'averycollins.photo', phone:'+1 978 555 0144', city:'Fitchburg, MA' });
   const mb = who({ name:'Maya Brennan', email:'mbrennan@umass.edu', web:'linkedin.com/in/mayabrennan', phone:'(413) 555-0172', city:'Amherst, MA' });
   samplePeople = [mo, th, ab, df, kw, pn, rh, lb, nj, ow, mb];
 
@@ -380,6 +381,20 @@ function presets(){
               T('Pronouns', '(She/Her/Hers)', { size:13, italic:true, color:'#8c8c8c', pb:10 }),
               mk('contact', { items:contacts(mb, 2).reverse(), size:13, iconSize:18, iconColor:'#881c1c', gap:6, pb:0 })]],
         { divW:1, divC:'#555555', gap:20, valign:'middle' })
+    ])},
+    // Jack's own signature layout: photo and logo, a navy rule, then two buttons underneath
+    { key:'profilebtns', cat:'Personal', name:'Profile with buttons', state:newState('Profile with buttons', { font:FONTS[0][0], color:'#333333', link:'#1a5fc1', palette:['#26355e','#333333','#8c8c8c','#e6e9f2','#f5f6fa'] }, [
+      mkRow([[photo(ac, 'AC', '#e6e9f2', '#26355e', { width:120, borderW:2, borderColor:'#26355e', align:'center', pb:10 }),
+              mk('image', { label:'Logo', sample:'l|COLLINS|#26355e', width:110, align:'center', alt:'Avery Collins Photography', pb:0 })],
+             [T('Name', ac.name, { size:20, weight:700, color:'#26355e', pb:4 }),
+              mk('social', { items:[{ icon:I('fab','linkedin'), link:'https://linkedin.com/in/averycollins' }], inline:true, gapL:12, shape:'none', color:'#3b78c4', size:22, pad:0, pb:4 }),
+              T('Title', 'Photographer', { size:14, color:'#444444', pb:1 }),
+              T('Pronouns', '(They/Them/Theirs)', { size:13, italic:true, color:'#8c8c8c', pb:14 }),
+              mk('contact', { items:[{ icon:I('fas','envelope'), text:ac.email, link:'mailto:' + ac.email }, { icon:I('fas','mobile-screen-button'), text:ac.phone, link:'tel:' + ac.phone.replace(/[^\d+]/g, '') }, { icon:I('fas','location-dot'), text:ac.city, link:'' }],
+                size:14, iconSize:20, iconColor:'#26355e', gap:16, pb:0 })]],
+        { divW:1, divC:'#26355e', gap:30, valign:'middle' }),
+      mkRow([[btn('Schedule a Meeting', I('fas','calendar-day'), 'https://' + ac.web + '/book', '#26355e', { size:14, weight:700, padY:13, padX:26, radius:6, iconSize:15 }),
+              btn('Save My Contact', I('fas','user'), 'https://' + ac.web + '/contact.vcf', '#ffffff', { inline:true, gapL:12, color:'#26355e', borderColor:'#26355e', borderW:1, size:14, weight:700, padY:13, padX:26, radius:6, iconSize:15 })]], { pt:14 })
     ])},
     { key:'freelance', cat:'Personal', name:'Freelancer', state:newState('Freelancer', { font:FONTS[2][0], palette:['#15803d','#14241a','#5c6b61','#dcfce7','#f3f7f4'] }, [
       mkRow([[photo(th, 'TL', '#dcfce7', '#15803d', { width:60, pb:0 })],
