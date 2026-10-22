@@ -1517,7 +1517,7 @@ function renderPeople(){
     <h2>People</h2>
     <p class="note">One design, a signature for everyone. Fields like <code>{{name}}</code> in the design fill in from each row. Blank fields are left out of that person's signature.</p>
     ${tm.people.length ? '' : `<div class="sharecard"><h3>${G('fas','users')}Make this a team signature</h3><p class="note">Convert turns the name, title, email, phone and photo in this design into fields and keeps the current details as the first person.</p><div class="row"><button class="btn primary sm" data-a="convert" type="button">Convert this design</button><button class="btn sm" data-a="add" type="button">Add a person</button><button class="btn sm" data-a="import" type="button">Paste from a spreadsheet</button></div></div>`}
-    <div class="field"><span>Fields</span><div class="chips">${cols.map(f => `<span class="chip" style="display:inline-flex;gap:4px;align-items:center">{{${f.key}}}${f.type === 'image' ? ' (image)' : ''}<button type="button" class="iconbtn" data-rmf="${f.key}" aria-label="Remove field ${esc(f.label)}">${G('fas','xmark')}</button></span>`).join('')}</div>
+    <div class="field"><span>Fields (drag to reorder, or use the arrows)</span><div class="chips">${cols.map((f, i) => `<span class="chip fchip" draggable="true" data-fk="${f.key}" style="display:inline-flex;gap:4px;align-items:center;cursor:grab">${i ? `<button type="button" class="iconbtn" data-mvf="${f.key}" data-dir="-1" aria-label="Move ${esc(f.label)} earlier">${G('fas','chevron-left')}</button>` : ''}{{${f.key}}}${f.type === 'image' ? ' (image)' : ''}${i < cols.length - 1 ? `<button type="button" class="iconbtn" data-mvf="${f.key}" data-dir="1" aria-label="Move ${esc(f.label)} later">${G('fas','chevron-right')}</button>` : ''}<button type="button" class="iconbtn" data-rmf="${f.key}" aria-label="Remove field ${esc(f.label)}">${G('fas','xmark')}</button></span>`).join('')}</div>
       <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap"><input id="tnewf" type="text" placeholder="New field, e.g. Pronouns" aria-label="New field name" style="flex:1;min-width:140px;padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:var(--panel2)"><label class="chk" style="font-size:12px"><input id="tnewimg" type="checkbox">Image</label><button class="btn sm" data-a="addf" type="button">Add field</button></div></div>
     ${tm.people.length ? `<div class="plist">${rows}</div>` : ''}
     <div class="row" style="display:flex;gap:6px;flex-wrap:wrap">${tm.people.length ? '<button class="btn sm" data-a="add" type="button">+ Add person</button><button class="btn sm" data-a="import" type="button">Paste from a spreadsheet</button>' : ''}${tm.people.length && dlOK ? '<button class="btn sm" data-a="csv" type="button">Download CSV</button>' : ''}${tm.people.length ? `<button class="btn sm" type="button" data-a="toshare">Share with everyone →</button>` : ''}</div>
@@ -1544,9 +1544,29 @@ $('#people').addEventListener('change', e => {
   const t = e.target;
   if (t.dataset.pv){ state.team.active = t.dataset.pv; changed({ team:true }); return; }
 });
+let dragField = null;
+$('#people').addEventListener('dragstart', e => { const c = e.target.closest && e.target.closest('.fchip'); if (c){ dragField = c.dataset.fk; e.dataTransfer.effectAllowed = 'move'; } });
+$('#people').addEventListener('dragover', e => { if (dragField && e.target.closest('.fchip')) e.preventDefault(); });
+$('#people').addEventListener('drop', e => {
+  const c = dragField && e.target.closest('.fchip'); if (!c) return;
+  e.preventDefault();
+  const fs = state.team.fields, from = fs.findIndex(f => f.key === dragField);
+  dragField = null; if (from < 0 || c.dataset.fk === fs[from].key) return;
+  // dropped on the right half of a chip lands after it
+  const r = c.getBoundingClientRect(), after = e.clientX > r.left + r.width / 2;
+  const [f] = fs.splice(from, 1); fs.splice(fs.findIndex(x => x.key === c.dataset.fk) + (after ? 1 : 0), 0, f);
+  changed({ team:true });
+});
+$('#people').addEventListener('dragend', () => { dragField = null; });
 $('#people').addEventListener('click', async e => {
-  const a = e.target.closest('[data-a],[data-rmf]'); if (!a) return;
+  const a = e.target.closest('[data-a],[data-rmf],[data-mvf]'); if (!a) return;
   const tm = state.team, tr = e.target.closest('.pers[data-pid]'), p = tr && tm.people.find(x => x.id === tr.dataset.pid);
+  // field order is the order of the boxes on each person's card and the columns in the CSV
+  if (a.dataset.mvf){
+    const k = a.dataset.mvf, d = a.dataset.dir, i = tm.fields.findIndex(f => f.key === k), j = i + Number(d);
+    if (j >= 0 && j < tm.fields.length){ [tm.fields[i], tm.fields[j]] = [tm.fields[j], tm.fields[i]]; changed({ team:true }); const b = $(`[data-mvf="${k}"][data-dir="${d}"]`) || $(`[data-mvf="${k}"]`); if (b) b.focus(); }
+    return;
+  }
   if (a.dataset.rmf){ const k = a.dataset.rmf; tm.fields = tm.fields.filter(f => f.key !== k); toast(`Removed {{${k}}}. Values stay saved with each person.`, UNDO); changed({ team:true }); return; }
   const act = a.dataset.a;
   if (act !== 'pdel') delPerson = null;
