@@ -589,13 +589,15 @@ function render(st, mode, pid){
     let any = false;
     r.cols.forEach((c, i) => {
       if (i){
-        const h1 = Math.floor(r.gap / 2), h2 = r.gap - h1, sp = w => `<td width="${w}" style="width:${w}px;font-size:0;line-height:0">&nbsp;</td>`;
-        cells.push(r.divW ? sp(h1) + `<td width="1" style="width:1px;border-left:${r.divW}px ${r.divS} ${r.divC};font-size:0;line-height:0">&nbsp;</td>` + sp(h2) : sp(r.gap));
+        const g = Math.max(r.gap, 0), h1 = Math.floor(g / 2), h2 = g - h1, sp = w => `<td width="${w}" style="width:${w}px;font-size:0;line-height:0">&nbsp;</td>`;
+        cells.push(r.divW ? (h1 ? sp(h1) : '') + `<td width="1" style="width:1px;border-left:${r.divW}px ${r.divS} ${r.divC};font-size:0;line-height:0">&nbsp;</td>` + (h2 ? sp(h2) : '') : g ? sp(g) : '');
       }
       let inner = renderColumn(c.blocks, ctx);
       if (inner) any = true;
       else if (mode === 'preview') inner = `<div style="min-width:80px;padding:14px 8px;border:1px dashed #c4cad4;border-radius:6px;color:#98a2b3;font:11px Arial;text-align:center">Empty column</div>`;
-      const st2 = `vertical-align:${r.valign};` + (c.width ? `width:${c.width}px;` : '') + (c.bgOn ? `background:${c.bg};` : '') + (c.pad ? `padding:${c.pad}px;` : '') + (c.bgOn && c.radius ? `border-radius:${c.radius}px;` : '');
+      const np = Math.min(c.pad || 0, 0), pullL = i && r.gap < 0 ? r.gap : 0;
+      if (inner && (np || pullL)) inner = `<div style="margin:${np}px ${np}px ${np}px ${np + pullL}px">${inner}</div>`;
+      const st2 = `vertical-align:${r.valign};` + (c.width ? `width:${c.width}px;` : '') + (c.bgOn ? `background:${c.bg};` : '') + (c.pad > 0 ? `padding:${c.pad}px;` : '') + (c.bgOn && c.radius ? `border-radius:${c.radius}px;` : '');
       cells.push(`<td${pv(ctx, 'cid', c.id)} valign="${r.valign}"${c.width ? ` width="${c.width}"` : ''}${c.bgOn ? ` bgcolor="${c.bg}"` : ''} style="${st2}">${inner}</td>`);
     });
     if (!any && mode !== 'preview') continue;
@@ -1346,7 +1348,7 @@ function renderInspector(){
     head(rowName(r), 'A row holds side-by-side columns. Stack rows to build any layout.');
     Pn.appendChild(nameField(r, `Row ${ri}`));
     const cnt = colCount(r, 'Columns');
-    [grp('Columns', cnt, r.cols.length > 1 ? [row(num(r, 'gap', 'Gap between', 0, 60), sel_(r, 'valign', 'Line up', [['top','Top'],['middle','Middle'],['bottom','Bottom']]))] : null,
+    [grp('Columns', cnt, r.cols.length > 1 ? [row(num(r, 'gap', 'Gap between (below 0 pulls them closer)', -60, 60), sel_(r, 'valign', 'Line up', [['top','Top'],['middle','Middle'],['bottom','Bottom']]))] : null,
         r.cols.map((c, i) => num(c, 'width', `Column ${i + 1} width (0 = auto)`, 0, COLMAX, 2, { list:true })),
         chk(r, 'full', 'Stretch row to full signature width')),
       r.cols.length > 1 ? grp('Divider between columns', row(num(r, 'divW', 'Thickness (0 = none)', 0, 8), sel_(r, 'divS', 'Style', LSTYLES)), color(r, 'divC', 'Color')) : null,
@@ -1358,7 +1360,7 @@ function renderInspector(){
     head(colName(f.r, c), 'Select a block in this column to edit it, or add one from the left.');
     Pn.appendChild(nameField(c, `Column ${f.r.cols.indexOf(c) + 1}`));
     Pn.append(grp('Layout', colCount(f.r, 'Columns in this row'), num(c, 'width', 'Width (0 = auto)', 0, COLMAX, 2, { list:true })),
-      grp('Background', chk(c, 'bgOn', 'Fill this column', { insp:true }), c.bgOn ? [color(c, 'bg', 'Color'), row(num(c, 'pad', 'Padding', 0, 40), num(c, 'radius', 'Corner radius', 0, 30))] : num(c, 'pad', 'Padding', 0, 40)));
+      grp('Background', chk(c, 'bgOn', 'Fill this column', { insp:true }), c.bgOn ? [color(c, 'bg', 'Color'), row(num(c, 'pad', 'Padding', -40, 40), num(c, 'radius', 'Corner radius', 0, 30))] : num(c, 'pad', 'Padding (below 0 pulls content out)', -40, 40)));
     return;
   }
   const b = f.b;
