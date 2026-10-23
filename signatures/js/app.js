@@ -567,7 +567,9 @@ function renderColumn(blocks, ctx){
     if (group.length > 1 || b.type === 'button'){
       const va = b.rowAlign || 'middle';
       const cells = group.map(g => [g, g.type === 'button' ? buttonCell(g, ctx) : renderBlock(g, ctx)]).filter(x => x[1])
-        .map(([g, h], n) => `<td${pv(ctx, 'bid', g.id)} valign="${va}" style="vertical-align:${va};padding-left:${n ? (g.gapL ?? 8) : 0}px;text-align:${g.align}">${h}</td>`).join('');
+        // the gap is its own cell, so a block's cell (and its highlight) hugs the block; icon-only cells drop the text line's extra height
+        .map(([g, h], n) => { const gap = n ? g.gapL ?? 8 : 0, tight = g.type === 'social' || g.type === 'button' ? 'line-height:0;font-size:0;' : '';
+          return (gap > 0 ? `<td width="${gap}" style="width:${gap}px;font-size:0;line-height:0">&nbsp;</td>` : '') + `<td${pv(ctx, 'bid', g.id)} valign="${va}" style="vertical-align:${va};${tight}text-align:${g.align}">${h}</td>`; }).join('');
       if (cells) out += `<tr><td align="${b.align}" style="padding:${Math.max(b.pt, 0)}px 0 ${Math.max(...group.map(g => Math.max(g.pb, 0)))}px 0;text-align:${b.align}"><table ${T0} style="display:inline-table;border-collapse:collapse"><tr>${cells}</tr></table></td></tr>`;
       continue;
     }
