@@ -483,7 +483,8 @@ function renderBlock(b, ctx){
       if (!src || (remote && mode === 'preview')){
         if (mode !== 'preview') return '';
         // if the link can't load, a stand-in with the real size, shape and border takes its place
-        const msg = remote ? "This image link didn't load" : b.source === 'field' ? `No ${b.field} link for this person` : 'Add an image link';
+        const viaCrop = /^https:\/\/images\.weserv\.nl\//.test(src);
+        const msg = remote ? (viaCrop && /imgur\.com/i.test(src) ? 'Imgur blocks cropped copies. Set Crop to Original, or host it elsewhere' : viaCrop ? "The cropped copy didn't load" : "This image link didn't load") : b.source === 'field' ? `No ${b.field} link for this person` : 'Add an image link';
         const ph = hgt || (b.shape === 'circle' ? b.width : Math.round(b.width * .62));
         const bd = b.borderW ? `${b.borderW}px solid ${b.borderColor}` : '1px dashed #b0b7c3';
         const box = `<span title="${esc(remote ? src : msg)}" style="display:inline-flex;width:${b.width}px;height:${ph}px;box-sizing:border-box;border:${bd};border-radius:${r === '0' ? '0' : r};background:#f2f4f7;color:#8a93a3;font:${b.width < 80 ? 9 : 11}px/1.25 Arial;text-align:center;align-items:center;justify-content:center;padding:6px;overflow:hidden;vertical-align:middle">${esc(msg)}</span>`;
@@ -740,6 +741,8 @@ function checks(st, pid){
   const out = [], g = render(st, 'gmail', pid), n = gmailLen(g.html);
   if (g.embedded.length) out.push(['warn', `Replace the sample pictures with links to your own images (${g.embedded.join(', ')}). Email apps can't show the samples.`]);
   if (n > 10000) out.push(['warn', `Gmail allows 10,000 characters; this is ${n.toLocaleString()}. Remove blocks or icons, or shorten links.`]);
+  // Imgur turns away the image service that crops pictures, so a cropped Imgur picture shows up broken
+  if (/images\.weserv\.nl\/\?url=[^"]*imgur\.com/i.test(g.html)) out.push(['warn', 'A cropped picture is hosted on Imgur, which blocks the cropping service, so it shows up broken. Set its Crop to Original, or host it on your own site.']);
   const person = personFor(st, pid), V = person ? person.values : null;
   let noLink = 0, noAlt = 0; const missing = new Set();
   for (const r of st.rows) for (const c of r.cols) for (const b of c.blocks){
