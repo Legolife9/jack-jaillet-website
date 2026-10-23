@@ -466,15 +466,14 @@ function renderBlock(b, ctx){
   const S = ctx.S, color = b.color || S.color, mode = ctx.mode;
   switch (b.type){
     case 'text': {
-      const t = M(b.text); if (!t.trim()) return '';
+      const t = M(b.text), tg = M(b.tag || '').trim(); if (!t.trim() && !tg) return '';
       const st = `font-family:${b.font || S.font};font-size:${b.size}px;line-height:${b.lh};color:${color};font-weight:${b.weight};` +
         (b.italic ? 'font-style:italic;' : '') + (b.upper ? 'text-transform:uppercase;' : '') + (b.spacing ? `letter-spacing:${b.spacing}px;` : '');
       // a small label beside the text, for pronouns or credentials
-      const tg = M(b.tag || '').trim();
       const tagH = tg ? `<span style="font-family:${b.font || S.font};font-size:${Math.max(9, Math.round(b.size * .72))}px;font-weight:400;font-style:${b.tagItalic === false ? 'normal' : 'italic'};text-transform:none;letter-spacing:0;color:${b.tagColor || '#667085'}">${esc(tg)}</span>` : '';
-      const main = `<span style="${st}">${rich(t, S.link)}</span>`;
+      const main = t.trim() ? `<span style="${st}">${rich(t, S.link)}</span>` : '';
       // the line height goes on a block around the text too: an inline span can't make its line shorter than the cell's own line
-      return `<div style="font-size:${b.size}px;line-height:${b.lh}">${wrapLink(tagH ? (b.tagPos === 'after' ? main + '&nbsp;&nbsp;' + tagH : tagH + '&nbsp;&nbsp;' + main) : main, b.link, color)}</div>`;
+      return `<div style="font-size:${b.size}px;line-height:${b.lh}">${wrapLink(tagH && main ? (b.tagPos === 'after' ? main + '&nbsp;&nbsp;' + tagH : tagH + '&nbsp;&nbsp;' + main) : main || tagH, b.link, color)}</div>`;
     }
     case 'image': {
       const { src, remote } = imageSrc(b, ctx);
@@ -862,6 +861,7 @@ const glyph = t => { const [s, n] = GLYPH[t].split(':'); return G(s, n); };
 const ADD = [
   ['Name', 'text', () => mk('text', { label:'Name', text:'{{name}}', size:18, weight:700, pb:2 })],
   ['Text', 'text', () => mk('text', { text:'Job title · Company' })],
+  ['Pronouns', 'text', () => mk('text', { label:'Pronouns', text:'(she/her)', size:12, italic:true, color:'#667085', pb:4 })],
   ['Photo', 'image', () => mk('image', { label:'Photo', width:88, shape:'circle', crop:{ aspect:'1:1', zoom:1, x:50, y:35 } })],
   ['Logo', 'image', () => mk('image', { label:'Logo', width:140 })],
   ['Contact', 'contact', () => mk('contact', { items:[{ icon:I('fas','phone'), text:'{{phone}}', link:'{{phone}}' }, { icon:I('fas','envelope'), text:'{{email}}', link:'{{email}}' }] })],
@@ -1363,6 +1363,12 @@ function renderInspector(){
   }
   const b = f.b;
   head(DEF[b.type].label, b.type === 'text' ? 'Supports **bold**, *italic* and [link text](https://…).' : '');
+  if (f.i > 0){
+    const pos = { v:b.inline ? 'beside' : 'below' };
+    const sg = segs(pos, 'v', 'Place it', [['below','Below the block above'],['beside','Next to the block above']]);
+    sg.querySelector('.seg').addEventListener('click', () => { b.inline = pos.v === 'beside'; if (b.inline && b.gapL == null) b.gapL = 8; changed({ insp:true, list:true }); });
+    Pn.appendChild(grp('Layout', sg, b.inline ? num(b, 'gapL', 'Space between them', 0, 60) : null));
+  }
   const place = [
     sel_({ to:f.c.id }, 'to', 'Position', allCols().map(x => [x.c.id, colName(x.r, x.c)])),
     segs(b, 'align', 'Alignment', ALIGN), row(num(b, 'pt', 'Space above', -20, 60), num(b, 'pb', 'Space below', -20, 60))
@@ -1373,10 +1379,6 @@ function renderInspector(){
     sp.onclick = () => { const moved = f.c.blocks.splice(f.i); moved[0].inline = false; f.r.cols.splice(f.r.cols.indexOf(f.c) + 1, 0, mkCol(moved)); changed({ list:true, insp:true }); };
     place.push(sp);
   }
-  // side by side: this block joins the one above it in a row
-  const beside = f.i > 0;
-  if (beside && b.type !== 'button') place.push(chk(b, 'inline', 'Sit beside the block above (side by side)', { insp:true, list:true }));
-  if (b.inline){ if (b.gapL == null) b.gapL = 8; place.push(num(b, 'gapL', 'Space to the left', 0, 60)); }
   const nxt = f.c.blocks[f.i + 1];
   if (!b.inline && nxt && nxt.inline && !b.rowAlign) b.rowAlign = 'middle';
   if (!b.inline && nxt && nxt.inline) place.push(sel_(b, 'rowAlign', 'Line up side-by-side blocks', [['top','Top'],['middle','Middle'],['bottom','Bottom']]));
