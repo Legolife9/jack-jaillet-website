@@ -747,7 +747,7 @@ function checks(st, pid){
   let noLink = 0, noAlt = 0; const missing = new Set();
   for (const r of st.rows) for (const c of r.cols) for (const b of c.blocks){
     if (b.type === 'button' && !b.link) noLink++;
-    if (b.type === 'social') noLink += b.items.filter(i => !i.link).length;
+    if (b.type === 'social' && b.items.length > 1) noLink += b.items.filter(i => !i.link).length; // a lone icon is often just decoration
     if (b.type === 'image' && !b.alt && (b.sample || b.url || b.source === 'field')) noAlt++;
     if (V) JSON.stringify(b).replace(/\{\{\s*([\w-]+)\s*\}\}/g, (_, k) => { if (!V[k]) missing.add(k); });
     if (V && b.type === 'image' && b.source === 'field' && !V[b.field]) missing.add(b.field);
@@ -861,7 +861,7 @@ $('#pv-person').onchange = e => { state.team.active = e.target.value; changed({ 
 
 
 /* ---------- layers ---------- */
-const GLYPH = { text:'fas:font', image:'fas:image', divider:'fas:minus', spacer:'fas:arrows-up-down', contact:'fas:address-card', social:'fas:share-nodes', button:'fas:hand-pointer', html:'fas:code', style:'fas:sliders', row:'fas:table-columns', col:'fas:table-cells-large' };
+const GLYPH = { text:'fas:font', image:'fas:image', divider:'fas:minus', spacer:'fas:arrows-up-down', contact:'fas:address-card', social:'fas:share-nodes', button:'fas:hand-pointer', html:'fas:code', style:'fas:sliders', row:'fas:table-columns', col:'fas:table-cells-large', icon:'fas:star' };
 const glyph = t => { const [s, n] = GLYPH[t].split(':'); return G(s, n); };
 const ADD = [
   ['Name', 'text', () => mk('text', { label:'Name', text:'{{name}}', size:18, weight:700, pb:2 })],
@@ -871,6 +871,8 @@ const ADD = [
   ['Logo', 'image', () => mk('image', { label:'Logo', width:140 })],
   ['Contact', 'contact', () => mk('contact', { items:[{ icon:I('fas','phone'), text:'{{phone}}', link:'{{phone}}' }, { icon:I('fas','envelope'), text:'{{email}}', link:'{{email}}' }] })],
   ['Icons', 'social', () => mk('social', { items:[{ icon:I('fab','linkedin-in'), link:'' }, { icon:I('fab','instagram'), link:'' }] })],
+  // a single icon on its own; it can sit next to other blocks and needs no link
+  ['Icon', 'icon', () => mk('social', { label:'Icon', items:[{ icon:I('fas','star'), link:'' }], shape:'none', color:'#2453e6', size:20, pad:6 })],
   ['Button', 'button', () => mk('button')],
   ['Line', 'divider', () => mk('divider')],
   ['Space', 'spacer', () => mk('spacer')],
