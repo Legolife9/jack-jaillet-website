@@ -173,13 +173,15 @@ function linkBrandColors(st){
     else if (v && typeof v === 'object') walk(v); } };
   walk(st.rows); walk(st.style);
 }
-// Oct 2026: every signature came out a little too big, so sizes and spacing scale down once (border and line thicknesses stay)
-const SHRINK = { style:['size','width','pad','br'], row:['gap','pt','pb'], col:['width','pad','radius'],
+// Oct 2026: signatures came out too big, so sizes and spacing scale down (border and line thicknesses stay).
+// SCALE is the size everything now starts at; shrunk:1 saves already had the first 7% step
+const SCALE = .86, SHRINK = { style:['size','width','pad','br'], row:['gap','pt','pb'], col:['width','pad','radius'],
   block:['pt','pb','gapL','size','spacing','width','radius','height','iconSize','iconPad','gap','pad','tsize','padX','padY'] };
+const sc = (o, keys, k) => keys.forEach(x => { const v = o[x]; if (typeof v === 'number') o[x] = Number.isInteger(v) ? Math.round(v * k) : Math.round(v * k * 10) / 10; });
+const shrinkBlock = (b, k) => sc(b, b.type === 'divider' ? ['pt','pb','gapL'] : SHRINK.block, k);
 function shrink(s, k){
-  const sc = (o, keys) => keys.forEach(x => { const v = o[x]; if (typeof v === 'number') o[x] = Number.isInteger(v) ? Math.round(v * k) : Math.round(v * k * 10) / 10; });
-  sc(s.style, SHRINK.style);
-  s.rows.forEach(r => { sc(r, SHRINK.row); r.cols.forEach(c => { sc(c, SHRINK.col); c.blocks.forEach(b => sc(b, b.type === 'divider' ? ['pt','pb','gapL'] : SHRINK.block)); }); });
+  sc(s.style, SHRINK.style, k);
+  s.rows.forEach(r => { sc(r, SHRINK.row, k); r.cols.forEach(c => { sc(c, SHRINK.col, k); c.blocks.forEach(b => shrinkBlock(b, k)); }); });
 }
 function migrate(s){
   s = clone(s);
@@ -199,7 +201,7 @@ function migrate(s){
   ['layout','sideW','gap','valign','divW','divS','divC','sideBg','sideBgOn','sidePad'].forEach(k => delete s.style[k]);
   s.team = s.team || { fields:clone(FIELDS0), people:[], active:null };
   if (!s.linked){ linkBrandColors(s); s.linked = 1; }
-  if (!s.shrunk){ shrink(s, .93); s.shrunk = 1; }
+  if ((s.shrunk || 0) < 2){ shrink(s, s.shrunk ? SCALE / .93 : SCALE); s.shrunk = 2; }
   return s;
 }
 
@@ -895,6 +897,7 @@ $('#addgrid').innerHTML = ADD.map(([n, t], i) => `<button data-add="${i}" title=
 $('#addgrid').onclick = e => {
   const btn = e.target.closest('[data-add]'); if (!btn) return;
   const b = ADD[+btn.dataset.add][2]();
+  shrinkBlock(b, SCALE);
   if (!state.team.people.length) {
     // without a team, field tokens would show literally — swap in readable sample text
     const sample = { name:'Your Name', phone:'(555) 000-0000', email:'you@example.com' };
@@ -913,6 +916,7 @@ $('#addrow').innerHTML = `<span class="note" style="width:100%">Add a row</span>
 $('#addrow').onclick = e => {
   const b = e.target.closest('[data-cols]'); if (!b) return;
   const n = +b.dataset.cols, r = mkRow(Array.from({ length:n }, () => []));
+  sc(r, SHRINK.row, SCALE);
   const f = find(sel), at = f && f.r ? state.rows.indexOf(f.r) + 1 : state.rows.length;
   state.rows.splice(at, 0, r); sel = r.id; changed({ list:true, insp:true });
 };
