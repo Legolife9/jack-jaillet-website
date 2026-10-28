@@ -57,12 +57,14 @@ returns public.company_members language sql stable security definer set search_p
   where company_owner = p_owner and company_id = p_company and email = public.my_email();
 $$;
 
-create or replace function public.save_shared_signature(p_owner uuid, p_id text, p_name text, p_state jsonb)
+-- p_prev is the updated_at the editor loaded; if the row changed since, the save is refused instead of overwriting it
+create or replace function public.save_shared_signature(p_owner uuid, p_id text, p_name text, p_state jsonb, p_prev bigint default null)
 returns bigint language plpgsql security definer set search_path = '' as $$
 declare s public.signatures; m public.company_members; st jsonb; ts bigint := (extract(epoch from now()) * 1000)::bigint;
 begin
-  select * into s from public.signatures where user_id = p_owner and id = p_id;
+  select * into s from public.signatures where user_id = p_owner and id = p_id for update;
   if s is null then raise exception 'not found'; end if;
+  if p_prev is not null and s.updated_at <> p_prev then raise exception 'changed elsewhere'; end if;
   m := public.member_perms(p_owner, s.company_id);
   if m is null or not m.can_edit_design then raise exception 'You can view this signature but not change its design'; end if;
   st := jsonb_set(p_state, '{companyId}', to_jsonb(s.company_id));
@@ -71,12 +73,13 @@ begin
   return ts;
 end; $$;
 
-create or replace function public.save_shared_team(p_owner uuid, p_id text, p_team jsonb)
+create or replace function public.save_shared_team(p_owner uuid, p_id text, p_team jsonb, p_prev bigint default null)
 returns bigint language plpgsql security definer set search_path = '' as $$
 declare s public.signatures; m public.company_members; ts bigint := (extract(epoch from now()) * 1000)::bigint;
 begin
-  select * into s from public.signatures where user_id = p_owner and id = p_id;
+  select * into s from public.signatures where user_id = p_owner and id = p_id for update;
   if s is null then raise exception 'not found'; end if;
+  if p_prev is not null and s.updated_at <> p_prev then raise exception 'changed elsewhere'; end if;
   m := public.member_perms(p_owner, s.company_id);
   if m is null or not m.can_edit_people then raise exception 'You can view this signature but not change its people'; end if;
   if jsonb_typeof(p_team) <> 'object' then raise exception 'bad people list'; end if;
@@ -101,9 +104,9 @@ returns void language sql security definer set search_path = '' as $$
 $$;
 
 revoke all on function public.shared_companies(), public.shared_signatures(), public.member_perms(uuid, text),
-  public.save_shared_signature(uuid, text, text, jsonb), public.save_shared_team(uuid, text, jsonb),
+  public.save_shared_signature(uuid, text, text, jsonb, bigint), public.save_shared_team(uuid, text, jsonb, bigint),
   public.save_shared_company(uuid, text, jsonb), public.leave_shared_company(uuid, text), public.my_email() from public, anon;
 revoke execute on function public.member_perms(uuid, text) from authenticated; -- helper for the save_* functions only
 grant execute on function public.shared_companies(), public.shared_signatures(),
-  public.save_shared_signature(uuid, text, text, jsonb), public.save_shared_team(uuid, text, jsonb),
+  public.save_shared_signature(uuid, text, text, jsonb, bigint), public.save_shared_team(uuid, text, jsonb, bigint),
   public.save_shared_company(uuid, text, jsonb), public.leave_shared_company(uuid, text), public.my_email() to authenticated;

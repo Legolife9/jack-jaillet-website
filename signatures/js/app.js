@@ -670,7 +670,7 @@ async function saveNow(){
   saveStatus = 'saving'; updateHead();
   saving = libSave(id, st.name || 'Untitled signature', st)
     .then(() => { saveErr = ''; saveStatus = id === sigId && snapshot() !== snap ? 'pending' : 'saved'; })
-    .catch(e => { saveStatus = 'error'; saveErr = (e && e.message) || 'Could not save.'; toast('Not saved: ' + saveErr); })
+    .catch(e => { saveStatus = 'error'; saveErr = (e && e.message) || 'Could not save.'; toast('Not saved: ' + saveErr, e && e.conflict ? { label:'Reload', fn:() => location.reload() } : null); })
     .finally(() => { saving = null; updateHead(); });
   await saving;
   if (saveStatus === 'pending') queueSave();
@@ -1807,6 +1807,7 @@ function permWords(p){
 // the public project URL and publishable key are meant to be in the page; row-level security keeps each account's rows private
 const SUPABASE_URL = 'https://rizgpvzmazuvidvbpkoa.supabase.co', SUPABASE_KEY = 'sb_publishable_gi6G-cLhq6wYpiB3G7kEsg_G_aI0QKk';
 let sb = null, user = null;
+const conflictErr = () => Object.assign(new Error('this signature was changed somewhere else since you opened it. Reload to get the latest version, then redo your last change'), { conflict:true });
 const cloudErr = e => new Error(/fetch|network/i.test(String(e && e.message)) ? 'you seem to be offline. Your changes will save when you reconnect and retry' : 'the account server said: ' + ((e && e.message) || 'unknown error'));
 async function libSave(id, name, st){
   const shT = templates.find(t => t.id === id && t.sh);
@@ -1814,21 +1815,27 @@ async function libSave(id, name, st){
   const doc = { name, state:st, companyId:st.companyId || '', updatedAt:Date.now() };
   const size = JSON.stringify(doc).length;
   if (size > 400000) throw new Error(`this signature is ${Math.round(size / 1024)} KB, which is more than one signature should need`);
-  const next = [Object.assign({ id }, doc)].concat(templates.filter(t => t.id !== id));
+  const prev = templates.find(t => t.id === id), next = [Object.assign({ id }, doc)].concat(templates.filter(t => t.id !== id));
   if (user){
-    const { error } = await sb.from('signatures').upsert({ user_id:user.id, id, name, company_id:doc.companyId, state:st, updated_at:doc.updatedAt });
+    // an existing row is only replaced if it is still the copy loaded here, so a newer save from elsewhere is never overwritten
+    const row = { name, company_id:doc.companyId, state:st, updated_at:doc.updatedAt };
+    const { data, error } = await (prev
+      ? sb.from('signatures').update(row).eq('user_id', user.id).eq('id', id).eq('updated_at', prev.updatedAt)
+      : sb.from('signatures').upsert(Object.assign({ user_id:user.id, id }, row))).select('id');
     if (error) throw cloudErr(error);
+    if (!data.length) throw conflictErr();
   } else persist(LIBKEY, next);
   templates = next;
   if (view === 'home') renderHome();
 }
 // a signature someone shared with me: the server checks the permission again and keeps what I may not change
 async function saveShared(t, name, st){
-  const p = t.sh.perms, args = { p_owner:t.sh.owner, p_id:t.sh.rid };
+  const p = t.sh.perms, args = { p_owner:t.sh.owner, p_id:t.sh.rid, p_prev:t.updatedAt };
   let res;
   if (p.edit_design) res = await sb.rpc('save_shared_signature', Object.assign(args, { p_name:name, p_state:st }));
   else if (p.edit_people) res = await sb.rpc('save_shared_team', Object.assign(args, { p_team:st.team }));
   else throw new Error('this signature is view only');
+  if (res.error && /changed elsewhere/.test(res.error.message)) throw conflictErr();
   if (res.error) throw cloudErr(res.error);
   Object.assign(t, { name:p.edit_design ? name : t.name, state:st, updatedAt:Number(res.data) || Date.now() });
   if (view === 'home') renderHome();
@@ -1864,8 +1871,9 @@ async function coDelete(id){
 }
 // many rows at once (import, moving a browser library into an account)
 async function saveMany(sigs, cos){
+  sigs = sigs.map(t => Object.assign({}, t, { updatedAt:t.updatedAt || Date.now() })); // kept in the list too, since later saves check it
   if (user){
-    if (sigs.length){ const { error } = await sb.from('signatures').upsert(sigs.map(t => ({ user_id:user.id, id:t.id, name:t.name || '', company_id:t.companyId || '', state:t.state, updated_at:t.updatedAt || Date.now() }))); if (error) throw cloudErr(error); }
+    if (sigs.length){ const { error } = await sb.from('signatures').upsert(sigs.map(t => ({ user_id:user.id, id:t.id, name:t.name || '', company_id:t.companyId || '', state:t.state, updated_at:t.updatedAt }))); if (error) throw cloudErr(error); }
     if (cos.length){ const { error } = await sb.from('companies').upsert(cos.map(c => { const { id, ...d } = c; return { user_id:user.id, id, data:d, updated_at:d.updatedAt || Date.now() }; })); if (error) throw cloudErr(error); }
   }
   const t2 = sigs.concat(templates.filter(t => !sigs.some(x => x.id === t.id))).sort((a, b) => b.updatedAt - a.updatedAt);
