@@ -87,13 +87,15 @@ begin
   return ts;
 end; $$;
 
-create or replace function public.save_shared_company(p_owner uuid, p_id text, p_data jsonb)
+create or replace function public.save_shared_company(p_owner uuid, p_id text, p_data jsonb, p_prev bigint default null)
 returns bigint language plpgsql security definer set search_path = '' as $$
-declare m public.company_members; ts bigint := (extract(epoch from now()) * 1000)::bigint;
+declare m public.company_members; cur bigint; ts bigint := (extract(epoch from now()) * 1000)::bigint;
 begin
   m := public.member_perms(p_owner, p_id);
   if m is null or not m.can_edit_brand then raise exception 'You can view this company but not change its brand kit'; end if;
   if jsonb_typeof(p_data) <> 'object' then raise exception 'bad company data'; end if;
+  select updated_at into cur from public.companies where user_id = p_owner and id = p_id for update;
+  if p_prev is not null and cur is distinct from p_prev then raise exception 'changed elsewhere'; end if;
   update public.companies set data = p_data, updated_at = ts where user_id = p_owner and id = p_id;
   return ts;
 end; $$;
@@ -105,8 +107,8 @@ $$;
 
 revoke all on function public.shared_companies(), public.shared_signatures(), public.member_perms(uuid, text),
   public.save_shared_signature(uuid, text, text, jsonb, bigint), public.save_shared_team(uuid, text, jsonb, bigint),
-  public.save_shared_company(uuid, text, jsonb), public.leave_shared_company(uuid, text), public.my_email() from public, anon;
+  public.save_shared_company(uuid, text, jsonb, bigint), public.leave_shared_company(uuid, text), public.my_email() from public, anon;
 revoke execute on function public.member_perms(uuid, text) from authenticated; -- helper for the save_* functions only
 grant execute on function public.shared_companies(), public.shared_signatures(),
   public.save_shared_signature(uuid, text, text, jsonb, bigint), public.save_shared_team(uuid, text, jsonb, bigint),
-  public.save_shared_company(uuid, text, jsonb), public.leave_shared_company(uuid, text), public.my_email() to authenticated;
+  public.save_shared_company(uuid, text, jsonb, bigint), public.leave_shared_company(uuid, text), public.my_email() to authenticated;

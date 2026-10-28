@@ -1807,7 +1807,7 @@ function permWords(p){
 // the public project URL and publishable key are meant to be in the page; row-level security keeps each account's rows private
 const SUPABASE_URL = 'https://rizgpvzmazuvidvbpkoa.supabase.co', SUPABASE_KEY = 'sb_publishable_gi6G-cLhq6wYpiB3G7kEsg_G_aI0QKk';
 let sb = null, user = null;
-const conflictErr = () => Object.assign(new Error('this signature was changed somewhere else since you opened it. Reload to get the latest version, then redo your last change'), { conflict:true });
+const conflictErr = (what = 'signature') => Object.assign(new Error(`this ${what} was changed somewhere else since you opened it. Reload to get the latest version, then redo your last change`), { conflict:true });
 const cloudErr = e => new Error(/fetch|network/i.test(String(e && e.message)) ? 'you seem to be offline. Your changes will save when you reconnect and retry' : 'the account server said: ' + ((e && e.message) || 'unknown error'));
 async function libSave(id, name, st){
   const shT = templates.find(t => t.id === id && t.sh);
@@ -1846,19 +1846,32 @@ async function libDelete(id){
   if (!user) persist(LIBKEY, templates);
   if (view === 'home') renderHome();
 }
-async function coSave(co){
+// one company write at a time: the brand kit saves on every change, and overlapping saves would trip each other's conflict check
+let coSaving = Promise.resolve();
+function coSave(co){ const run = coSaving.then(() => coWrite(co)); coSaving = run.catch(() => {}); return run; }
+async function coWrite(co){
+  const prev = companies.find(c => c.id === co.id);
   if (co.sh){
     if (!co.sh.perms.edit_brand) throw new Error('you can view this company but not change its brand kit');
     const { id, sh, updatedAt, ...data } = co;
-    const { error } = await sb.rpc('save_shared_company', { p_owner:sh.owner, p_id:sh.rid, p_data:data });
-    if (error) throw cloudErr(error);
+    const res = await sb.rpc('save_shared_company', { p_owner:sh.owner, p_id:sh.rid, p_data:data, p_prev:prev && prev.updatedAt });
+    if (res.error && /changed elsewhere/.test(res.error.message)) throw conflictErr('company');
+    if (res.error) throw cloudErr(res.error);
+    if (prev) prev.updatedAt = Number(res.data) || Date.now();
     if (view === 'home') renderHome();
     return;
   }
   const { id, ...doc } = co; doc.updatedAt = Date.now();
   const next = companies.filter(c => c.id !== id).concat(Object.assign({ id }, doc)).sort((a, b) => a.name.localeCompare(b.name));
-  if (user){ const { error } = await sb.from('companies').upsert({ user_id:user.id, id, data:doc, updated_at:doc.updatedAt }); if (error) throw cloudErr(error); }
-  else persist(COKEY, next);
+  if (user){
+    // like signatures: an existing company is only replaced if it is still the copy loaded here
+    const row = { data:doc, updated_at:doc.updatedAt };
+    const { data, error } = await (prev
+      ? sb.from('companies').update(row).eq('user_id', user.id).eq('id', id).eq('updated_at', prev.updatedAt)
+      : sb.from('companies').upsert(Object.assign({ user_id:user.id, id }, row))).select('id');
+    if (error) throw cloudErr(error);
+    if (!data.length) throw conflictErr('company');
+  } else persist(COKEY, next);
   companies = next;
   if (view === 'home') renderHome();
   renderCompanySelect();
@@ -1871,10 +1884,12 @@ async function coDelete(id){
 }
 // many rows at once (import, moving a browser library into an account)
 async function saveMany(sigs, cos){
-  sigs = sigs.map(t => Object.assign({}, t, { updatedAt:t.updatedAt || Date.now() })); // kept in the list too, since later saves check it
+  // kept in the lists too, since later saves check it
+  sigs = sigs.map(t => Object.assign({}, t, { updatedAt:t.updatedAt || Date.now() }));
+  cos = cos.map(c => Object.assign({}, c, { updatedAt:c.updatedAt || Date.now() }));
   if (user){
     if (sigs.length){ const { error } = await sb.from('signatures').upsert(sigs.map(t => ({ user_id:user.id, id:t.id, name:t.name || '', company_id:t.companyId || '', state:t.state, updated_at:t.updatedAt }))); if (error) throw cloudErr(error); }
-    if (cos.length){ const { error } = await sb.from('companies').upsert(cos.map(c => { const { id, ...d } = c; return { user_id:user.id, id, data:d, updated_at:d.updatedAt || Date.now() }; })); if (error) throw cloudErr(error); }
+    if (cos.length){ const { error } = await sb.from('companies').upsert(cos.map(c => { const { id, ...d } = c; return { user_id:user.id, id, data:d, updated_at:d.updatedAt }; })); if (error) throw cloudErr(error); }
   }
   const t2 = sigs.concat(templates.filter(t => !sigs.some(x => x.id === t.id))).sort((a, b) => b.updatedAt - a.updatedAt);
   const c2 = cos.concat(companies.filter(c => !cos.some(x => x.id === c.id))).sort((a, b) => a.name.localeCompare(b.name));
@@ -2029,7 +2044,7 @@ function renderHome(){
 }
 function wireBrandKit(co){
   if (!co || !brandOpen) return;
-  const sv = async msg => { try { await coSave(co); if (msg) toast(msg); } catch (er){ toast(er.message); } };
+  const sv = async msg => { try { await coSave(co); if (msg) toast(msg); } catch (er){ toast(er.message, er.conflict ? { label:'Reload', fn:() => location.reload() } : null); } };
   $('#bk-name').onchange = e => { const v = e.target.value.trim(); if (v){ co.name = v; sv('Renamed.'); } };
   $('#bk-logourl').onchange = e => { co.logoUrl = e.target.value.trim(); sv('Logo link saved.').then(renderHome); };
   $('#bk-font').onchange = e => { co.font = e.target.value; sv(); };
