@@ -173,6 +173,14 @@ function linkBrandColors(st){
     else if (v && typeof v === 'object') walk(v); } };
   walk(st.rows); walk(st.style);
 }
+// Oct 2026: every signature came out a little too big, so sizes and spacing scale down once (border and line thicknesses stay)
+const SHRINK = { style:['size','width','pad','br'], row:['gap','pt','pb'], col:['width','pad','radius'],
+  block:['pt','pb','gapL','size','spacing','width','radius','height','iconSize','iconPad','gap','pad','tsize','padX','padY'] };
+function shrink(s, k){
+  const sc = (o, keys) => keys.forEach(x => { const v = o[x]; if (typeof v === 'number') o[x] = Number.isInteger(v) ? Math.round(v * k) : Math.round(v * k * 10) / 10; });
+  sc(s.style, SHRINK.style);
+  s.rows.forEach(r => { sc(r, SHRINK.row); r.cols.forEach(c => { sc(c, SHRINK.col); c.blocks.forEach(b => sc(b, b.type === 'divider' ? ['pt','pb','gapL'] : SHRINK.block)); }); });
+}
 function migrate(s){
   s = clone(s);
   if (!s.rows){
@@ -191,6 +199,7 @@ function migrate(s){
   ['layout','sideW','gap','valign','divW','divS','divC','sideBg','sideBgOn','sidePad'].forEach(k => delete s.style[k]);
   s.team = s.team || { fields:clone(FIELDS0), people:[], active:null };
   if (!s.linked){ linkBrandColors(s); s.linked = 1; }
+  if (!s.shrunk){ shrink(s, .93); s.shrunk = 1; }
   return s;
 }
 
