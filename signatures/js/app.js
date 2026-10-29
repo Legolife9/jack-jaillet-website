@@ -580,7 +580,7 @@ function buttonCell(b, ctx){
 }
 const pv = (ctx, k, id) => ctx.mode === 'preview' ? ` data-${k}="${id}"` : '';
 function renderColumn(blocks, ctx){
-  let out = '';
+  const rows = [];
   for (let i = 0; i < blocks.length; i++){
     const b = blocks[i];
     // blocks set to "sit beside the block above" share one row: columns inside a column
@@ -592,15 +592,24 @@ function renderColumn(blocks, ctx){
         // the gap is its own cell, so a block's cell (and its highlight) hugs the block; icon-only cells drop the text line's extra height
         .map(([g, h], n) => { const gap = n ? g.gapL ?? 8 : 0, tight = g.type === 'social' || g.type === 'button' ? 'line-height:0;font-size:0;' : '';
           return (gap > 0 ? `<td width="${gap}" style="width:${gap}px;font-size:0;line-height:0">&nbsp;</td>` : '') + `<td${pv(ctx, 'bid', g.id)} valign="${va}" style="vertical-align:${va};${tight}text-align:${g.align}">${h}</td>`; }).join('');
-      if (cells) out += `<tr><td align="${b.align}" style="padding:${Math.max(b.pt, 0)}px 0 ${Math.max(...group.map(g => Math.max(g.pb, 0)))}px 0;text-align:${b.align}"><table ${T0} style="display:inline-table;border-collapse:collapse"><tr>${cells}</tr></table></td></tr>`;
+      if (cells) rows.push({ pt:b.pt, pb:Math.max(...group.map(g => g.pb)), html:(t, bt) => `<tr><td align="${b.align}" style="padding:${t}px 0 ${bt}px 0;text-align:${b.align}"><table ${T0} style="display:inline-table;border-collapse:collapse"><tr>${cells}</tr></table></td></tr>` });
       continue;
     }
-    const inner = renderBlock(b, ctx);
-    if (!inner) continue;
-    // negative spacing pulls neighbours closer with a margin; padding can't go below zero
-    const pull = b.pt < 0 || b.pb < 0 ? `<div style="margin:${Math.min(b.pt, 0)}px 0 ${Math.min(b.pb, 0)}px 0">${inner}</div>` : inner;
-    out += `<tr><td${pv(ctx, 'bid', b.id)} align="${b.align}" style="padding:${Math.max(b.pt, 0)}px 0 ${Math.max(b.pb, 0)}px 0;text-align:${b.align}">${pull}</td></tr>`;
+    const one = b.type === 'text' && !/\n|<br/i.test(M(b.text));
+    if (!renderBlock(b, ctx)) continue;
+    rows.push({ pt:b.pt, pb:b.pb, line:one ? b.size * b.lh : 0,
+      html:(t, bt, lh) => `<tr><td${pv(ctx, 'bid', b.id)} align="${b.align}" style="padding:${t}px 0 ${bt}px 0;text-align:${b.align}">${renderBlock(lh ? Object.assign({}, b, { lh }) : b, ctx)}</td></tr>` });
   }
+  // Gmail strips negative margins, so the space between two blocks is one gap: below 0 it first uses up the gap above,
+  // then a single line of text gets a shorter line height (its letters rise into the space above) and the rest goes below it
+  let out = '', carry = 0;
+  rows.forEach((r, n) => {
+    let top = r.pt + carry, lift = 0;
+    if (top < 0 && r.line){ lift = Math.min(-top, r.line / 2); top = 0; }
+    carry = r.pb + lift;
+    const last = n === rows.length - 1;
+    out += r.html(Math.max(top, 0), last ? Math.max(carry, 0) : 0, lift ? `${+(r.line - 2 * lift).toFixed(1)}px` : '');
+  });
   return out ? `<table ${T0} width="100%" style="border-collapse:collapse">${out}</table>` : '';
 }
 function render(st, mode, pid){
@@ -620,8 +629,6 @@ function render(st, mode, pid){
       let inner = renderColumn(c.blocks, ctx);
       if (inner) any = true;
       else if (mode === 'preview') inner = `<div style="min-width:80px;padding:14px 8px;border:1px dashed #c4cad4;border-radius:6px;color:#98a2b3;font:11px Arial;text-align:center">Empty column</div>`;
-      const np = Math.min(c.pad || 0, 0), pullL = i && r.gap < 0 ? r.gap : 0;
-      if (inner && (np || pullL)) inner = `<div style="margin:${np}px ${np}px ${np}px ${np + pullL}px">${inner}</div>`;
       const st2 = `vertical-align:${r.valign};` + (c.width ? `width:${c.width}px;` : '') + (c.bgOn ? `background:${c.bg};` : '') + (c.pad > 0 ? `padding:${c.pad}px;` : '') + (c.bgOn && c.radius ? `border-radius:${c.radius}px;` : '');
       cells.push(`<td${pv(ctx, 'cid', c.id)} valign="${r.valign}"${c.width ? ` width="${c.width}"` : ''}${c.bgOn ? ` bgcolor="${c.bg}"` : ''} style="${st2}">${inner}</td>`);
     });
@@ -1379,7 +1386,7 @@ function renderInspector(){
     head(rowName(r), 'A row holds side-by-side columns. Stack rows to build any layout.');
     Pn.appendChild(nameField(r, `Row ${ri}`));
     const cnt = colCount(r, 'Columns');
-    [grp('Columns', cnt, r.cols.length > 1 ? [row(num(r, 'gap', 'Gap between (below 0 pulls them closer)', -60, 60), sel_(r, 'valign', 'Line up', [['top','Top'],['middle','Middle'],['bottom','Bottom']]))] : null,
+    [grp('Columns', cnt, r.cols.length > 1 ? [row(num(r, 'gap', 'Gap between', 0, 60), sel_(r, 'valign', 'Line up', [['top','Top'],['middle','Middle'],['bottom','Bottom']]))] : null,
         r.cols.map((c, i) => num(c, 'width', `Column ${i + 1} width (0 = auto)`, 0, COLMAX, 2, { list:true })),
         chk(r, 'full', 'Stretch row to full signature width')),
       r.cols.length > 1 ? grp('Divider between columns', row(num(r, 'divW', 'Thickness (0 = none)', 0, 8), sel_(r, 'divS', 'Style', LSTYLES)), color(r, 'divC', 'Color')) : null,
@@ -1391,7 +1398,7 @@ function renderInspector(){
     head(colName(f.r, c), 'Select a block in this column to edit it, or add one from the left.');
     Pn.appendChild(nameField(c, `Column ${f.r.cols.indexOf(c) + 1}`));
     Pn.append(grp('Layout', colCount(f.r, 'Columns in this row'), num(c, 'width', 'Width (0 = auto)', 0, COLMAX, 2, { list:true })),
-      grp('Background', chk(c, 'bgOn', 'Fill this column', { insp:true }), c.bgOn ? [color(c, 'bg', 'Color'), row(num(c, 'pad', 'Padding', -40, 40), num(c, 'radius', 'Corner radius', 0, 30))] : num(c, 'pad', 'Padding (below 0 pulls content out)', -40, 40)));
+      grp('Background', chk(c, 'bgOn', 'Fill this column', { insp:true }), c.bgOn ? [color(c, 'bg', 'Color'), row(num(c, 'pad', 'Padding', 0, 40), num(c, 'radius', 'Corner radius', 0, 30))] : num(c, 'pad', 'Padding', 0, 40)));
     return;
   }
   const b = f.b;
