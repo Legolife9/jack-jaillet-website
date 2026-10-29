@@ -9,15 +9,16 @@ All images are in place. Current inventory:
   headshot-casual.jpg      About page portrait (optimized, 900px wide).
   logo-blue-on-white.png   Blue JJ on solid white (square). Not currently
                            used on the site; kept for print/social use.
-  watermark-black.png      50% transparent black JJ. Not currently used.
-  watermark-white.png      50% transparent white JJ. Used as the subtle
-                           background mark in the blue UMass band on the
-                           home page.
-  favicon.svg              Old text-based fallback favicon. No longer
-                           referenced; safe to delete.
-  originals/               Your original full-resolution headshots
-                           (1463x2048). The site serves the optimized
-                           copies above; these are your masters.
+  watermark-black.png      50% transparent black JJ. The faint mark behind
+                           the shaded sections in the light theme.
+  watermark-white.png      50% transparent white JJ. The same mark in the
+                           dark theme, and the background mark in the blue
+                           UMass band on the home page.
+  logos/                   Formatted logos for the homepage marquee.
+
+Masters that the site doesn't use (full-resolution headshots, the
+unformatted company logos and the list of company websites) live outside
+the site so they aren't published: OneDrive\Claude\jack-jaillet-website-assets\
 
 TO SWAP A HEADSHOT LATER
 ------------------------

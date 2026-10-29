@@ -35,8 +35,10 @@ each, so use find-and-replace rather than hunting for them.
 | `{{READ_TIME}}`  | A number. Word count ÷ 220, rounded. The build tells you if you're off.  |
 | `{{OG_IMAGE}}`   | Social preview image — normally the same file as the header image, e.g. `/assets/blog/rehearsal.jpg`. If the post has no image, use `/assets/og-image.jpg`. |
 
-Miss one and the build refuses to publish that post rather than putting
-`{{TITLE}}` on the live site. It'll tell you which one you missed.
+Miss one and the build leaves that post off the blog page and the sitemap,
+and tells you which one you missed. The file itself still goes live with
+the rest of the site, `{{TITLE}}` and all, at its own address. So keep an
+unfinished post out of `blog/` (or keep the draft line in it) until it's done.
 
 ## 3. Write it
 

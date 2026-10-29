@@ -61,7 +61,8 @@ function readPost(file) {
   const leftovers = [...new Set(html.match(/\{\{[A-Z_]+\}\}/g) || [])];
 
   // The noindex line is how a post says "not ready yet".
-  const isDraft = /<meta\s+name="robots"\s+content="noindex">/i.test(html);
+  // any robots tag that says noindex counts: "noindex, nofollow", a self-closing "/>", and so on
+  const isDraft = /<meta\s+name="robots"\s+content="[^"]*noindex/i.test(html);
 
   const head = html.split(/<article class="post-body"/)[0];
 
