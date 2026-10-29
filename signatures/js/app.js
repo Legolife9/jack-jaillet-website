@@ -156,12 +156,16 @@ function newState(name, style, rows){ return { v:2, name, style:Object.assign(cl
 // older saves had one block list with a side/main/footer column flag
 /* brand color links: a color stored as "@0".."@4" means that slot of the signature's brand palette */
 const isTok = v => typeof v === 'string' && /^@[0-4]$/.test(v);
+// colors, fonts, ids and other settings go into HTML attributes unescaped, and a shared or imported signature can hold
+// anything, so they lose the characters that could break out of one; free text is escaped where it is used
+const FREE = new Set(['text', 'tag', 'html', 'alt', 'label', 'name', 'sep', 'data']);
 function resolveColors(st){
   const pal = (st.style && st.style.palette) || STYLE0.palette;
-  const walk = o => {
-    if (Array.isArray(o)) return o.map(walk);
-    if (o && typeof o === 'object'){ const r = {}; for (const k in o) r[k] = k === 'palette' || k === 'team' ? o[k] : walk(o[k]); return r; }
-    return isTok(o) ? (pal[+o[1]] || '#000000') : o;
+  const walk = (o, key) => {
+    if (Array.isArray(o)) return o.map(x => walk(x, key));
+    if (o && typeof o === 'object'){ const r = {}; for (const k in o) r[k] = k === 'palette' || k === 'team' ? o[k] : walk(o[k], k); return r; }
+    const v = isTok(o) ? (pal[+o[1]] || '#000000') : o;
+    return typeof v === 'string' && !FREE.has(key) ? v.replace(/["<>]/g, '') : v;
   };
   return walk(st);
 }
@@ -202,6 +206,12 @@ function migrate(s){
   s.team = s.team || { fields:clone(FIELDS0), people:[], active:null };
   if (!s.linked){ linkBrandColors(s); s.linked = 1; }
   if ((s.shrunk || 0) < 2){ shrink(s, s.shrunk ? SCALE / .93 : SCALE); s.shrunk = 2; }
+  // ids and field keys go into attributes and selectors all over the editor; keep only the characters the app makes
+  const safe = o => { if (typeof o.id === 'string') o.id = o.id.replace(/[^\w-]/g, ''); };
+  s.rows.forEach(r => { safe(r); r.cols.forEach(c => { safe(c); c.blocks.forEach(safe); }); });
+  (s.team.people || []).forEach(safe);
+  (s.team.fields || []).forEach(f => { if (typeof f.key === 'string') f.key = f.key.replace(/[^\w-]/g, ''); });
+  if (typeof s.team.active === 'string') s.team.active = s.team.active.replace(/[^\w-]/g, '');
   return s;
 }
 
@@ -552,7 +562,8 @@ function renderBlock(b, ctx){
     case 'button':
       return buttonCell(b, ctx);
     case 'html':
-      return M(b.html);
+      // the HTML is the designer's, but a {{field}} is a person's text (they can edit it through their link), so it goes in escaped
+      return P && typeof b.html === 'string' ? b.html.replace(/\{\{\s*([\w-]+)\s*\}\}/g, (_, k) => esc(P[k] ?? '').replace(/\n/g, '<br>')) : (b.html ?? '');
   }
   return '';
 }
@@ -1919,13 +1930,16 @@ async function loadCloud(){
   for (const r of [s1, s2, s3, s4]) if (r.error) throw cloudErr(r.error);
   const own = s1.data.map(r => ({ id:r.id, name:r.name, state:r.state, companyId:r.company_id, updatedAt:Number(r.updated_at) }));
   const ownC = s2.data.map(r => Object.assign({}, r.data, { id:r.id, updatedAt:Number(r.updated_at) }));
-  const shC = s3.data.map(r => Object.assign({}, r.data, { id:shId(r.owner, r.id), updatedAt:Number(r.updated_at), sh:{ owner:r.owner, ownerEmail:r.owner_email, rid:r.id,
+  // a shared row's id is the sharer's choice and ends up in attributes, so ids the app never makes are skipped
+  const okId = id => /^[\w-]{1,64}$/.test(id);
+  const shC = s3.data.filter(r => okId(r.id)).map(r => Object.assign({}, r.data, { id:shId(r.owner, r.id), updatedAt:Number(r.updated_at), sh:{ owner:r.owner, ownerEmail:r.owner_email, rid:r.id,
     perms:{ view_people:r.can_view_people, edit_people:r.can_edit_people, edit_design:r.can_edit_design, edit_brand:r.can_edit_brand } } }));
-  const shS = s4.data.map(r => {
+  const shS = s4.data.filter(r => okId(r.id)).map(r => {
     const c = shC.find(x => x.sh.owner === r.owner && x.sh.rid === r.company_id);
+    if (!c) return null; // its company was unshared or deleted between the two reads
     const st = Object.assign({}, r.state, { companyId:shId(r.owner, r.company_id) });
     return { id:shId(r.owner, r.id), name:r.name, state:st, companyId:st.companyId, updatedAt:Number(r.updated_at), sh:Object.assign({}, c.sh, { rid:r.id }) };
-  });
+  }).filter(Boolean);
   templates = own.concat(shS).sort((a, b) => b.updatedAt - a.updatedAt);
   companies = ownC.sort((a, b) => (a.name || '').localeCompare(b.name || '')).concat(shC.sort((a, b) => (a.name || '').localeCompare(b.name || '')));
 }
@@ -1951,7 +1965,8 @@ function importLibrary(file){
     if (!sigs.length && !cos.length){ toast("That file isn't a Signature Studio backup."); return; }
     try {
       // same ids are replaced by the backup's copy, everything else is added
-      await saveMany(sigs.filter(t => t && t.id && t.state), cos.filter(c => c && c.id && c.name));
+      const okId = id => /^[\w-]{1,64}$/.test(id); // ids land in attributes; the app only ever makes these
+      await saveMany(sigs.filter(t => t && okId(t.id) && t.state), cos.filter(c => c && okId(c.id) && c.name));
       renderHome(); toast(`Imported ${sigs.length} signature${sigs.length === 1 ? '' : 's'} and ${cos.length} compan${cos.length === 1 ? 'y' : 'ies'}${user ? ' into your account' : ''}.`);
     } catch (e){ toast('Import failed: ' + e.message + '.'); }
   };
@@ -2209,7 +2224,7 @@ $('#homemain').addEventListener('click', async e => {
     const list = templates.filter(x => x.companyId === co.id); let n = 0;
     a.disabled = true; a.textContent = 'Updating…';
     for (const tt of list){ try { await libSave(tt.id, tt.name, applyBrandIn(migrate(tt.state), co)); n++; } catch {} }
-    toast(`Updated ${n} signature${n === 1 ? '' : 's'} with ${co.name}'s brand.`); renderHome();
+    toast(n === list.length ? `Updated ${n} signature${n === 1 ? '' : 's'} with ${co.name}'s brand.` : `Updated ${n} of ${list.length} signatures with ${co.name}'s brand. Reload and try again for the rest.`); renderHome();
   }
   if (act === 'co-del'){
     if (coDelArm !== co.id){ coDelArm = co.id; renderHome(); return; }
