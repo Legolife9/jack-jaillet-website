@@ -768,10 +768,11 @@ $('#go-home').onclick = () => { if (view === 'editor') closeEditor(); };
 
 /* ---------- preview & checks ---------- */
 const gmailLen = h => h.replace(/data:[^"]+/g, '').length; // embedded images never reach Gmail
+// Gmail's 10,000 is counted on the signature as Gmail saves it, after it rewrites the pasted HTML, so the copied size overstates it
+const sizeNote = n => `The copied HTML is ${n.toLocaleString()} characters, over Gmail's 10,000. Gmail counts the signature after it tidies what you paste, which is usually shorter, so it often saves fine. Only if Gmail says the signature is too long: remove an icon or image, or shorten a link.`;
 function checks(st, pid){
   const out = [], g = render(st, 'gmail', pid), n = gmailLen(g.html);
   if (g.embedded.length) out.push(['warn', `Replace the sample pictures with links to your own images (${g.embedded.join(', ')}). Email apps can't show the samples.`]);
-  if (n > 10000) out.push(['warn', `Gmail allows 10,000 characters; this is ${n.toLocaleString()}. Remove blocks or icons, or shorten links.`]);
   // Imgur turns away the image service that crops pictures, so a cropped Imgur picture shows up broken
   if (/images\.weserv\.nl\/\?url=[^"]*imgur\.com/i.test(g.html)) out.push(['warn', 'A cropped picture is hosted on Imgur, which blocks the cropping service, so it shows up broken. Set its Crop to Original, or host it on your own site.']);
   const person = personFor(st, pid), V = person ? person.values : null;
@@ -786,7 +787,8 @@ function checks(st, pid){
   if (noLink) out.push(['info', `${noLink} button${noLink > 1 ? 's or icons have' : ' or icon has'} no link yet.`]);
   if (noAlt) out.push(['info', `${noAlt} image${noAlt > 1 ? 's have' : ' has'} no alt text. Recipients who block images see the alt text instead.`]);
   if (missing.size) out.push(['info', `${person.values.name || 'This person'} has no value for: ${[...missing].join(', ')}. Those parts are hidden in their copy.`]);
-  if (!out.length) out.push(['ok', 'Ready to copy: every image is linked and the size is within Gmail\'s limit.']);
+  if (!out.length) out.push(['ok', n > 10000 ? 'Ready to copy: every image is linked.' : 'Ready to copy: every image is linked and the size is within Gmail\'s limit.']);
+  if (n > 10000) out.push(['info', sizeNote(n)]);
   return { out, n };
 }
 const chkHtml = list => list.map(([k, t]) => `<div class="chkline ${k === 'info' ? '' : k}"><span class="dot"></span><span>${esc(t)}</span></div>`).join('');
@@ -798,8 +800,8 @@ function renderPreview(){
   markSel();
   const { out, n } = checks(state);
   const m = $('#meter');
-  m.textContent = `Gmail size ${n.toLocaleString()} / 10,000`;
-  m.classList.toggle('bad', n > 10000);
+  m.textContent = `Copied size ${n.toLocaleString()} characters`;
+  m.title = 'Gmail allows 10,000 characters, counted on the signature it saves after tidying what you paste, which is usually shorter than this.';
   $('#checks').innerHTML = chkHtml(out);
   renderPersonSelect();
 }
@@ -1756,7 +1758,7 @@ function renderShare(){
     ${ps.length ? `<div class="field"><span>Signature for</span><select id="sharep" style="max-width:320px;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--panel2)">${ps.map((p, i) => `<option value="${p.id}"${p === person ? ' selected' : ''}>${esc(personLabel(p, i))}</option>`).join('')}</select></div>` : ''}
     <div class="sharecard"><h3>${G('fab','google')}Gmail</h3>
       <ol class="steps note">${STEPS.gmail.map(s => `<li>${s}</li>`).join('')}</ol>
-      ${gw.length ? chkHtml(gw) : chkHtml([['ok', `Ready for Gmail. ${n.toLocaleString()} of 10,000 characters.`]])}
+      ${gw.length ? chkHtml(gw) : chkHtml([['ok', 'Ready for Gmail.']])}${n > 10000 ? chkHtml([['info', sizeNote(n)]]) : ''}
       <div class="row"><button class="btn primary" data-a="copy-gmail" type="button">Copy for Gmail</button></div></div>
     <div class="sharecard"><h3>${G('fas','envelope-open-text')}Outlook and Apple Mail</h3>
       <ol class="steps note">${STEPS.outlook.map(s => `<li>${s}</li>`).join('')}</ol>
