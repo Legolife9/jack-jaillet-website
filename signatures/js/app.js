@@ -1927,14 +1927,17 @@ async function saveMany(sigs, cos){
   if (!user){ persist(LIBKEY, t2); persist(COKEY, c2); }
   templates = t2; companies = c2;
 }
+let invites = []; // companies shared with me that I haven't accepted yet
 async function loadCloud(){
-  const [s1, s2, s3, s4] = await Promise.all([
+  const [s1, s2, s3, s4, s5] = await Promise.all([
     sb.from('signatures').select('id,name,company_id,state,updated_at').order('updated_at', { ascending:false }),
     sb.from('companies').select('id,data,updated_at'),
     sb.rpc('shared_companies'),
-    sb.rpc('shared_signatures')
+    sb.rpc('shared_signatures'),
+    sb.rpc('pending_shares')
   ]);
   for (const r of [s1, s2, s3, s4]) if (r.error) throw cloudErr(r.error);
+  invites = s5.error ? [] : s5.data.filter(r => /^[\w-]{1,64}$/.test(r.id)); // invites are extra: the library still loads without them
   const own = s1.data.map(r => ({ id:r.id, name:r.name, state:r.state, companyId:r.company_id, updatedAt:Number(r.updated_at) }));
   const ownC = s2.data.map(r => Object.assign({}, r.data, { id:r.id, updatedAt:Number(r.updated_at) }));
   // a shared row's id is the sharer's choice and ends up in attributes, so ids the app never makes are skipped
@@ -2071,7 +2074,9 @@ function renderHome(){
   else if (!templates.length) body = `<div class="sharecard"><h3>${G('fas','pen-nib')}Start your first signature</h3><p class="note">Pick a layout below. You can change everything about it, and it saves as you go.</p></div>${templateGallery('home', co)}`;
   else body = `<div class="sgrid">${q || (co && co.sh) ? '' : newCard}${cards}</div>${list.length ? '' : `<div class="empty">${q ? 'No signatures match that search.' : co ? `No signatures for ${esc(co.name)} yet.` : 'Nothing here yet.'}</div>`}`;
   const offer = user && offerMove ? `<div class="sharecard"><h3>${G('fas','cloud-arrow-up')}Move this browser's signatures into your account?</h3><p class="note">${offerMove} signature${offerMove === 1 ? ' is' : 's are'} saved in this browser from before you signed in. Moving them puts them in your account, on every device.</p><div class="row"><button class="btn primary sm" type="button" data-a="move-local">Move them</button><button class="btn sm" type="button" data-a="move-later">Not now</button></div></div>` : '';
-  $('#homemain').innerHTML = offer + head + body;
+  // a shared company stays out of the library until its invite is accepted here
+  const inv = user ? invites.map(i => `<div class="sharecard"><h3>${G('fas','user-plus')}${esc(i.owner_email)} shared ${esc(i.name || 'a company')} with you</h3><p class="note">Accept to see its signatures here. Only accept if you know them.</p><div class="row"><button class="btn primary sm" type="button" data-a="inv-accept" data-owner="${esc(i.owner)}" data-id="${esc(i.id)}">Accept</button><button class="btn sm" type="button" data-a="inv-decline" data-owner="${esc(i.owner)}" data-id="${esc(i.id)}">Decline</button></div></div>`).join('') : '';
+  $('#homemain').innerHTML = inv + offer + head + body;
   wireRemoteImages($('#homemain'));
   fitThumbs($('#homemain'));
   const ni = $('#co-new'); if (ni){ ni.focus(); ni.onkeydown = e => { if (e.key === 'Enter') $('#cos [data-a="co-create"]').click(); if (e.key === 'Escape'){ coForm = false; renderHome(); } }; }
@@ -2225,6 +2230,15 @@ $('#homemain').addEventListener('click', async e => {
     if (error){ toast('Could not remove them: ' + error.message); return; }
     await loadMembers(co); renderHome(); toast(`${em} no longer has access.`);
   }
+  if (act === 'inv-accept' || act === 'inv-decline'){
+    const args = { p_owner:a.dataset.owner, p_id:a.dataset.id }, i = invites.find(x => x.owner === args.p_owner && x.id === args.p_id);
+    a.disabled = true;
+    const { error } = await sb.rpc(act === 'inv-accept' ? 'accept_shared_company' : 'leave_shared_company', args);
+    if (error){ a.disabled = false; toast('Could not do that: ' + error.message); return; }
+    try { await loadCloud(); } catch (er){ toast('Could not reload your library: ' + er.message + '.'); }
+    renderHome(); renderCompanySelect();
+    toast(act === 'inv-accept' ? `Added ${(i && i.name) || 'the company'} to your library.` : 'Declined.');
+  }
   if (act === 'mem-invite'){ const ok = await copyText(inviteText(co, a.dataset.email)); toast(ok ? 'Invite message copied. Paste it into an email or chat.' : 'Copy was blocked.'); }
   if (act === 'co-done'){ brandOpen = false; renderHome(); }
   if (act === 'co-applyall'){
@@ -2260,13 +2274,13 @@ async function loadMembers(co){
   members[co.id] = data;
 }
 const toolUrl = () => location.origin + location.pathname;
-const inviteText = (co, email) => `I shared the "${co.name}" email signatures with you on Signature Studio. Open ${toolUrl()} and sign in with ${email} to see them.`;
+const inviteText = (co, email) => `I shared the "${co.name}" email signatures with you on Signature Studio. Open ${toolUrl()}, sign in with ${email} and accept the invite to see them.`;
 function sharePanel(co){
   const list = members[co.id];
-  const rows = (list || []).map(m => `<div class="memrow" data-email="${esc(m.email)}"><div class="grow"><b>${esc(m.email)}</b><div class="memperms">${PERMS.map(([k, l]) => `<label class="chk"><input type="checkbox" data-perm="${k}"${m[k] ? ' checked' : ''}>${l}</label>`).join('')}</div></div>
+  const rows = (list || []).map(m => `<div class="memrow" data-email="${esc(m.email)}"><div class="grow"><b>${esc(m.email)}</b>${m.accepted === false ? ' <span class="note">Hasn\'t accepted yet</span>' : ''}<div class="memperms">${PERMS.map(([k, l]) => `<label class="chk"><input type="checkbox" data-perm="${k}"${m[k] ? ' checked' : ''}>${l}</label>`).join('')}</div></div>
     <div class="row"><button class="btn sm" type="button" data-a="mem-invite" data-email="${esc(m.email)}">Copy invite</button><a class="btn sm ghost" href="mailto:${encodeURIComponent(m.email)}?subject=${encodeURIComponent('Email signatures for ' + co.name)}&body=${encodeURIComponent(inviteText(co, m.email))}">Email invite</a><button class="btn sm ghost danger" type="button" data-a="mem-remove" data-email="${esc(m.email)}">Remove</button></div></div>`).join('');
   return `<div class="sharecard sharepanel"><h3>${G('fas','user-plus')}Share ${esc(co.name)}</h3>
-    <p class="note">People you add see this company and its signatures after they sign in with that email. They can't share it, delete it, or add new signatures. Change what each person can do below; it takes effect the next time they open the page.</p>
+    <p class="note">People you add see this company and its signatures after they sign in with that email and accept your invite. They can't share it, delete it, or add new signatures. Change what each person can do below; it takes effect the next time they open the page.</p>
     <form id="shareform" class="row" style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
       <div class="field" style="flex:1 1 220px"><span>Email</span><input id="share-email" type="email" required placeholder="name@company.com" autocomplete="off"></div>
       <div class="field"><span>Access</span><select id="share-role">${ROLES.map(([v, l]) => `<option value="${v}">${l}</option>`).join('')}</select></div>
