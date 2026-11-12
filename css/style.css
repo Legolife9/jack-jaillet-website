@@ -1488,16 +1488,14 @@ a.org-item:hover { color: var(--ink); text-decoration: none; }
 .job time { color: var(--ink-2); font-size: 0.9rem; white-space: nowrap; }
 .job p { color: var(--ink-2); font-size: 0.95rem; margin-top: 8px; }
 
-.job ul.roles { list-style: none; margin-top: 10px; }
-.job ul.roles li {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 6px 0;
-  font-size: 0.95rem;
-  color: var(--ink-2);
-}
-.job ul.roles li b { color: var(--ink); font-weight: 500; }
+.job .job-loc { color: var(--ink-2); font-weight: 400; font-size: 0.9rem; }
+.job .role { margin-top: 14px; }
+.job .role h4 { font-family: var(--sans); font-size: 1rem; font-weight: 500; }
+.job ul.points { margin: 6px 0 0 1.1em; color: var(--ink-2); font-size: 0.95rem; }
+.job ul.points li + li { margin-top: 4px; }
+
+.skill-group { font-family: var(--sans); font-size: 0.85rem; font-weight: 600; color: var(--ink-2); margin: 4px 0 10px; }
+.skill-chips + .skill-group { margin-top: 18px; }
 
 .aside-block + .aside-block { margin-top: 44px; }
 
@@ -1623,7 +1621,7 @@ a.org-item:hover { color: var(--ink); text-decoration: none; }
     --paper: #fff; --surface: #fff; --ink: #000; --ink-2: #333;
     --line: #bbb; --link: #000; --blue-deep: #000; --blue-tint: #fff;
   }
-  .site-nav, .site-footer, .no-print, .contact-band { display: none !important; }
+  .site-nav, .site-footer, .contact-band { display: none !important; }
   body { background: #fff; font-size: 11pt; }
   .resume-head { padding: 0 0 16px; }
   .resume-body { padding: 24px 0 0; }
