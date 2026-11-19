@@ -14,7 +14,7 @@
        {{DATE_HUMAN}}   Readable date, e.g. August 10, 2026
        {{READ_TIME}}    e.g. 4  (roughly words divided by 220)
        {{OG_IMAGE}}     Social preview image, e.g. /assets/blog/my-photo.jpg
-                        Use /assets/og-jack-jaillet.jpg if the post has no image.
+                        Use /assets/og-image.jpg if the post has no image.
 
   3. Write the post inside <article class="post-body">. Delete any blocks
      you don't use - every kind of block you can use is shown down there,
@@ -36,8 +36,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#dedad3" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#151515" media="(prefers-color-scheme: dark)">
+  <!-- Mobile browser chrome follows the theme. Dark is the site default, so
+       that is the static value; the bootstrap below corrects it before first
+       paint for visitors who chose light. -->
+  <meta name="theme-color" content="#10131a">
   <!-- DRAFT SWITCH. While this line is here the post is a draft: it stays off
        the blog page and search engines skip it. Delete this one line when the
        post is ready to go live, then run "Publish blog.bat". -->
@@ -61,7 +63,7 @@
   <link rel="apple-touch-icon" href="/assets/favicon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&amp;family=Rokkitt:wght@800&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css">
   <script type="application/ld+json">
   {
@@ -76,7 +78,8 @@
     "publisher": { "@id": "https://jackjaillet.com/#jack" }
   }
   </script>
-  <script>document.documentElement.classList.add("js");try{var t=localStorage.getItem("theme");if(t==="light"||t==="dark"){document.documentElement.dataset.theme=t;document.querySelectorAll('meta[name="theme-color"]').forEach(function(m){m.content=t==="light"?"#dedad3":"#151515"})}}catch(e){}</script>
+  <script>try{var t=localStorage.getItem("theme");if(t){document.documentElement.dataset.theme=t;var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content",t==="light"?"#f7f8fa":"#10131a")}}catch(e){}</script>
+  <noscript><style>.reveal{opacity:1 !important;transform:none !important}</style></noscript>
 </head>
 <body>
 
@@ -85,19 +88,20 @@
   <nav class="site-nav" aria-label="Primary">
     <div class="wrap">
       <a class="brand" href="/">
-        <img class="brand-img" src="/assets/favicon.png" alt="" width="36" height="36">
+        <img class="brand-img" src="/assets/favicon.png" alt="" width="40" height="40">
         <span class="brand-name">Jack Jaillet</span>
       </a>
-      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-menu">Menu</button>
+      <button class="nav-toggle" aria-expanded="false" aria-controls="nav-menu" aria-label="Open navigation menu">Menu</button>
       <ul class="nav-links" id="nav-menu">
+        <li><a href="/">Home</a></li>
         <li><a href="/about">About</a></li>
         <li><a href="/resume">Resume</a></li>
         <li><a href="/blog/" aria-current="page">Blog</a></li>
         <li><a href="/services">Services</a></li>
-        <li><a class="btn btn-small" href="mailto:contact@jackjaillet.com">Email me</a></li>
+        <li><a class="btn btn-primary btn-small" href="mailto:contact@jackjaillet.com">Get in touch</a></li>
         <li class="theme-item">
           <span class="theme-text" id="theme-text">Dark mode</span>
-          <button class="theme-toggle" type="button" role="switch" aria-checked="false" aria-labelledby="theme-text">
+          <button class="theme-toggle" type="button" role="switch" aria-checked="true" aria-labelledby="theme-text">
             <svg class="icon-sun" aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
             <svg class="icon-moon" aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
             <span class="theme-knob" aria-hidden="true"></span>
@@ -225,19 +229,21 @@
   </main>
 
   <footer class="site-footer">
-    <div class="wrap footer-line">
-      <p class="footer-id">Jack Jaillet, Massachusetts</p>
+    <div class="wrap">
+      <a class="brand" href="/" aria-label="Jack Jaillet, back to home">
+        <img class="brand-img" src="/assets/favicon.png" alt="" width="32" height="32" loading="lazy" decoding="async">
+      </a>
       <nav aria-label="Footer">
-        <ul class="footer-links">
-          <li><a href="mailto:contact@jackjaillet.com">contact@jackjaillet.com</a></li>
-          <li><a href="https://www.linkedin.com/in/jackjaillet/" target="_blank" rel="noopener">LinkedIn<span class="sr-only"> (opens in new tab)</span></a></li>
-          <li><a href="/privacy">Privacy</a></li>
-          <li><a href="/terms">Terms</a></li>
-          <li><a href="/accessibility">Accessibility</a></li>
-          <li hidden data-cookie-settings><button type="button">Cookie settings</button></li>
-        </ul>
+      <ul class="footer-links">
+        <li><a href="mailto:contact@jackjaillet.com">contact@jackjaillet.com</a></li>
+        <li><a href="https://www.linkedin.com/in/jackjaillet/" target="_blank" rel="noopener">LinkedIn<span class="sr-only"> (opens in new tab)</span></a></li>
+        <li><a href="/privacy">Privacy</a></li>
+        <li><a href="/terms">Terms</a></li>
+        <li><a href="/accessibility">Accessibility</a></li>
+        <li hidden data-cookie-settings><button type="button">Cookie settings</button></li>
+      </ul>
       </nav>
-      <p class="footer-year"><small>&copy; <span id="year">2026</span> Jack Jaillet</small></p>
+      <small>&copy; <span id="year">2026</span> Jack Jaillet</small>
     </div>
   </footer>
 

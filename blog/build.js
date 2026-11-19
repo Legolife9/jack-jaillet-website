@@ -144,8 +144,8 @@ function card(post) {
 function emptyState() {
   return [
     '      <div class="blog-empty reveal">',
-    '        <p class="blog-empty-title">No posts yet</p>',
-    '        <p class="blog-empty-note">The first one is in the works.</p>',
+    '        <p class="blog-empty-kicker">Coming soon</p>',
+    '        <p class="blog-empty-note">The first post is on its way. In the meantime, <a href="/about">read more about me</a>.</p>',
     "      </div>",
   ].join("\n");
 }
@@ -228,7 +228,7 @@ function main() {
     for (const problem of p.problems) console.log(`             ${problem}`);
     if (p.leftovers.length) console.log(`             still has ${p.leftovers.join(", ")} to fill in`);
   }
-  if (!all.length) console.log("  No post files yet. The blog page will say No posts yet.");
+  if (!all.length) console.log("  No post files yet. The blog page will say Coming soon.");
 
   const indexChanged = replaceBlock(INDEX_FILE, "POSTS", postList(posts));
   const sitemapChanged = replaceBlock(SITEMAP_FILE, "BLOG", sitemapEntries(posts));
@@ -239,7 +239,7 @@ function main() {
   console.log("");
   console.log(
     posts.length === 0
-      ? "  Done. No posts published, so the blog page shows the No posts yet panel."
+      ? "  Done. No posts published, so the blog page shows the Coming soon panel."
       : `  Done. ${posts.length} post${posts.length === 1 ? "" : "s"} on the blog page.`
   );
   console.log("");

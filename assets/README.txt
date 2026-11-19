@@ -1,32 +1,26 @@
 ASSETS
 ======
 
-Current inventory:
+All images are in place. Current inventory:
 
-  favicon.png              Blue JJ in a white circle. Browser-tab icon and the
-                           nav logo.
-  headshot-serious.jpg     Trail portrait, 900px wide. Smaller source for the
-                           home page photo (srcset).
-  headshot-casual.jpg      Fence portrait, 900px wide. Smaller source for the
-                           About page and home page photos (srcset).
-  photo/jack-trail-1400.jpg  Trail portrait, 1400px. Home page stage photo.
-  photo/jack-fence-1400.jpg  Fence portrait, 1400px. About page and the home
-                             page stage once you scroll to "Selected work".
-  photo/jack-fence-wide.jpg  Landscape crop of the fence portrait (fog on the
-                             left) behind the home page contact card.
-  photo/jack-face-160.jpg    Small face crop for the letter on the About page.
-  og-jack-jaillet.jpg      1200x630 link preview (LinkedIn, iMessage, etc.).
-  logos/                   Organisation logos shown beside "Selected work".
-  blog/placeholder.svg     Stand-in image for the example blog post.
-
-No longer used by the site (kept for print/social or older links):
-  og-image.jpg, logo-blue-on-white.png, watermark-black.png, watermark-white.png
+  favicon.png              Blue JJ in a white circle. Used as the browser-tab
+                           icon, the nav logo, and the footer logo.
+  headshot-serious.jpg     Home page hero portrait (optimized, 900px wide).
+  headshot-casual.jpg      About page portrait (optimized, 900px wide).
+  logo-blue-on-white.png   Blue JJ on solid white (square). Not currently
+                           used on the site; kept for print/social use.
+  watermark-black.png      50% transparent black JJ. The faint mark behind
+                           the shaded sections in the light theme.
+  watermark-white.png      50% transparent white JJ. The same mark in the
+                           dark theme, and the background mark in the blue
+                           UMass band on the home page.
+  logos/                   Formatted logos for the homepage marquee.
 
 Masters that the site doesn't use (full-resolution headshots, the
 unformatted company logos and the list of company websites) live outside
-the site so they aren't published: OneDrive\Claude\jack-jaillet-website-assets
+the site so they aren't published: OneDrive\Claude\jack-jaillet-website-assets\
+
 TO SWAP A HEADSHOT LATER
 ------------------------
-Replace both sizes of that photo (the 900px file here and the 1400px file in
-photo/), keeping the filenames, and refresh. The crops in photo/ were made
-from the masters folder above.
+Drop the new photo over headshot-serious.jpg or headshot-casual.jpg
+(keep the same filename, ideally around 900px wide) and refresh.

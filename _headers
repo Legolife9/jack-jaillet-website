@@ -1,12 +1,11 @@
 # Cloudflare Pages response headers.
 #
-# The one CSP hash below covers the only inline block on the site: the theme
-# bootstrap in each page's <head> (it also adds the "js" class that lets the
-# entrance motion hide content safely). If you edit that snippet, even its
-# whitespace, recompute the hash or the browser will silently refuse to run it:
-#   node -e "console.log(require('crypto').createHash('sha256').update(SNIPPET).digest('base64'))"
-# Everything else is in /css/style.css, /js/main.js and /js/footer.js, so this
-# should rarely need touching.
+# The two CSP hashes below cover the only inline blocks on the site:
+#   script — the theme bootstrap in each page's <head>
+#   style  — the <noscript> reveal fallback
+# If you edit either of those snippets (even the whitespace), recompute the
+# hash or the browser will silently refuse to run it. Everything else is in
+# /css/style.css, /js/main.js and /js/footer.js, so this should rarely need touching.
 # Google Analytics hosts are contacted only when js/footer.js allows it (Europe opts in,
 # elsewhere visitors can say no). cloudflareinsights.com is Cloudflare Web Analytics,
 # which Cloudflare injects itself and which sets no cookies.
@@ -17,7 +16,7 @@
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=(), usb=()
   Strict-Transport-Security: max-age=31536000; includeSubDomains
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://static.cloudflareinsights.com https://www.googletagmanager.com 'sha256-PSnaQe7rz+GJtDIj1Ba3nwUVStp28jb8bkr74sTpq/o='; connect-src 'self' https://cloudflareinsights.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://*.google-analytics.com https://www.googletagmanager.com; base-uri 'self'; form-action 'none'; frame-ancestors 'none'; object-src 'none'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://static.cloudflareinsights.com https://www.googletagmanager.com 'sha256-PzBLokaZvNUDewm/MO4NJQlgzvoEq/9WPrbjvKy4Mgc='; connect-src 'self' https://cloudflareinsights.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com; style-src 'self' https://fonts.googleapis.com 'sha256-AQw+/rZat5Ptf1TLzB41a0GmKxd3HreJnk3Ip+F7Ou4='; font-src https://fonts.gstatic.com; img-src 'self' data: https://*.google-analytics.com https://www.googletagmanager.com; base-uri 'self'; form-action 'none'; frame-ancestors 'none'; object-src 'none'; upgrade-insecure-requests
 
 # Images are content-stable but do get replaced occasionally (the logo set was
 # swapped once already), so this is a week rather than a year.

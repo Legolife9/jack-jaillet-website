@@ -3,30 +3,31 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#dedad3" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#151515" media="(prefers-color-scheme: dark)">
+  <!-- Mobile browser chrome follows the theme. Dark is the site default, so
+       that is the static value; the bootstrap below corrects it before first
+       paint for visitors who chose light. -->
+  <meta name="theme-color" content="#10131a">
   <title>Jack Jaillet Resume | Experience, Leadership &amp; Education</title>
-  <meta name="description" content="Jack Jaillet's resume: client service, photography, youth leadership and nonprofit work, plus his education at UMass Amherst's Isenberg School of Management.">
+  <meta name="description" content="The full resume of Jack Jaillet: experience, leadership, education, honors, and skills.">
   <link rel="canonical" href="https://jackjaillet.com/resume">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Jack Jaillet">
   <meta property="og:title" content="Jack Jaillet Resume | Experience, Leadership & Education">
-  <meta property="og:description" content="Jack Jaillet's resume: client service, photography, youth leadership and nonprofit work, plus his education at UMass Amherst's Isenberg School of Management.">
+  <meta property="og:description" content="The full resume of Jack Jaillet: experience, leadership, education, honors, and skills.">
   <meta property="og:url" content="https://jackjaillet.com/resume">
-  <meta property="og:image" content="https://jackjaillet.com/assets/og-jack-jaillet.jpg">
+  <meta property="og:image" content="https://jackjaillet.com/assets/og-image.jpg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="Jack Jaillet, business student at UMass Amherst, in a blue flannel shirt">
+  <meta property="og:image:alt" content="Jack Jaillet">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Jack Jaillet Resume | Experience, Leadership & Education">
-  <meta name="twitter:description" content="Jack Jaillet's resume: client service, photography, youth leadership and nonprofit work, plus his education at UMass Amherst's Isenberg School of Management.">
-  <meta name="twitter:image" content="https://jackjaillet.com/assets/og-jack-jaillet.jpg">
-  <meta name="twitter:image:alt" content="Jack Jaillet, business student at UMass Amherst, in a blue flannel shirt">
+  <meta name="twitter:description" content="The full resume of Jack Jaillet: experience, leadership, education, honors, and skills.">
+  <meta name="twitter:image" content="https://jackjaillet.com/assets/og-image.jpg">
   <link rel="icon" type="image/png" href="/assets/favicon.png">
   <link rel="apple-touch-icon" href="/assets/favicon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&amp;family=Rokkitt:wght@800&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css">
   <script type="application/ld+json">
   {
@@ -34,10 +35,11 @@
     "@type": "ProfilePage",
     "url": "https://jackjaillet.com/resume",
     "name": "Jack Jaillet Resume",
-    "mainEntity": { "@type": "Person", "@id": "https://jackjaillet.com/#jack", "name": "Jack Jaillet", "url": "https://jackjaillet.com/" }
+    "mainEntity": { "@id": "https://jackjaillet.com/#jack" }
   }
   </script>
-  <script>document.documentElement.classList.add("js");try{var t=localStorage.getItem("theme");if(t==="light"||t==="dark"){document.documentElement.dataset.theme=t;document.querySelectorAll('meta[name="theme-color"]').forEach(function(m){m.content=t==="light"?"#dedad3":"#151515"})}}catch(e){}</script>
+  <script>try{var t=localStorage.getItem("theme");if(t){document.documentElement.dataset.theme=t;var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content",t==="light"?"#f7f8fa":"#10131a")}}catch(e){}</script>
+  <noscript><style>.reveal{opacity:1 !important;transform:none !important}</style></noscript>
 </head>
 <body>
 
@@ -46,19 +48,20 @@
   <nav class="site-nav" aria-label="Primary">
     <div class="wrap">
       <a class="brand" href="/">
-        <img class="brand-img" src="/assets/favicon.png" alt="" width="36" height="36">
+        <img class="brand-img" src="/assets/favicon.png" alt="" width="40" height="40">
         <span class="brand-name">Jack Jaillet</span>
       </a>
-      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-menu">Menu</button>
+      <button class="nav-toggle" aria-expanded="false" aria-controls="nav-menu" aria-label="Open navigation menu">Menu</button>
       <ul class="nav-links" id="nav-menu">
+        <li><a href="/">Home</a></li>
         <li><a href="/about">About</a></li>
         <li><a href="/resume" aria-current="page">Resume</a></li>
         <li><a href="/blog/">Blog</a></li>
         <li><a href="/services">Services</a></li>
-        <li><a class="btn btn-small" href="mailto:contact@jackjaillet.com">Email me</a></li>
+        <li><a class="btn btn-primary btn-small" href="mailto:contact@jackjaillet.com">Get in touch</a></li>
         <li class="theme-item">
           <span class="theme-text" id="theme-text">Dark mode</span>
-          <button class="theme-toggle" type="button" role="switch" aria-checked="false" aria-labelledby="theme-text">
+          <button class="theme-toggle" type="button" role="switch" aria-checked="true" aria-labelledby="theme-text">
             <svg class="icon-sun" aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
             <svg class="icon-moon" aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
             <span class="theme-knob" aria-hidden="true"></span>
@@ -91,9 +94,9 @@
           <h2 id="experience-heading">Experience</h2>
 
           <article class="job">
-            <h3><span class="job-org"><a href="https://www.gatheringcurrents.org/" target="_blank" rel="noopener">Gathering Currents (formerly Quabbin Mediation)<span class="sr-only"> (opens in new tab)</span></a></span> <span class="job-loc">Hybrid</span></h3>
+            <h3><span class="job-org"><a href="https://www.gatheringcurrents.org/" target="_blank" rel="noopener">Gathering Currents (formerly Quabbin Mediation)<span class="sr-only"> (opens in new tab)</span><svg class="ext-icon" aria-hidden="true" focusable="false" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a></span> <span class="job-loc">&middot; Hybrid</span></h3>
             <div class="role">
-              <div class="job-top"><h4>Consultant</h4><span class="job-dates">Sep 2025 &ndash; present</span></div>
+              <div class="job-top"><h4>Consultant</h4><time>Sep 2025 - Present</time></div>
               <ul class="points">
                 <li>Manage social media and website content for a mediation nonprofit, increasing community engagement</li>
                 <li>Support fundraising through targeted outreach and promotion while coordinating training program logistics</li>
@@ -101,7 +104,7 @@
               </ul>
             </div>
             <div class="role">
-              <div class="job-top"><h4>Youth Consultant</h4><span class="job-dates">Jul 2025 &ndash; Aug 2025</span></div>
+              <div class="job-top"><h4>Youth Consultant</h4><time>Jul 2025 - Aug 2025</time></div>
               <ul class="points">
                 <li>Managed social media presence and website content, growing community engagement and fundraising outreach</li>
                 <li>Recommended program delivery and communication improvements and coordinated training logistics</li>
@@ -110,16 +113,16 @@
           </article>
 
           <article class="job">
-            <h3><span class="job-org"><a href="https://www.brightfuturefinancialllc.com/" target="_blank" rel="noopener">Bright Future Financial LLC<span class="sr-only"> (opens in new tab)</span></a></span> <span class="job-loc">Leominster, MA</span></h3>
+            <h3><span class="job-org"><a href="https://www.brightfuturefinancialllc.com/" target="_blank" rel="noopener">Bright Future Financial LLC<span class="sr-only"> (opens in new tab)</span><svg class="ext-icon" aria-hidden="true" focusable="false" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a></span> <span class="job-loc">&middot; Leominster, MA</span></h3>
             <div class="role">
-              <div class="job-top"><h4>Client Service Associate</h4><span class="job-dates">May 2026 &ndash; present</span></div>
+              <div class="job-top"><h4>Client Service Associate</h4><time>May 2026 - Present</time></div>
               <ul class="points">
                 <li>Manage confidential client information through accurate data entry, document scanning, and CRM maintenance</li>
                 <li>Schedule client meetings, streamline record-keeping workflows, and support the firm&#x27;s social media presence</li>
               </ul>
             </div>
             <div class="role">
-              <div class="job-top"><h4>Client Service Associate Intern</h4><span class="job-dates">Feb 2025 &ndash; May 2026</span></div>
+              <div class="job-top"><h4>Client Service Associate Intern</h4><time>Feb 2025 - May 2026</time></div>
               <ul class="points">
                 <li>Supported the office and its clients through confidential data entry, document scanning, and CRM management</li>
                 <li>Scheduled client meetings and maintained organized records, improving system workflows for team efficiency</li>
@@ -128,9 +131,9 @@
           </article>
 
           <article class="job">
-            <h3><span class="job-org"><a href="https://www.charmingphotography.com/" target="_blank" rel="noopener">Charming Memories Photography<span class="sr-only"> (opens in new tab)</span></a></span> <span class="job-loc">Hybrid</span></h3>
+            <h3><span class="job-org"><a href="https://www.charmingphotography.com/" target="_blank" rel="noopener">Charming Memories Photography<span class="sr-only"> (opens in new tab)</span><svg class="ext-icon" aria-hidden="true" focusable="false" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a></span> <span class="job-loc">&middot; Hybrid</span></h3>
             <div class="role">
-              <div class="job-top"><h4>Owner</h4><span class="job-dates">Nov 2024 &ndash; present</span></div>
+              <div class="job-top"><h4>Owner</h4><time>Nov 2024 - Present</time></div>
               <ul class="points">
                 <li>Own and operate a full-service photography and videography business serving families and organizations</li>
                 <li>Shoot and edit portrait, headshot, event, corporate, real estate, sports, food, and nature photography and video</li>
@@ -140,9 +143,9 @@
           </article>
 
           <article class="job">
-            <h3>Sun Kim Bop Food Truck <span class="job-loc">Petersham, MA</span></h3>
+            <h3>Sun Kim Bop Food Truck <span class="job-loc">&middot; Petersham, MA</span></h3>
             <div class="role">
-              <div class="job-top"><h4>Team Member</h4><span class="job-dates">Jun 2022 &ndash; present</span></div>
+              <div class="job-top"><h4>Team Member</h4><time>Jun 2022 - Present</time></div>
               <ul class="points">
                 <li>Take customer orders and prepare and deliver food accurately and promptly in a fast-paced food truck setting</li>
                 <li>Maintain a clean, hazard-free workspace and support daily setup and shutdown of mobile food service</li>
@@ -151,9 +154,9 @@
           </article>
 
           <article class="job">
-            <h3><span class="job-org"><a href="https://www.lgbtqiasafezone.org/" target="_blank" rel="noopener">LGBTQIA+ Safe Zone<span class="sr-only"> (opens in new tab)</span></a></span> <span class="job-loc">Online</span></h3>
+            <h3><span class="job-org"><a href="https://www.lgbtqiasafezone.org/" target="_blank" rel="noopener">LGBTQIA+ Safe Zone<span class="sr-only"> (opens in new tab)</span><svg class="ext-icon" aria-hidden="true" focusable="false" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a></span> <span class="job-loc">&middot; Online</span></h3>
             <div class="role">
-              <div class="job-top"><h4>Founder</h4><span class="job-dates">Apr 2021 &ndash; present</span></div>
+              <div class="job-top"><h4>Founder</h4><time>Apr 2021 - Present</time></div>
               <ul class="points">
                 <li>Founded and lead an online LGBTQIA+ community nonprofit, now a registered 501(c)(3), built as a safe space</li>
                 <li>Oversee Discord server operations, including staff management, moderation, and community safety protocols</li>
@@ -163,9 +166,9 @@
           </article>
 
           <article class="job">
-            <h3><span class="job-org"><a href="https://www.greatwolf.com/new-england" target="_blank" rel="noopener">Great Wolf Lodge<span class="sr-only"> (opens in new tab)</span></a></span> <span class="job-loc">Fitchburg, MA</span></h3>
+            <h3><span class="job-org"><a href="https://www.greatwolf.com/new-england" target="_blank" rel="noopener">Great Wolf Lodge<span class="sr-only"> (opens in new tab)</span><svg class="ext-icon" aria-hidden="true" focusable="false" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a></span> <span class="job-loc">&middot; Fitchburg, MA</span></h3>
             <div class="role">
-              <div class="job-top"><h4>Retail Attendant</h4><span class="job-dates">Sep 2025 &ndash; Mar 2026</span></div>
+              <div class="job-top"><h4>Retail Attendant</h4><time>Sep 2025 - Mar 2026</time></div>
               <ul class="points">
                 <li>Guided guests through purchasing decisions with outstanding customer service and suggestive selling techniques</li>
                 <li>Handled POS transactions, registers, and daily reporting while upholding operating procedures and cleanliness</li>
@@ -173,7 +176,7 @@
               </ul>
             </div>
             <div class="role">
-              <div class="job-top"><h4>Entertainment Ambassador</h4><span class="job-dates">Aug 2024 &ndash; Sep 2025</span></div>
+              <div class="job-top"><h4>Entertainment Ambassador</h4><time>Aug 2024 - Sep 2025</time></div>
               <ul class="points">
                 <li>Led branded experiences including Storytime, Dance Party, Yoga, Arts &amp; Crafts, and the Master Magi Ceremony</li>
                 <li>Engaged families through hands-on activities and character appearances performed to corporate brand standards</li>
@@ -182,7 +185,7 @@
               </ul>
             </div>
             <div class="role">
-              <div class="job-top"><h4>Banquet Server</h4><span class="job-dates">Nov 2024 &ndash; Nov 2025</span></div>
+              <div class="job-top"><h4>Banquet Server</h4><time>Nov 2024 - Nov 2025</time></div>
               <ul class="points">
                 <li>Executed functions per Banquet Event Orders (BEOs), relaying changes, special requests, and dietary needs</li>
                 <li>Set up and broke down events, including tables, chairs, buffets, side stations, place settings, and beverages</li>
@@ -190,7 +193,7 @@
               </ul>
             </div>
             <div class="role">
-              <div class="job-top"><h4>Restaurant Host</h4><span class="job-dates">May 2024 &ndash; Aug 2024</span></div>
+              <div class="job-top"><h4>Restaurant Host</h4><time>May 2024 - Aug 2024</time></div>
               <ul class="points">
                 <li>Greeted and seated patrons, tracking table availability on a floor plan board and managing a digital waitlist</li>
                 <li>Informed guests of promotions and assigned servers while helping staff set and clear tables and serve beverages</li>
@@ -200,9 +203,9 @@
           </article>
 
           <article class="job">
-            <h3><span class="job-org"><a href="https://www.luk.org/" target="_blank" rel="noopener">LUK Inc.<span class="sr-only"> (opens in new tab)</span></a></span> <span class="job-loc">Fitchburg, MA</span></h3>
+            <h3><span class="job-org"><a href="https://www.luk.org/" target="_blank" rel="noopener">LUK Inc.<span class="sr-only"> (opens in new tab)</span><svg class="ext-icon" aria-hidden="true" focusable="false" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a></span> <span class="job-loc">&middot; Fitchburg, MA</span></h3>
             <div class="role">
-              <div class="job-top"><h4>Youth Leader</h4><span class="job-dates">Jun 2023 &ndash; Jan 2025</span></div>
+              <div class="job-top"><h4>Youth Leader</h4><time>Jun 2023 - Jan 2025</time></div>
               <ul class="points">
                 <li>Designed community campaigns promoting positive behaviors while collaborating with the team each week</li>
                 <li>Represented LUK at community events and public outreach, demonstrating consistent punctuality and reliability</li>
@@ -215,9 +218,9 @@
           <h2 id="activities-heading">Activities</h2>
 
           <article class="job">
-            <h3>American Hotel &amp; Lodging Association (AHLA), UMass Amherst Chapter <span class="job-loc">Amherst, MA</span></h3>
+            <h3>American Hotel &amp; Lodging Association (AHLA), UMass Amherst Chapter <span class="job-loc">&middot; Amherst, MA</span></h3>
             <div class="role">
-              <div class="job-top"><h4>Member</h4><span class="job-dates">Oct 2026 &ndash; present</span></div>
+              <div class="job-top"><h4>Member</h4><time>Oct 2026 - Present</time></div>
               <ul class="points">
                 <li>Network with hotel executives, industry professionals, and UMass alumni at chapter meetings and events</li>
                 <li>Explore hotel and lodging career paths, internships, and full-time roles through mentorship and career advice</li>
@@ -226,9 +229,9 @@
           </article>
 
           <article class="job">
-            <h3>Dean&#x27;s Academy, Isenberg School of Management <span class="job-loc">Amherst, MA</span></h3>
+            <h3>Dean&#x27;s Academy, Isenberg School of Management <span class="job-loc">&middot; Amherst, MA</span></h3>
             <div class="role">
-              <div class="job-top"><h4>Active Member</h4><span class="job-dates">Aug 2026 &ndash; present</span></div>
+              <div class="job-top"><h4>Active Member</h4><time>Aug 2026 - Present</time></div>
               <ul class="points">
                 <li>Selected as one of 43 incoming Isenberg students for outstanding high school academics and potential</li>
                 <li>Attend weekly seminars with the Academy director and regular sessions with the dean and Isenberg faculty</li>
@@ -243,9 +246,9 @@
           <h2 id="volunteer-heading">Volunteer Work</h2>
 
           <article class="job">
-            <h3><span class="job-org"><a href="https://www.lionsclubs.org/en" target="_blank" rel="noopener">Lions Clubs International<span class="sr-only"> (opens in new tab)</span></a></span> <span class="job-loc">Fitchburg, MA</span></h3>
+            <h3><span class="job-org"><a href="https://www.lionsclubs.org/en" target="_blank" rel="noopener">Lions Clubs International<span class="sr-only"> (opens in new tab)</span><svg class="ext-icon" aria-hidden="true" focusable="false" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a></span> <span class="job-loc">&middot; Fitchburg, MA</span></h3>
             <div class="role">
-              <div class="job-top"><h4>District 33A Leo Advisor</h4><span class="job-dates">Jun 2026 &ndash; present</span></div>
+              <div class="job-top"><h4>District 33A Leo Advisor</h4><time>Jun 2026 - Present</time></div>
               <ul class="points">
                 <li>Advise and mentor Leo Club members across District 33A, supporting youth leadership and club operations</li>
                 <li>Serve as the link between clubs and Lions district leadership, guiding service programming and club growth</li>
@@ -254,7 +257,7 @@
               </ul>
             </div>
             <div class="role">
-              <div class="job-top"><h4>District 33A Student Leo Representative</h4><span class="job-dates">Jul 2025 &ndash; Jun 2026</span></div>
+              <div class="job-top"><h4>District 33A Student Leo Representative</h4><time>Jul 2025 - Jun 2026</time></div>
               <ul class="points">
                 <li>Served as student liaison between Leo Clubs and district Lions leadership, representing youth at district events</li>
                 <li>Advocated for youth engagement and assisted the District Advisor in planning and executing district programs</li>
@@ -263,9 +266,9 @@
           </article>
 
           <article class="job">
-            <h3>Fitchburg Lions Club <span class="job-loc">Fitchburg, MA</span></h3>
+            <h3>Fitchburg Lions Club <span class="job-loc">&middot; Fitchburg, MA</span></h3>
             <div class="role">
-              <div class="job-top"><h4>Member</h4><span class="job-dates">Aug 2025 &ndash; present</span></div>
+              <div class="job-top"><h4>Member</h4><time>Aug 2025 - Present</time></div>
               <ul class="points">
                 <li>Participate in community service initiatives and club events supporting local residents in the Fitchburg area</li>
                 <li>Collaborate with fellow members on charitable projects advancing the Lions International mission of service</li>
@@ -274,9 +277,9 @@
           </article>
 
           <article class="job">
-            <h3><span class="job-org"><a href="https://www.massyouthleadership.org/" target="_blank" rel="noopener">Massachusetts Youth Leadership Foundation<span class="sr-only"> (opens in new tab)</span></a></span> <span class="job-loc">Fitchburg, MA</span></h3>
+            <h3><span class="job-org"><a href="https://www.massyouthleadership.org/" target="_blank" rel="noopener">Massachusetts Youth Leadership Foundation<span class="sr-only"> (opens in new tab)</span><svg class="ext-icon" aria-hidden="true" focusable="false" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a></span> <span class="job-loc">&middot; Fitchburg, MA</span></h3>
             <div class="role">
-              <div class="job-top"><h4>Multi-Media Director, Board of Directors</h4><span class="job-dates">Nov 2025 &ndash; Aug 2026</span></div>
+              <div class="job-top"><h4>Multi-Media Director, Board of Directors</h4><time>Nov 2025 - Aug 2026</time></div>
               <ul class="points">
                 <li>Served on the Board of Directors, overseeing visual communications strategy and supporting fellow directors</li>
                 <li>Developed branded content, promotional materials, and digital media assets to advance MYL&#x27;s mission</li>
@@ -284,7 +287,7 @@
               </ul>
             </div>
             <div class="role">
-              <div class="job-top"><h4>Seasonal Conference Multi-Media Director</h4><span class="job-dates">Jan &ndash; Jun 2025 &amp; 2026</span></div>
+              <div class="job-top"><h4>Seasonal Conference Multi-Media Director</h4><time>Jan - Jun 2025 &amp; 2026</time></div>
               <ul class="points">
                 <li>Directed all multimedia production for the annual MassSTAR youth leadership conference across 2025 and 2026</li>
                 <li>Captured footage and edited a 7+ minute video during the 3-day conference weekend for student delegates</li>
@@ -294,9 +297,9 @@
           </article>
 
           <article class="job">
-            <h3>Gardner Emergency Housing Mission (GEHM) <span class="job-loc">Gardner, MA</span></h3>
+            <h3>Gardner Emergency Housing Mission (GEHM) <span class="job-loc">&middot; Gardner, MA</span></h3>
             <div class="role">
-              <div class="job-top"><h4>Multimedia Director</h4><span class="job-dates">Apr 2023 &ndash; Nov 2025</span></div>
+              <div class="job-top"><h4>Multimedia Director</h4><time>Apr 2023 - Nov 2025</time></div>
               <ul class="points">
                 <li>Managed website updates and scheduled social media posts to keep the nonprofit&#x27;s messaging current</li>
                 <li>Edited engaging multimedia content and analyzed post performance data to optimize audience engagement</li>
@@ -317,7 +320,7 @@
           </div>
           <div class="edu">
             <h3>Montachusett Regional Vocational Technical School</h3>
-            <p>Business Technology &middot; Aug 2022 &ndash; May 2026 &middot; Fitchburg, MA</p>
+            <p>Business Technology &middot; Aug 2022 - May 2026 &middot; Fitchburg, MA</p>
             <p>GPA 3.99/4.00 &middot; Class rank 42 of 353</p>
           </div>
           <ul class="plain-list">
@@ -409,13 +412,11 @@
 
   <section class="contact-band" id="contact" aria-labelledby="contact-heading">
     <div class="wrap reveal">
-      <h2 id="contact-heading">Get in touch</h2>
-      <div>
-        <p>Email is the quickest way to reach me, whether it&rsquo;s about a shoot, a project or something you read here. I&rsquo;m also on LinkedIn.</p>
-        <div class="contact-actions">
-          <a class="btn" href="mailto:contact@jackjaillet.com">Email me</a>
-          <a class="go" href="https://www.linkedin.com/in/jackjaillet/" target="_blank" rel="noopener">LinkedIn<span class="sr-only"> (opens in new tab)</span></a>
-        </div>
+      <h2 id="contact-heading">Let's connect.</h2>
+      <p>Whether it's an opportunity, a project, or a question about anything I'm involved in, my inbox is open.</p>
+      <div class="contact-actions">
+        <a class="btn btn-primary" href="mailto:contact@jackjaillet.com">Get in touch</a>
+        <a class="btn btn-ghost" href="https://www.linkedin.com/in/jackjaillet/" target="_blank" rel="noopener">Connect on LinkedIn<span class="sr-only"> (opens in new tab)</span></a>
       </div>
     </div>
   </section>
@@ -423,19 +424,21 @@
   </main>
 
   <footer class="site-footer">
-    <div class="wrap footer-line">
-      <p class="footer-id">Jack Jaillet, Massachusetts</p>
+    <div class="wrap">
+      <a class="brand" href="/" aria-label="Jack Jaillet, back to home">
+        <img class="brand-img" src="/assets/favicon.png" alt="" width="32" height="32" loading="lazy" decoding="async">
+      </a>
       <nav aria-label="Footer">
-        <ul class="footer-links">
-          <li><a href="mailto:contact@jackjaillet.com">contact@jackjaillet.com</a></li>
-          <li><a href="https://www.linkedin.com/in/jackjaillet/" target="_blank" rel="noopener">LinkedIn<span class="sr-only"> (opens in new tab)</span></a></li>
-          <li><a href="/privacy">Privacy</a></li>
-          <li><a href="/terms">Terms</a></li>
-          <li><a href="/accessibility">Accessibility</a></li>
-          <li hidden data-cookie-settings><button type="button">Cookie settings</button></li>
-        </ul>
+      <ul class="footer-links">
+        <li><a href="mailto:contact@jackjaillet.com">contact@jackjaillet.com</a></li>
+        <li><a href="https://www.linkedin.com/in/jackjaillet/" target="_blank" rel="noopener">LinkedIn<span class="sr-only"> (opens in new tab)</span></a></li>
+        <li><a href="/privacy">Privacy</a></li>
+        <li><a href="/terms">Terms</a></li>
+        <li><a href="/accessibility">Accessibility</a></li>
+        <li hidden data-cookie-settings><button type="button">Cookie settings</button></li>
+      </ul>
       </nav>
-      <p class="footer-year"><small>&copy; <span id="year">2026</span> Jack Jaillet</small></p>
+      <small>&copy; <span id="year">2026</span> Jack Jaillet</small>
     </div>
   </footer>
 
