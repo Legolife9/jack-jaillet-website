@@ -1219,3 +1219,27 @@ html.nav-locked .site-nav { z-index: 101; }
    the entrance motion shows itself after 3s. */
 .js:not(.js-ready) .reveal > * { animation: reveal-failsafe 0s 3s forwards; }
 @keyframes reveal-failsafe { to { opacity: 1; transform: none; } }
+
+/* Resume, built from the master resume: each organisation is a heading, each
+   role under it has its own title, dates and bullet points. */
+.job > h3 .job-org,
+.job > h3 .job-org a { display: inline; margin: 0; font: inherit; color: var(--ink); }
+.job > h3 .job-org a { text-decoration-color: var(--link); }
+.job .job-loc { display: block; margin-top: 2px; font-weight: 400; font-size: var(--step-small); color: var(--muted); }
+.job .role { margin-top: 18px; }
+.job .role h4 { font-family: var(--text); font-weight: 600; font-size: var(--step-body); line-height: 1.35; }
+.job ul.points { margin: 8px 0 0 1.1em; max-width: 42em; }
+.job ul.points li + li { margin-top: 4px; }
+.job ul.points li::marker { color: var(--link); }
+.job + .job { margin-top: 8px; }
+.edu p + p { margin-top: 4px; }
+.aside-block .plain-list { margin-top: 12px; }
+h3.skill-group { font-family: var(--text); font-weight: 600; font-size: var(--step-small); color: var(--muted); margin: 6px 0 10px; }
+.skill-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.skill-chips span { background: var(--card); padding: 4px 10px; font-size: var(--step-small); line-height: 1.35; }
+.skill-chips + .skill-group { margin-top: 20px; }
+@media print {
+  .skill-chips span { background: none; padding: 0; }
+  .skill-chips span:not(:last-child)::after { content: ","; }
+  .job .role { margin-top: 6px; break-inside: avoid; }
+}

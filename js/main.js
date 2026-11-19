@@ -1,5 +1,5 @@
 // Jack Jaillet site: nav toggle, theme switch, scroll reveals, the home
-// page's photo stage and year list, image fallbacks, print.
+// page's photo stage and year list, image fallbacks.
 
 (function () {
   var root = document.documentElement;
@@ -181,7 +181,4 @@
     });
   }
 
-  // ---------- resume print button ----------
-  var printBtn = document.getElementById("print-btn");
-  if (printBtn) printBtn.addEventListener("click", function () { window.print(); });
 })();
