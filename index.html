@@ -3,75 +3,149 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Mobile browser chrome follows the theme. Dark is the site default, so
-       that is the static value; the bootstrap below corrects it before first
-       paint for visitors who chose light. -->
-  <meta name="theme-color" content="#10131a">
-  <title>Jack Jaillet | Business Student &amp; Community Leader</title>
-  <meta name="description" content="Jack Jaillet is a business student at UMass Amherst's Isenberg School of Management, a community leader, and a photographer based in Massachusetts.">
+  <meta name="theme-color" content="#dedad3" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#151515" media="(prefers-color-scheme: dark)">
+  <title>Jack Jaillet | UMass Amherst Business Student &amp; Photographer</title>
+  <meta name="description" content="Jack Jaillet is a business student at UMass Amherst's Isenberg School of Management, a photographer, and the 2024-25 Massachusetts Leo of the Year.">
   <link rel="canonical" href="https://jackjaillet.com/">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Jack Jaillet">
-  <meta property="og:title" content="Jack Jaillet | Business Student & Community Leader">
-  <meta property="og:description" content="Jack Jaillet is a business student at UMass Amherst's Isenberg School of Management, a community leader, and a photographer based in Massachusetts.">
+  <meta property="og:title" content="Jack Jaillet | UMass Amherst Business Student & Photographer">
+  <meta property="og:description" content="Jack Jaillet is a business student at UMass Amherst's Isenberg School of Management, a photographer, and the 2024-25 Massachusetts Leo of the Year.">
   <meta property="og:url" content="https://jackjaillet.com/">
-  <meta property="og:image" content="https://jackjaillet.com/assets/og-image.jpg">
+  <meta property="og:image" content="https://jackjaillet.com/assets/og-jack-jaillet.jpg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="Jack Jaillet">
+  <meta property="og:image:alt" content="Jack Jaillet, business student at UMass Amherst, in a blue flannel shirt">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Jack Jaillet | Business Student & Community Leader">
-  <meta name="twitter:description" content="Jack Jaillet is a business student at UMass Amherst's Isenberg School of Management, a community leader, and a photographer based in Massachusetts.">
-  <meta name="twitter:image" content="https://jackjaillet.com/assets/og-image.jpg">
+  <meta name="twitter:title" content="Jack Jaillet | UMass Amherst Business Student & Photographer">
+  <meta name="twitter:description" content="Jack Jaillet is a business student at UMass Amherst's Isenberg School of Management, a photographer, and the 2024-25 Massachusetts Leo of the Year.">
+  <meta name="twitter:image" content="https://jackjaillet.com/assets/og-jack-jaillet.jpg">
+  <meta name="twitter:image:alt" content="Jack Jaillet, business student at UMass Amherst, in a blue flannel shirt">
   <link rel="icon" type="image/png" href="/assets/favicon.png">
   <link rel="apple-touch-icon" href="/assets/favicon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&amp;family=Rokkitt:wght@800&amp;display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "ProfilePage",
-    "url": "https://jackjaillet.com/",
-    "mainEntity": {
-      "@type": "Person",
-      "@id": "https://jackjaillet.com/#jack",
-      "name": "Jack Jaillet",
-      "url": "https://jackjaillet.com",
-      "image": "https://jackjaillet.com/assets/headshot-serious.jpg",
-      "email": "contact@jackjaillet.com",
-      "jobTitle": "Business Student",
-      "description": "Business-oriented student, community leader, and photographer based in Massachusetts.",
-      "alumniOf": [
-        { "@type": "CollegeOrUniversity", "name": "University of Massachusetts Amherst", "url": "https://www.umass.edu/" },
-        { "@type": "EducationalOrganization", "name": "Montachusett Regional Vocational Technical School" }
-      ],
-      "award": "2024-25 Massachusetts Leo of the Year",
-      "worksFor": {
-        "@type": "Organization",
-        "name": "Charming Memories Photography",
-        "url": "https://www.charmingphotography.com/"
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://jackjaillet.com/#website",
+        "url": "https://jackjaillet.com/",
+        "name": "Jack Jaillet",
+        "inLanguage": "en-US",
+        "publisher": {
+          "@id": "https://jackjaillet.com/#jack"
+        }
       },
-      "founder": [
-        { "@type": "Organization", "name": "Charming Memories Photography", "url": "https://www.charmingphotography.com/" },
-        { "@type": "Organization", "name": "LGBTQIA Safe Zone", "url": "https://www.lgbtqiasafezone.org/" }
-      ],
-      "memberOf": [
-        { "@type": "Organization", "name": "Massachusetts Youth Leadership Foundation", "url": "https://www.massyouthleadership.org/" },
-        { "@type": "Organization", "name": "Lions Clubs International", "url": "https://www.lionsclubs.org/en" }
-      ],
-      "knowsAbout": [ "Leadership", "Community Service", "Photography", "Video Production", "Public Speaking" ],
-      "homeLocation": { "@type": "Place", "name": "Massachusetts, United States" },
-      "sameAs": [
-        "https://www.linkedin.com/in/jackjaillet/",
-        "https://www.charmingphotography.com/"
-      ]
-    }
+      {
+        "@type": "ProfilePage",
+        "@id": "https://jackjaillet.com/#profile",
+        "url": "https://jackjaillet.com/",
+        "name": "Jack Jaillet",
+        "isPartOf": {
+          "@id": "https://jackjaillet.com/#website"
+        },
+        "dateModified": "2026-11-10",
+        "mainEntity": {
+          "@id": "https://jackjaillet.com/#jack"
+        }
+      },
+      {
+        "@type": "Person",
+        "@id": "https://jackjaillet.com/#jack",
+        "name": "Jack Jaillet",
+        "givenName": "Jack",
+        "familyName": "Jaillet",
+        "url": "https://jackjaillet.com/",
+        "image": {
+          "@type": "ImageObject",
+          "url": "https://jackjaillet.com/assets/photo/jack-trail-1400.jpg",
+          "width": 1400,
+          "height": 1960
+        },
+        "email": "mailto:contact@jackjaillet.com",
+        "jobTitle": "Business Student",
+        "description": "Business student at UMass Amherst's Isenberg School of Management, founder of Charming Memories Photography, and 2024-25 Massachusetts Leo of the Year.",
+        "affiliation": {
+          "@type": "CollegeOrUniversity",
+          "name": "University of Massachusetts Amherst",
+          "url": "https://www.umass.edu/",
+          "department": {
+            "@type": "EducationalOrganization",
+            "name": "Isenberg School of Management",
+            "url": "https://www.isenberg.umass.edu/"
+          }
+        },
+        "alumniOf": {
+          "@type": "HighSchool",
+          "name": "Montachusett Regional Vocational Technical School"
+        },
+        "award": "2024-25 Massachusetts Leo of the Year, Lions Clubs International District 33A",
+        "memberOf": [
+          {
+            "@type": "Organization",
+            "name": "Massachusetts Youth Leadership Foundation",
+            "url": "https://www.massyouthleadership.org/"
+          },
+          {
+            "@type": "Organization",
+            "name": "Lions Clubs International",
+            "url": "https://www.lionsclubs.org/en"
+          }
+        ],
+        "knowsAbout": [
+          "Photography",
+          "Video production",
+          "Event media",
+          "Leadership",
+          "Community service",
+          "Bystander intervention training",
+          "Data management",
+          "Customer service"
+        ],
+        "address": {
+          "@type": "PostalAddress",
+          "addressRegion": "MA",
+          "addressCountry": "US"
+        },
+        "sameAs": [
+          "https://www.linkedin.com/in/jackjaillet/"
+        ],
+        "worksFor": [
+          {
+            "@id": "https://jackjaillet.com/#charming-memories"
+          }
+        ]
+      },
+      {
+        "@type": "Organization",
+        "@id": "https://jackjaillet.com/#charming-memories",
+        "name": "Charming Memories Photography",
+        "url": "https://www.charmingphotography.com/",
+        "foundingDate": "2024-11",
+        "founder": {
+          "@id": "https://jackjaillet.com/#jack"
+        }
+      },
+      {
+        "@type": "Organization",
+        "@id": "https://jackjaillet.com/#safe-zone",
+        "name": "LGBTQIA Safe Zone",
+        "url": "https://www.lgbtqiasafezone.org/",
+        "foundingDate": "2021-04",
+        "founder": {
+          "@id": "https://jackjaillet.com/#jack"
+        }
+      }
+    ]
   }
   </script>
-  <script>try{var t=localStorage.getItem("theme");if(t){document.documentElement.dataset.theme=t;var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content",t==="light"?"#f7f8fa":"#10131a")}}catch(e){}</script>
-  <noscript><style>.reveal{opacity:1 !important;transform:none !important}</style></noscript>
+  <script>document.documentElement.classList.add("js");try{var t=localStorage.getItem("theme");if(t==="light"||t==="dark"){document.documentElement.dataset.theme=t;document.querySelectorAll('meta[name="theme-color"]').forEach(function(m){m.content=t==="light"?"#dedad3":"#151515"})}}catch(e){}</script>
 </head>
 <body>
 
@@ -79,22 +153,20 @@
 
   <nav class="site-nav" aria-label="Primary">
     <div class="wrap">
-      <a class="brand" href="/">
-        <img class="brand-img" src="/assets/favicon.png" alt="" width="40" height="40">
+      <a class="brand" href="/" aria-current="page">
+        <img class="brand-img" src="/assets/favicon.png" alt="" width="36" height="36">
         <span class="brand-name">Jack Jaillet</span>
       </a>
-      <button class="nav-toggle" aria-expanded="false" aria-controls="nav-menu" aria-label="Open navigation menu">Menu</button>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-menu">Menu</button>
       <ul class="nav-links" id="nav-menu">
-        <li><a href="/" aria-current="page">Home</a></li>
         <li><a href="/about">About</a></li>
         <li><a href="/resume">Resume</a></li>
-        <li><a href="/updates">Now</a></li>
         <li><a href="/blog/">Blog</a></li>
         <li><a href="/services">Services</a></li>
-        <li><a class="btn btn-primary btn-small" href="mailto:contact@jackjaillet.com">Get in touch</a></li>
+        <li><a class="btn btn-small" href="mailto:contact@jackjaillet.com">Email me</a></li>
         <li class="theme-item">
           <span class="theme-text" id="theme-text">Dark mode</span>
-          <button class="theme-toggle" type="button" role="switch" aria-checked="true" aria-labelledby="theme-text">
+          <button class="theme-toggle" type="button" role="switch" aria-checked="false" aria-labelledby="theme-text">
             <svg class="icon-sun" aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
             <svg class="icon-moon" aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
             <span class="theme-knob" aria-hidden="true"></span>
@@ -106,146 +178,169 @@
 
   <main id="main">
 
-  <header class="hero">
-    <div class="wrap hero-grid">
-      <div>
-        <h1>Always learning,<br><em>always leading.</em></h1>
-        <p class="lede">I'm Jack Jaillet, a business student at UMass Amherst's Isenberg School of Management, community leader, and photographer from Massachusetts.</p>
-        <div class="hero-ctas">
-          <a class="btn btn-primary" href="/about">More about me</a>
-          <a class="btn btn-ghost" href="/resume">View resume</a>
-        </div>
-      </div>
-      <figure class="portrait">
-        <img src="/assets/headshot-serious.jpg" alt="Portrait of Jack Jaillet" width="900" height="1259" fetchpriority="high">
-        <div class="portrait-fallback">
-          <span class="brand-mark" aria-hidden="true"><i>J</i><i>J</i></span>
-          <span>Jack Jaillet</span>
-        </div>
-      </figure>
-    </div>
-  </header>
+  <div class="stage">
 
-  <section class="orgs" aria-label="Organizations Jack has worked with" data-paused="false">
-    <button class="orgs-pause" type="button" aria-label="Pause the scrolling organization list">
-      <svg class="icon-pause" aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
-      <svg class="icon-play" aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v13.72a1 1 0 0 0 1.54.84l10.3-6.86a1 1 0 0 0 0-1.68L9.54 4.3A1 1 0 0 0 8 5.14z"/></svg>
-    </button>
-    <div class="orgs-track" aria-hidden="true">
-      <div class="orgs-set">
-        <a class="org-item" tabindex="-1" href="https://www.massyouthleadership.org/" target="_blank" rel="noopener"><img src="/assets/logos/mylf.jpg" alt="" width="34" height="34" loading="lazy" decoding="async">Massachusetts Youth Leadership Foundation<span class="sr-only"> (opens in new tab)</span></a>
-        <a class="org-item" tabindex="-1" href="https://www.lionsclubs.org/en" target="_blank" rel="noopener"><img src="/assets/logos/lions.jpg" alt="" width="34" height="34" loading="lazy" decoding="async">Lions Clubs International<span class="sr-only"> (opens in new tab)</span></a>
-        <a class="org-item" tabindex="-1" href="https://www.brightfuturefinancialllc.com/" target="_blank" rel="noopener"><img src="/assets/logos/bright-future.jpg" alt="" width="34" height="34" loading="lazy" decoding="async">Bright Future Financial<span class="sr-only"> (opens in new tab)</span></a>
-        <a class="org-item" tabindex="-1" href="https://www.charmingphotography.com/" target="_blank" rel="noopener"><img src="/assets/logos/charming-memories.jpg" alt="" width="34" height="34" loading="lazy" decoding="async">Charming Memories Photography<span class="sr-only"> (opens in new tab)</span></a>
-        <a class="org-item" tabindex="-1" href="https://www.trainingactivebystanders.org/" target="_blank" rel="noopener"><img src="/assets/logos/tab.jpg" alt="" width="34" height="34" loading="lazy" decoding="async">Training Active Bystanders<span class="sr-only"> (opens in new tab)</span></a>
-        <span class="org-item"><img src="/assets/logos/gehm.jpg" alt="" width="34" height="34" loading="lazy" decoding="async">Gardner Emergency Housing Mission</span>
-        <a class="org-item" tabindex="-1" href="https://www.greatwolf.com/new-england" target="_blank" rel="noopener"><img src="/assets/logos/great-wolf.jpg" alt="" width="34" height="34" loading="lazy" decoding="async">Great Wolf Lodge<span class="sr-only"> (opens in new tab)</span></a>
-        <a class="org-item" tabindex="-1" href="https://www.luk.org/" target="_blank" rel="noopener"><img src="/assets/logos/luk.jpg" alt="" width="34" height="34" loading="lazy" decoding="async">LUK, Inc.<span class="sr-only"> (opens in new tab)</span></a>
-        <a class="org-item" tabindex="-1" href="https://www.gatheringcurrents.org/" target="_blank" rel="noopener"><img src="/assets/logos/gathering-currents.jpg" alt="" width="34" height="34" loading="lazy" decoding="async">Gathering Currents<span class="sr-only"> (opens in new tab)</span></a>
-        <a class="org-item" tabindex="-1" href="https://www.templetonma.gov/1386/Templeton-Community-Television" target="_blank" rel="noopener"><img src="/assets/logos/tctv.jpg" alt="" width="34" height="34" loading="lazy" decoding="async">Templeton Community Television<span class="sr-only"> (opens in new tab)</span></a>
-      </div>
-      <div class="orgs-set">
-        <a class="org-item" tabindex="-1" href="https://www.massyouthleadership.org/" target="_blank" rel="noopener"><img src="/assets/logos/mylf.jpg" alt="" width="34" height="34" loading="lazy" decoding="async">Massachusetts Youth Leadership Foundation<span class="sr-only"> (opens in new tab)</span></a>
-        <a class="org-item" tabindex="-1" href="https://www.lionsclubs.org/en" target="_blank" rel="noopener"><img src="/assets/logos/lions.jpg" alt="" width="34" height="34" loading="lazy" decoding="async">Lions Clubs International<span class="sr-only"> (opens in new tab)</span></a>
-        <a class="org-item" tabindex="-1" href="https://www.brightfuturefinancialllc.com/" target="_blank" rel="noopener"><img src="/assets/logos/bright-future.jpg" alt="" width="34" height="34" loading="lazy" decoding="async">Bright Future Financial<span class="sr-only"> (opens in new tab)</span></a>
-        <a class="org-item" tabindex="-1" href="https://www.charmingphotography.com/" target="_blank" rel="noopener"><img src="/assets/logos/charming-memories.jpg" alt="" width="34" height="34" loading="lazy" decoding="async">Charming Memories Photography<span class="sr-only"> (opens in new tab)</span></a>
-        <a class="org-item" tabindex="-1" href="https://www.trainingactivebystanders.org/" target="_blank" rel="noopener"><img src="/assets/logos/tab.jpg" alt="" width="34" height="34" loading="lazy" decoding="async">Training Active Bystanders<span class="sr-only"> (opens in new tab)</span></a>
-        <span class="org-item"><img src="/assets/logos/gehm.jpg" alt="" width="34" height="34" loading="lazy" decoding="async">Gardner Emergency Housing Mission</span>
-        <a class="org-item" tabindex="-1" href="https://www.greatwolf.com/new-england" target="_blank" rel="noopener"><img src="/assets/logos/great-wolf.jpg" alt="" width="34" height="34" loading="lazy" decoding="async">Great Wolf Lodge<span class="sr-only"> (opens in new tab)</span></a>
-        <a class="org-item" tabindex="-1" href="https://www.luk.org/" target="_blank" rel="noopener"><img src="/assets/logos/luk.jpg" alt="" width="34" height="34" loading="lazy" decoding="async">LUK, Inc.<span class="sr-only"> (opens in new tab)</span></a>
-        <a class="org-item" tabindex="-1" href="https://www.gatheringcurrents.org/" target="_blank" rel="noopener"><img src="/assets/logos/gathering-currents.jpg" alt="" width="34" height="34" loading="lazy" decoding="async">Gathering Currents<span class="sr-only"> (opens in new tab)</span></a>
-        <a class="org-item" tabindex="-1" href="https://www.templetonma.gov/1386/Templeton-Community-Television" target="_blank" rel="noopener"><img src="/assets/logos/tctv.jpg" alt="" width="34" height="34" loading="lazy" decoding="async">Templeton Community Television<span class="sr-only"> (opens in new tab)</span></a>
-      </div>
-    </div>
-    <ul class="sr-only">
-      <li>Massachusetts Youth Leadership Foundation</li>
-      <li>Lions Clubs International</li>
-      <li>Bright Future Financial</li>
-      <li>Charming Memories Photography</li>
-      <li>Training Active Bystanders</li>
-      <li>Gardner Emergency Housing Mission</li>
-      <li>Great Wolf Lodge</li>
-      <li>LUK, Inc.</li>
-      <li>Gathering Currents</li>
-      <li>Templeton Community Television</li>
-    </ul>
-  </section>
+    <figure class="stage-photo" data-show="1">
+      <img src="/assets/photo/jack-trail-1400.jpg" srcset="/assets/photo/jack-trail-800.jpg 800w, /assets/photo/jack-trail-1400.jpg 1400w" sizes="(max-width: 820px) 100vw, 50vw" alt="Jack Jaillet in a blue flannel shirt, smiling, on a wooded trail in autumn" width="1400" height="1960" fetchpriority="high">
+      <img data-src="/assets/photo/jack-fence-1400.jpg" data-srcset="/assets/photo/jack-fence-800.jpg 800w, /assets/photo/jack-fence-1400.jpg 1400w" sizes="50vw" alt="" width="1400" height="1960" loading="lazy" decoding="async">
+    </figure>
 
-  <section class="section section-alt" aria-labelledby="highlights-heading">
-    <div class="wrap">
-      <div class="section-head reveal">
-        <h2 id="highlights-heading">A few highlights</h2>
-      </div>
-      <div class="highlights">
-        <article class="hl hl-lead reveal" aria-labelledby="hl-myl">
-          <img class="hl-logo" src="/assets/logos/mylf.jpg" alt="" width="64" height="64" loading="lazy" decoding="async">
-          <span class="hl-org"><a href="https://www.massyouthleadership.org/" target="_blank" rel="noopener">Massachusetts Youth Leadership Foundation<span class="sr-only"> (opens in new tab)</span><svg class="ext-icon" aria-hidden="true" focusable="false" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a></span>
-          <h3 id="hl-myl">Multimedia Director</h3>
-          <p>Leading video production for the MassSTAR conference: filming Friday through Sunday, editing on the fly, and delivering the finished recap the same weekend. Delegate in 2024, back on the planning committee ever since.</p>
-          <p class="hl-cta"><a href="https://lnkd.in/girWviJ6" target="_blank" rel="noopener">Watch the 2026 recap video<span class="sr-only"> (opens in new tab)</span></a></p>
-        </article>
-        <article class="hl hl-a reveal" aria-labelledby="hl-photo">
-          <img class="hl-logo" src="/assets/logos/charming-memories.jpg" alt="" width="44" height="44" loading="lazy" decoding="async">
-          <span class="hl-org"><a href="https://www.charmingphotography.com/" target="_blank" rel="noopener">Charming Memories Photography<span class="sr-only"> (opens in new tab)</span><svg class="ext-icon" aria-hidden="true" focusable="false" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a></span>
-          <h3 id="hl-photo">Founder</h3>
-          <p>Portrait, event, and corporate photography across Massachusetts.</p>
-        </article>
-        <article class="hl hl-b reveal" aria-labelledby="hl-bff">
-          <img class="hl-logo" src="/assets/logos/bright-future.jpg" alt="" width="44" height="44" loading="lazy" decoding="async">
-          <span class="hl-org"><a href="https://www.brightfuturefinancialllc.com/" target="_blank" rel="noopener">Bright Future Financial LLC<span class="sr-only"> (opens in new tab)</span><svg class="ext-icon" aria-hidden="true" focusable="false" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a></span>
-          <h3 id="hl-bff">Client Service Associate</h3>
-          <p>Internship in data management and database administration at a financial services firm.</p>
-        </article>
-        <article class="hl hl-c reveal" aria-labelledby="hl-leo">
-          <img class="hl-logo" src="/assets/logos/lions.jpg" alt="" width="44" height="44" loading="lazy" decoding="async">
-          <span class="hl-org"><a href="https://www.lionsclubs.org/en" target="_blank" rel="noopener">Lions Clubs International, District 33A<span class="sr-only"> (opens in new tab)</span><svg class="ext-icon" aria-hidden="true" focusable="false" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a></span>
-          <h3 id="hl-leo">2024-25 Massachusetts Leo of the Year</h3>
-          <p>Named Leo of the Year for my school, then for the state of Massachusetts.</p>
-        </article>
-      </div>
+    <div class="stage-read">
+
+      <header class="hero-card" data-photo="1">
+        <div class="plaid-band" aria-hidden="true"></div>
+        <h1 class="name"><span>Jack</span> <span>Jaillet</span></h1>
+        <p class="lede">I&rsquo;m a first-year business student at UMass Amherst&rsquo;s Isenberg School of Management. I also run Charming Memories Photography and lead video production for the MassSTAR youth leadership conference.</p>
+        <div class="hero-actions">
+          <a class="btn" href="mailto:contact@jackjaillet.com">Email me</a>
+          <a class="go" href="/about">About me</a>
+          <a class="go" href="/resume">Resume</a>
+          <a class="go" href="https://www.linkedin.com/in/jackjaillet/" target="_blank" rel="noopener">LinkedIn<span class="sr-only"> (opens in new tab)</span></a>
+        </div>
+      </header>
+
+      <section class="read-section intro reveal" aria-labelledby="intro-heading" data-photo="1">
+        <h2 id="intro-heading">The short version</h2>
+        <p>I graduated from MontyTech in June 2026 after four years in Business Technology, where I was Class Treasurer, Class Secretary and a member of the National Honor Society. Now I&rsquo;m at Isenberg, major undeclared for now.</p>
+        <p>Outside class I take pictures for people: portraits, events, headshots and corporate work. I train people in bystander intervention with Training Active Bystanders, consult for Gathering Currents, and handle data for Bright Future Financial.</p>
+        <p>In 2025 Lions Clubs International named me the Massachusetts Leo of the Year.</p>
+        <p><a class="go" href="/about">More about me</a></p>
+      </section>
+
+      <section class="read-section work" aria-labelledby="work-heading" data-photo="2">
+        <h2 id="work-heading" class="reveal"><span>Selected work</span></h2>
+        <ul class="work-list">
+          <li class="work-item reveal">
+            <h3 class="work-name"><a href="https://lnkd.in/girWviJ6" target="_blank" rel="noopener">MassSTAR recaps<span class="sr-only"> (watch the 2026 recap, opens in new tab)</span></a></h3>
+            <p class="work-meta"><img src="/assets/logos/mylf.jpg" alt="" width="36" height="36" loading="lazy" decoding="async">Board and Conference Multimedia Director, Massachusetts Youth Leadership Foundation, since 2025</p>
+            <p class="work-desc">I film the whole conference weekend, edit while it&rsquo;s still going, and deliver the finished recap on Sunday afternoon. I went to MassSTAR as a delegate in 2024 and have been on the planning side since.</p>
+          </li>
+          <li class="work-item reveal">
+            <h3 class="work-name"><a href="https://www.charmingphotography.com/" target="_blank" rel="noopener">Charming Memories<span class="sr-only"> Photography (opens in new tab)</span></a></h3>
+            <p class="work-meta"><img src="/assets/logos/charming-memories.jpg" alt="" width="36" height="36" loading="lazy" decoding="async">Founder and photographer, since 2024</p>
+            <p class="work-desc">My photography business. Portraits, events, headshots, real estate, sports and corporate shoots.</p>
+          </li>
+          <li class="work-item reveal">
+            <h3 class="work-name"><a href="/signatures/">Signature Studio</a></h3>
+            <p class="work-meta">A free tool I built</p>
+            <p class="work-desc">An email signature builder. Make one, fill it in for a whole team from a spreadsheet, and paste it into Gmail, Outlook or Apple Mail.</p>
+          </li>
+          <li class="work-item reveal">
+            <h3 class="work-name">Leo of the Year</h3>
+            <p class="work-meta"><img src="/assets/logos/lions.jpg" alt="" width="36" height="36" loading="lazy" decoding="async">Lions Clubs International, District 33A, 2024&ndash;25</p>
+            <p class="work-desc">Named Leo of the Year for my school first, then for the state of Massachusetts.</p>
+          </li>
+          <li class="work-item reveal">
+            <h3 class="work-name"><a href="https://www.brightfuturefinancialllc.com/" target="_blank" rel="noopener">Bright Future Financial<span class="sr-only"> (opens in new tab)</span></a></h3>
+            <p class="work-meta"><img src="/assets/logos/bright-future.jpg" alt="" width="36" height="36" loading="lazy" decoding="async">Client Service Associate, internship, since 2025</p>
+            <p class="work-desc">Data management and database administration for a financial services firm in Leominster.</p>
+          </li>
+          <li class="work-item reveal">
+            <h3 class="work-name"><a href="https://www.lgbtqiasafezone.org/" target="_blank" rel="noopener">LGBTQIA Safe Zone<span class="sr-only"> (opens in new tab)</span></a></h3>
+            <p class="work-meta"><img src="/assets/logos/safe-zone.jpg" alt="" width="36" height="36" loading="lazy" decoding="async">Founder, since 2021</p>
+            <p class="work-desc">A community resource project I started in 2021. I still run it.</p>
+          </li>
+        </ul>
+      </section>
+
+      <section class="read-section years" aria-labelledby="years-heading" data-photo="2">
+        <h2 id="years-heading">Year by year</h2>
+        <p class="years-intro">Pick a year to see what I was juggling at the time.</p>
+        <ul class="year-list">
+          <li class="year">
+            <h3 class="year-head"><button class="year-btn" type="button" aria-expanded="true" aria-controls="year-2026"><span class="year-num">2026</span> <span class="year-count">10 things</span></button></h3>
+            <div class="year-detail" id="year-2026">
+              <ul>
+                <li>Graduated from MontyTech in June</li>
+                <li>My second MassSTAR as Conference Multimedia Director</li>
+                <li>Started at UMass Amherst&rsquo;s Isenberg School of Management in the fall</li>
+                <li>Wrapped up at Great Wolf Lodge in March</li>
+              </ul>
+              <p class="still">Still going: LGBTQIA Safe Zone, Training Active Bystanders, Charming Memories Photography, Bright Future Financial, Gathering Currents, the Massachusetts Youth Leadership Foundation board.</p>
+            </div>
+          </li>
+          <li class="year">
+            <h3 class="year-head"><button class="year-btn" type="button" aria-expanded="true" aria-controls="year-2025"><span class="year-num">2025</span> <span class="year-count">12 things</span></button></h3>
+            <div class="year-detail" id="year-2025">
+              <ul>
+                <li>Started my internship at Bright Future Financial in February</li>
+                <li>Named the 2024&ndash;25 Massachusetts Leo of the Year in April</li>
+                <li>First MassSTAR as Conference Multimedia Director</li>
+                <li>Became a consultant with Training Active Bystanders</li>
+                <li>Started consulting for Gathering Currents in September</li>
+                <li>Joined the Massachusetts Youth Leadership Foundation board as Multimedia Director in November</li>
+                <li>Wrapped up at LUK in January and the Gardner Emergency Housing Mission in November</li>
+              </ul>
+              <p class="still">Still going: LGBTQIA Safe Zone, MontyTech, Charming Memories Photography, Great Wolf Lodge.</p>
+            </div>
+          </li>
+          <li class="year">
+            <h3 class="year-head"><button class="year-btn" type="button" aria-expanded="true" aria-controls="year-2024"><span class="year-num">2024</span> <span class="year-count">8 things</span></button></h3>
+            <div class="year-detail" id="year-2024">
+              <ul>
+                <li>Started at Great Wolf Lodge in May as a restaurant host, then entertainment ambassador and banquet server</li>
+                <li>Went to MassSTAR as a delegate</li>
+                <li>Founded Charming Memories Photography in November</li>
+              </ul>
+              <p class="still">Still going: LGBTQIA Safe Zone, MontyTech, Training Active Bystanders, LUK, the Gardner Emergency Housing Mission.</p>
+            </div>
+          </li>
+          <li class="year">
+            <h3 class="year-head"><button class="year-btn" type="button" aria-expanded="true" aria-controls="year-2023"><span class="year-num">2023</span> <span class="year-count">5 things</span></button></h3>
+            <div class="year-detail" id="year-2023">
+              <ul>
+                <li>Became a youth leader at LUK, Inc. in June</li>
+                <li>Certified as a trainer with Training Active Bystanders in July</li>
+                <li>Started volunteering as Multimedia Director for the Gardner Emergency Housing Mission in July</li>
+              </ul>
+              <p class="still">Still going: LGBTQIA Safe Zone, MontyTech.</p>
+            </div>
+          </li>
+          <li class="year">
+            <h3 class="year-head"><button class="year-btn" type="button" aria-expanded="true" aria-controls="year-2022"><span class="year-num">2022</span> <span class="year-count">2 things</span></button></h3>
+            <div class="year-detail" id="year-2022">
+              <ul>
+                <li>Started Business Technology at MontyTech</li>
+              </ul>
+              <p class="still">Still going: LGBTQIA Safe Zone.</p>
+            </div>
+          </li>
+          <li class="year">
+            <h3 class="year-head"><button class="year-btn" type="button" aria-expanded="true" aria-controls="year-2021"><span class="year-num">2021</span> <span class="year-count">1 thing</span></button></h3>
+            <div class="year-detail" id="year-2021">
+              <ul>
+                <li>Founded the LGBTQIA Safe Zone in April</li>
+              </ul>
+            </div>
+          </li>
+        </ul>
+      </section>
+
     </div>
-  </section>
+  </div>
 
   <section class="band" aria-labelledby="umass-heading">
-    <div class="wrap band-inner">
-      <div class="reveal">
-        <h2 id="umass-heading">Next stop: UMass Amherst</h2>
-        <p>This fall I'm joining the Isenberg School of Management, Class of 2030.</p>
-      </div>
-      <a class="btn btn-on-blue" href="/updates#umass">Read the announcement</a>
-    </div>
-  </section>
-
-  <section class="section" aria-labelledby="updates-heading">
     <div class="wrap">
-      <div class="section-head section-head-row reveal">
-        <h2 id="updates-heading">Recent milestones</h2>
-        <a class="more-link" href="/updates">Full timeline &rarr;</a>
-      </div>
-      <div class="post-teasers">
-        <article class="post reveal">
-          <time datetime="2026-07">July 2026</time>
-          <h3>Committing to UMass Amherst</h3>
-          <p>I am so excited to share that I will be attending UMass Amherst this fall at the Isenberg School of Management. My major is undeclared for now, but I could not be more excited for this new path.</p>
-          <div class="post-foot"><a href="/updates#umass">Read more<span class="sr-only"> about committing to UMass Amherst</span></a></div>
-        </article>
-        <article class="post reveal">
-          <time datetime="2026-07">July 2026</time>
-          <h3>Three years of MassSTAR</h3>
-          <p>Three years ago, I walked into MassSTAR as a sophomore delegate with no idea how much this conference would shape who I am today.</p>
-          <div class="post-foot"><a href="/updates#massstar">Read more<span class="sr-only"> about three years of MassSTAR</span></a></div>
-        </article>
+      <h2 id="umass-heading" class="reveal"><span>UMass Amherst</span></h2>
+      <div class="reveal">
+        <p>Isenberg School of Management, class of 2030. I started in fall 2026 and haven&rsquo;t declared a major yet.</p>
       </div>
     </div>
   </section>
 
-  <section class="contact-band" id="contact" aria-labelledby="contact-heading">
-    <div class="wrap reveal">
-      <h2 id="contact-heading">Let's connect.</h2>
-      <p>Whether it's an opportunity, a project, or a question about anything I'm involved in, my inbox is open.</p>
-      <div class="contact-actions">
-        <a class="btn btn-primary" href="mailto:contact@jackjaillet.com">Get in touch</a>
-        <a class="btn btn-ghost" href="https://www.linkedin.com/in/jackjaillet/" target="_blank" rel="noopener">Connect on LinkedIn<span class="sr-only"> (opens in new tab)</span></a>
+  <section class="visit" id="contact" aria-labelledby="contact-heading">
+    <img class="visit-photo" src="/assets/photo/jack-fence-wide.jpg" alt="Jack Jaillet laughing on a foggy autumn morning" width="1463" height="914" loading="lazy" decoding="async">
+    <div class="wrap">
+      <div class="visit-card">
+        <h2 id="contact-heading">Get in touch</h2>
+        <p>Email is the quickest way to reach me, whether it&rsquo;s about a shoot, a project or something you read here.</p>
+        <dl>
+          <div><dt>Email</dt><dd><a href="mailto:contact@jackjaillet.com">contact@jackjaillet.com</a></dd></div>
+          <div><dt>LinkedIn</dt><dd><a href="https://www.linkedin.com/in/jackjaillet/" target="_blank" rel="noopener">in/jackjaillet<span class="sr-only"> (opens in new tab)</span></a></dd></div>
+          <div><dt>School</dt><dd>UMass Amherst, Isenberg</dd></div>
+          <div><dt>Resume</dt><dd><a href="/resume">jackjaillet.com/resume</a></dd></div>
+        </dl>
+        <a class="btn" href="mailto:contact@jackjaillet.com">Email me</a>
       </div>
     </div>
   </section>
@@ -253,21 +348,19 @@
   </main>
 
   <footer class="site-footer">
-    <div class="wrap">
-      <a class="brand" href="/" aria-label="Jack Jaillet, back to home">
-        <img class="brand-img" src="/assets/favicon.png" alt="" width="32" height="32" loading="lazy" decoding="async">
-      </a>
+    <div class="wrap footer-line">
+      <p class="footer-id">Jack Jaillet, Massachusetts</p>
       <nav aria-label="Footer">
-      <ul class="footer-links">
-        <li><a href="mailto:contact@jackjaillet.com">contact@jackjaillet.com</a></li>
-        <li><a href="https://www.linkedin.com/in/jackjaillet/" target="_blank" rel="noopener">LinkedIn<span class="sr-only"> (opens in new tab)</span></a></li>
-        <li><a href="/privacy">Privacy</a></li>
-        <li><a href="/terms">Terms</a></li>
-        <li><a href="/accessibility">Accessibility</a></li>
-        <li hidden data-cookie-settings><button type="button">Cookie settings</button></li>
-      </ul>
+        <ul class="footer-links">
+          <li><a href="mailto:contact@jackjaillet.com">contact@jackjaillet.com</a></li>
+          <li><a href="https://www.linkedin.com/in/jackjaillet/" target="_blank" rel="noopener">LinkedIn<span class="sr-only"> (opens in new tab)</span></a></li>
+          <li><a href="/privacy">Privacy</a></li>
+          <li><a href="/terms">Terms</a></li>
+          <li><a href="/accessibility">Accessibility</a></li>
+          <li hidden data-cookie-settings><button type="button">Cookie settings</button></li>
+        </ul>
       </nav>
-      <small>&copy; <span id="year">2026</span> Jack Jaillet</small>
+      <p class="footer-year"><small>&copy; <span id="year">2026</span> Jack Jaillet</small></p>
     </div>
   </footer>
 

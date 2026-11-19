@@ -3,31 +3,30 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Mobile browser chrome follows the theme. Dark is the site default, so
-       that is the static value; the bootstrap below corrects it before first
-       paint for visitors who chose light. -->
-  <meta name="theme-color" content="#10131a">
+  <meta name="theme-color" content="#dedad3" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#151515" media="(prefers-color-scheme: dark)">
   <title>About Jack Jaillet | Business Student &amp; Community Leader</title>
-  <meta name="description" content="Get to know Jack Jaillet: business student, community leader, photographer, and 2024-25 Massachusetts Leo of the Year.">
+  <meta name="description" content="Get to know Jack Jaillet: UMass Amherst business student, photographer, MassSTAR multimedia director, and 2024-25 Massachusetts Leo of the Year.">
   <link rel="canonical" href="https://jackjaillet.com/about">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Jack Jaillet">
   <meta property="og:title" content="About Jack Jaillet | Business Student & Community Leader">
-  <meta property="og:description" content="Get to know Jack Jaillet: business student, community leader, photographer, and 2024-25 Massachusetts Leo of the Year.">
+  <meta property="og:description" content="Get to know Jack Jaillet: UMass Amherst business student, photographer, MassSTAR multimedia director, and 2024-25 Massachusetts Leo of the Year.">
   <meta property="og:url" content="https://jackjaillet.com/about">
-  <meta property="og:image" content="https://jackjaillet.com/assets/og-image.jpg">
+  <meta property="og:image" content="https://jackjaillet.com/assets/og-jack-jaillet.jpg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="Jack Jaillet">
+  <meta property="og:image:alt" content="Jack Jaillet, business student at UMass Amherst, in a blue flannel shirt">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="About Jack Jaillet | Business Student & Community Leader">
-  <meta name="twitter:description" content="Get to know Jack Jaillet: business student, community leader, photographer, and 2024-25 Massachusetts Leo of the Year.">
-  <meta name="twitter:image" content="https://jackjaillet.com/assets/og-image.jpg">
+  <meta name="twitter:description" content="Get to know Jack Jaillet: UMass Amherst business student, photographer, MassSTAR multimedia director, and 2024-25 Massachusetts Leo of the Year.">
+  <meta name="twitter:image" content="https://jackjaillet.com/assets/og-jack-jaillet.jpg">
+  <meta name="twitter:image:alt" content="Jack Jaillet, business student at UMass Amherst, in a blue flannel shirt">
   <link rel="icon" type="image/png" href="/assets/favicon.png">
   <link rel="apple-touch-icon" href="/assets/favicon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&amp;family=Rokkitt:wght@800&amp;display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css">
   <script type="application/ld+json">
   {
@@ -35,11 +34,10 @@
     "@type": "ProfilePage",
     "url": "https://jackjaillet.com/about",
     "name": "About Jack Jaillet",
-    "mainEntity": { "@id": "https://jackjaillet.com/#jack" }
+    "mainEntity": { "@type": "Person", "@id": "https://jackjaillet.com/#jack", "name": "Jack Jaillet", "url": "https://jackjaillet.com/" }
   }
   </script>
-  <script>try{var t=localStorage.getItem("theme");if(t){document.documentElement.dataset.theme=t;var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content",t==="light"?"#f7f8fa":"#10131a")}}catch(e){}</script>
-  <noscript><style>.reveal{opacity:1 !important;transform:none !important}</style></noscript>
+  <script>document.documentElement.classList.add("js");try{var t=localStorage.getItem("theme");if(t==="light"||t==="dark"){document.documentElement.dataset.theme=t;document.querySelectorAll('meta[name="theme-color"]').forEach(function(m){m.content=t==="light"?"#dedad3":"#151515"})}}catch(e){}</script>
 </head>
 <body>
 
@@ -48,21 +46,19 @@
   <nav class="site-nav" aria-label="Primary">
     <div class="wrap">
       <a class="brand" href="/">
-        <img class="brand-img" src="/assets/favicon.png" alt="" width="40" height="40">
+        <img class="brand-img" src="/assets/favicon.png" alt="" width="36" height="36">
         <span class="brand-name">Jack Jaillet</span>
       </a>
-      <button class="nav-toggle" aria-expanded="false" aria-controls="nav-menu" aria-label="Open navigation menu">Menu</button>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-menu">Menu</button>
       <ul class="nav-links" id="nav-menu">
-        <li><a href="/">Home</a></li>
         <li><a href="/about" aria-current="page">About</a></li>
         <li><a href="/resume">Resume</a></li>
-        <li><a href="/updates">Now</a></li>
         <li><a href="/blog/">Blog</a></li>
         <li><a href="/services">Services</a></li>
-        <li><a class="btn btn-primary btn-small" href="mailto:contact@jackjaillet.com">Get in touch</a></li>
+        <li><a class="btn btn-small" href="mailto:contact@jackjaillet.com">Email me</a></li>
         <li class="theme-item">
           <span class="theme-text" id="theme-text">Dark mode</span>
-          <button class="theme-toggle" type="button" role="switch" aria-checked="true" aria-labelledby="theme-text">
+          <button class="theme-toggle" type="button" role="switch" aria-checked="false" aria-labelledby="theme-text">
             <svg class="icon-sun" aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
             <svg class="icon-moon" aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
             <span class="theme-knob" aria-hidden="true"></span>
@@ -77,19 +73,16 @@
   <header class="about-head">
     <div class="wrap about-grid">
       <div>
-        <h1>Hey, thanks for<br><em>stopping by.</em></h1>
-        <div class="prose mt-6">
-          <p>I'm Jack (he/him), an 18-year-old business student in Massachusetts with a constant drive to learn, serve, and lead. I graduated from <strong>Montachusett Regional Vocational Technical School</strong> in 2026, where I studied Business Technology, served as Class Treasurer and Class Secretary, and was a member of the National Honor Society.</p>
-          <p>This fall, I'm starting at <strong>UMass Amherst's Isenberg School of Management</strong>. My major is undeclared for now, and I could not be more excited about the path ahead.</p>
-          <p>Outside the classroom you'll usually find me behind a camera, planning a service project, or training people to step in when it matters. I founded <strong>Charming Memories Photography</strong>, lead multimedia for the MassSTAR youth leadership conference, and was named the <strong>2024-25 Massachusetts Leo of the Year</strong> by Lions Clubs International.</p>
+        <h1>About me</h1>
+        <div class="prose">
+          <p>I&rsquo;m Jack (he/him), a 19-year-old business student from Massachusetts. I graduated from <strong>Montachusett Regional Vocational Technical School</strong> in 2026, where I studied Business Technology, served as Class Treasurer and Class Secretary, and was in the National Honor Society.</p>
+          <p>This fall I started at <strong>UMass Amherst&rsquo;s Isenberg School of Management</strong>. My major is undeclared for now.</p>
+          <p>Outside class I&rsquo;m usually behind a camera, planning a service project, or training people to step in when something&rsquo;s wrong. I founded <strong>Charming Memories Photography</strong>, lead multimedia for the MassSTAR youth leadership conference, and was named the <strong>2024&ndash;25 Massachusetts Leo of the Year</strong> by Lions Clubs International.</p>
         </div>
       </div>
       <figure class="portrait">
-        <img src="/assets/headshot-casual.jpg" alt="Jack Jaillet laughing" width="900" height="1259" fetchpriority="high">
-        <div class="portrait-fallback">
-          <span class="brand-mark" aria-hidden="true"><i>J</i><i>J</i></span>
-          <span>Jack Jaillet</span>
-        </div>
+        <img src="/assets/photo/jack-fence-1400.jpg" srcset="/assets/photo/jack-fence-800.jpg 800w, /assets/photo/jack-fence-1400.jpg 1400w" sizes="(max-width: 820px) 100vw, 40vw" alt="Jack Jaillet laughing, sitting on a wooden fence on a foggy autumn morning" width="1400" height="1960" fetchpriority="high">
+        <div class="portrait-fallback">Jack Jaillet</div>
       </figure>
     </div>
   </header>
@@ -97,32 +90,32 @@
   <section class="section section-alt" aria-labelledby="involve-heading">
     <div class="wrap">
       <div class="section-head reveal">
-        <h2 id="involve-heading">Where I'm involved</h2>
+        <h2 id="involve-heading"><span>Where I&rsquo;m involved</span></h2>
       </div>
       <div class="involve reveal">
         <div>
           <h3>Leadership &amp; Service</h3>
           <ul>
-            <li><a href="https://www.massyouthleadership.org/" target="_blank" rel="noopener">Massachusetts Youth Leadership Foundation<span class="sr-only"> (opens in new tab)</span><svg class="ext-icon" aria-hidden="true" focusable="false" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a> <span>Board &amp; Conference Multimedia Director</span></li>
-            <li><a href="https://www.lionsclubs.org/en" target="_blank" rel="noopener">Leo Club, Lions Clubs International<span class="sr-only"> (opens in new tab)</span><svg class="ext-icon" aria-hidden="true" focusable="false" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a> <span>2024-25 Massachusetts Leo of the Year, District 33A</span></li>
+            <li><a href="https://www.massyouthleadership.org/" target="_blank" rel="noopener">Massachusetts Youth Leadership Foundation<span class="sr-only"> (opens in new tab)</span></a> <span>Board &amp; Conference Multimedia Director</span></li>
+            <li><a href="https://www.lionsclubs.org/en" target="_blank" rel="noopener">Leo Club, Lions Clubs International<span class="sr-only"> (opens in new tab)</span></a> <span>2024-25 Massachusetts Leo of the Year, District 33A</span></li>
             <li>Gardner Emergency Housing Mission <span>Multimedia Director, volunteer</span></li>
-            <li><a href="https://www.lgbtqiasafezone.org/" target="_blank" rel="noopener">LGBTQIA Safe Zone<span class="sr-only"> (opens in new tab)</span><svg class="ext-icon" aria-hidden="true" focusable="false" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a> <span>Founder</span></li>
-            <li><a href="https://www.luk.org/" target="_blank" rel="noopener">LUK, Inc.<span class="sr-only"> (opens in new tab)</span><svg class="ext-icon" aria-hidden="true" focusable="false" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a> <span>Youth Leader</span></li>
+            <li><a href="https://www.lgbtqiasafezone.org/" target="_blank" rel="noopener">LGBTQIA Safe Zone<span class="sr-only"> (opens in new tab)</span></a> <span>Founder</span></li>
+            <li><a href="https://www.luk.org/" target="_blank" rel="noopener">LUK, Inc.<span class="sr-only"> (opens in new tab)</span></a> <span>Youth Leader</span></li>
           </ul>
         </div>
         <div>
           <h3>Work &amp; Business</h3>
           <ul>
-            <li><a href="https://www.brightfuturefinancialllc.com/" target="_blank" rel="noopener">Bright Future Financial LLC<span class="sr-only"> (opens in new tab)</span><svg class="ext-icon" aria-hidden="true" focusable="false" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a> <span>Client Service Associate, internship</span></li>
-            <li><a href="https://www.trainingactivebystanders.org/" target="_blank" rel="noopener">Training Active Bystanders<span class="sr-only"> (opens in new tab)</span><svg class="ext-icon" aria-hidden="true" focusable="false" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a> <span>Certified Trainer &amp; Consultant</span></li>
-            <li><a href="https://www.gatheringcurrents.org/" target="_blank" rel="noopener">Gathering Currents<span class="sr-only"> (opens in new tab)</span><svg class="ext-icon" aria-hidden="true" focusable="false" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a> <span>Consultant</span></li>
-            <li><a href="https://www.greatwolf.com/new-england" target="_blank" rel="noopener">Great Wolf Lodge<span class="sr-only"> (opens in new tab)</span><svg class="ext-icon" aria-hidden="true" focusable="false" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a> <span>Four guest-facing roles over two years</span></li>
+            <li><a href="https://www.brightfuturefinancialllc.com/" target="_blank" rel="noopener">Bright Future Financial LLC<span class="sr-only"> (opens in new tab)</span></a> <span>Client Service Associate, internship</span></li>
+            <li><a href="https://www.trainingactivebystanders.org/" target="_blank" rel="noopener">Training Active Bystanders<span class="sr-only"> (opens in new tab)</span></a> <span>Certified Trainer &amp; Consultant</span></li>
+            <li><a href="https://www.gatheringcurrents.org/" target="_blank" rel="noopener">Gathering Currents<span class="sr-only"> (opens in new tab)</span></a> <span>Consultant</span></li>
+            <li><a href="https://www.greatwolf.com/new-england" target="_blank" rel="noopener">Great Wolf Lodge<span class="sr-only"> (opens in new tab)</span></a> <span>Four guest-facing roles over two years</span></li>
           </ul>
         </div>
         <div>
           <h3>Creative</h3>
           <ul>
-            <li><a href="https://www.charmingphotography.com/" target="_blank" rel="noopener">Charming Memories Photography<span class="sr-only"> (opens in new tab)</span><svg class="ext-icon" aria-hidden="true" focusable="false" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a> <span>Founder: portrait, event &amp; corporate work</span></li>
+            <li><a href="https://www.charmingphotography.com/" target="_blank" rel="noopener">Charming Memories Photography<span class="sr-only"> (opens in new tab)</span></a> <span>Founder: portrait, event &amp; corporate work</span></li>
             <li>MassSTAR Conference Recaps <span>Filmed, edited &amp; delivered same-weekend videos</span></li>
             <li>Graphic Design <span>For nonprofits and community organizations</span></li>
           </ul>
@@ -131,25 +124,28 @@
     </div>
   </section>
 
-  <section class="section" aria-labelledby="drives-heading">
+  <section class="letter-section" aria-labelledby="drives-heading">
     <div class="wrap">
-      <div class="section-head reveal">
-        <h2 id="drives-heading">What drives me</h2>
-      </div>
-      <div class="prose reveal">
-        <p>I try to lead with intentionality and stay genuinely curious about the reasoning behind decisions and actions. The things I'm proudest of, from state-level recognition to a finished conference recap video, were never done alone. Teachers, mentors, friends, and community members believed in me, challenged me, and showed up when it mattered.</p>
-        <p>Now I'm heading into the next chapter with purpose and the ambition to serve, do good, and make the people who believed in me proud.</p>
+      <div class="letter reveal">
+        <img class="letter-face" src="/assets/photo/jack-face-160.jpg" alt="" width="64" height="64" loading="lazy" decoding="async">
+        <h2 id="drives-heading">Why I do this</h2>
+        <p>I like understanding why a decision gets made before I act on it, and I try to lead that way too.</p>
+        <p>Nothing I&rsquo;m proud of happened alone. The Leo of the Year award and the MassSTAR recap videos both came out of teachers, mentors, friends and community members who believed in me, pushed me, and showed up when it counted.</p>
+        <p>I&rsquo;m in college now, and the plan hasn&rsquo;t changed: keep serving, do good work, and make the people who believed in me proud.</p>
+        <p class="sign">Jack<span>Jack Jaillet, business student at UMass Amherst</span></p>
       </div>
     </div>
   </section>
 
   <section class="contact-band" id="contact" aria-labelledby="contact-heading">
     <div class="wrap reveal">
-      <h2 id="contact-heading">Let's connect.</h2>
-      <p>Whether it's an opportunity, a project, or a question about anything I'm involved in, my inbox is open.</p>
-      <div class="contact-actions">
-        <a class="btn btn-primary" href="mailto:contact@jackjaillet.com">Get in touch</a>
-        <a class="btn btn-ghost" href="https://www.linkedin.com/in/jackjaillet/" target="_blank" rel="noopener">Connect on LinkedIn<span class="sr-only"> (opens in new tab)</span></a>
+      <h2 id="contact-heading">Get in touch</h2>
+      <div>
+        <p>Email is the quickest way to reach me, whether it&rsquo;s about a shoot, a project or something you read here. I&rsquo;m also on LinkedIn.</p>
+        <div class="contact-actions">
+          <a class="btn" href="mailto:contact@jackjaillet.com">Email me</a>
+          <a class="go" href="https://www.linkedin.com/in/jackjaillet/" target="_blank" rel="noopener">LinkedIn<span class="sr-only"> (opens in new tab)</span></a>
+        </div>
       </div>
     </div>
   </section>
@@ -157,21 +153,19 @@
   </main>
 
   <footer class="site-footer">
-    <div class="wrap">
-      <a class="brand" href="/" aria-label="Jack Jaillet, back to home">
-        <img class="brand-img" src="/assets/favicon.png" alt="" width="32" height="32" loading="lazy" decoding="async">
-      </a>
+    <div class="wrap footer-line">
+      <p class="footer-id">Jack Jaillet, Massachusetts</p>
       <nav aria-label="Footer">
-      <ul class="footer-links">
-        <li><a href="mailto:contact@jackjaillet.com">contact@jackjaillet.com</a></li>
-        <li><a href="https://www.linkedin.com/in/jackjaillet/" target="_blank" rel="noopener">LinkedIn<span class="sr-only"> (opens in new tab)</span></a></li>
-        <li><a href="/privacy">Privacy</a></li>
-        <li><a href="/terms">Terms</a></li>
-        <li><a href="/accessibility">Accessibility</a></li>
-        <li hidden data-cookie-settings><button type="button">Cookie settings</button></li>
-      </ul>
+        <ul class="footer-links">
+          <li><a href="mailto:contact@jackjaillet.com">contact@jackjaillet.com</a></li>
+          <li><a href="https://www.linkedin.com/in/jackjaillet/" target="_blank" rel="noopener">LinkedIn<span class="sr-only"> (opens in new tab)</span></a></li>
+          <li><a href="/privacy">Privacy</a></li>
+          <li><a href="/terms">Terms</a></li>
+          <li><a href="/accessibility">Accessibility</a></li>
+          <li hidden data-cookie-settings><button type="button">Cookie settings</button></li>
+        </ul>
       </nav>
-      <small>&copy; <span id="year">2026</span> Jack Jaillet</small>
+      <p class="footer-year"><small>&copy; <span id="year">2026</span> Jack Jaillet</small></p>
     </div>
   </footer>
 

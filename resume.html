@@ -3,31 +3,30 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Mobile browser chrome follows the theme. Dark is the site default, so
-       that is the static value; the bootstrap below corrects it before first
-       paint for visitors who chose light. -->
-  <meta name="theme-color" content="#10131a">
+  <meta name="theme-color" content="#dedad3" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#151515" media="(prefers-color-scheme: dark)">
   <title>Jack Jaillet Resume | Experience, Leadership &amp; Education</title>
-  <meta name="description" content="The full resume of Jack Jaillet: experience, leadership, education, honors, and skills.">
+  <meta name="description" content="Jack Jaillet's resume: client service, photography, youth leadership and nonprofit work, plus his education at UMass Amherst's Isenberg School of Management.">
   <link rel="canonical" href="https://jackjaillet.com/resume">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Jack Jaillet">
   <meta property="og:title" content="Jack Jaillet Resume | Experience, Leadership & Education">
-  <meta property="og:description" content="The full resume of Jack Jaillet: experience, leadership, education, honors, and skills.">
+  <meta property="og:description" content="Jack Jaillet's resume: client service, photography, youth leadership and nonprofit work, plus his education at UMass Amherst's Isenberg School of Management.">
   <meta property="og:url" content="https://jackjaillet.com/resume">
-  <meta property="og:image" content="https://jackjaillet.com/assets/og-image.jpg">
+  <meta property="og:image" content="https://jackjaillet.com/assets/og-jack-jaillet.jpg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="Jack Jaillet">
+  <meta property="og:image:alt" content="Jack Jaillet, business student at UMass Amherst, in a blue flannel shirt">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Jack Jaillet Resume | Experience, Leadership & Education">
-  <meta name="twitter:description" content="The full resume of Jack Jaillet: experience, leadership, education, honors, and skills.">
-  <meta name="twitter:image" content="https://jackjaillet.com/assets/og-image.jpg">
+  <meta name="twitter:description" content="Jack Jaillet's resume: client service, photography, youth leadership and nonprofit work, plus his education at UMass Amherst's Isenberg School of Management.">
+  <meta name="twitter:image" content="https://jackjaillet.com/assets/og-jack-jaillet.jpg">
+  <meta name="twitter:image:alt" content="Jack Jaillet, business student at UMass Amherst, in a blue flannel shirt">
   <link rel="icon" type="image/png" href="/assets/favicon.png">
   <link rel="apple-touch-icon" href="/assets/favicon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&amp;family=Rokkitt:wght@800&amp;display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css">
   <script type="application/ld+json">
   {
@@ -35,11 +34,10 @@
     "@type": "ProfilePage",
     "url": "https://jackjaillet.com/resume",
     "name": "Jack Jaillet Resume",
-    "mainEntity": { "@id": "https://jackjaillet.com/#jack" }
+    "mainEntity": { "@type": "Person", "@id": "https://jackjaillet.com/#jack", "name": "Jack Jaillet", "url": "https://jackjaillet.com/" }
   }
   </script>
-  <script>try{var t=localStorage.getItem("theme");if(t){document.documentElement.dataset.theme=t;var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content",t==="light"?"#f7f8fa":"#10131a")}}catch(e){}</script>
-  <noscript><style>.reveal{opacity:1 !important;transform:none !important}</style></noscript>
+  <script>document.documentElement.classList.add("js");try{var t=localStorage.getItem("theme");if(t==="light"||t==="dark"){document.documentElement.dataset.theme=t;document.querySelectorAll('meta[name="theme-color"]').forEach(function(m){m.content=t==="light"?"#dedad3":"#151515"})}}catch(e){}</script>
 </head>
 <body>
 
@@ -48,21 +46,19 @@
   <nav class="site-nav" aria-label="Primary">
     <div class="wrap">
       <a class="brand" href="/">
-        <img class="brand-img" src="/assets/favicon.png" alt="" width="40" height="40">
+        <img class="brand-img" src="/assets/favicon.png" alt="" width="36" height="36">
         <span class="brand-name">Jack Jaillet</span>
       </a>
-      <button class="nav-toggle" aria-expanded="false" aria-controls="nav-menu" aria-label="Open navigation menu">Menu</button>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-menu">Menu</button>
       <ul class="nav-links" id="nav-menu">
-        <li><a href="/">Home</a></li>
         <li><a href="/about">About</a></li>
         <li><a href="/resume" aria-current="page">Resume</a></li>
-        <li><a href="/updates">Now</a></li>
         <li><a href="/blog/">Blog</a></li>
         <li><a href="/services">Services</a></li>
-        <li><a class="btn btn-primary btn-small" href="mailto:contact@jackjaillet.com">Get in touch</a></li>
+        <li><a class="btn btn-small" href="mailto:contact@jackjaillet.com">Email me</a></li>
         <li class="theme-item">
           <span class="theme-text" id="theme-text">Dark mode</span>
-          <button class="theme-toggle" type="button" role="switch" aria-checked="true" aria-labelledby="theme-text">
+          <button class="theme-toggle" type="button" role="switch" aria-checked="false" aria-labelledby="theme-text">
             <svg class="icon-sun" aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
             <svg class="icon-moon" aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
             <span class="theme-knob" aria-hidden="true"></span>
@@ -77,7 +73,7 @@
   <header class="resume-head">
     <div class="wrap">
       <h1>Jack Jaillet</h1>
-      <p class="lede">Business-oriented student passionate about community service, leadership, and communication. Skilled in customer service, hospitality, and management.</p>
+      <p class="lede">Business student at UMass Amherst&rsquo;s Isenberg School of Management, with experience in client service, hospitality, data management, photography and nonprofit leadership.</p>
       <div class="resume-contact">
         <span>He/Him</span>
         <span>Massachusetts, United States</span>
@@ -98,9 +94,9 @@
           <article class="job">
             <div class="job-top">
               <div>
-                <h3>Client Service Associate <span class="job-org">&middot; <a href="https://www.brightfuturefinancialllc.com/" target="_blank" rel="noopener">Bright Future Financial LLC<span class="sr-only"> (opens in new tab)</span><svg class="ext-icon" aria-hidden="true" focusable="false" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a></span></h3>
+                <h3>Client Service Associate <span class="job-org"><a href="https://www.brightfuturefinancialllc.com/" target="_blank" rel="noopener">Bright Future Financial LLC<span class="sr-only"> (opens in new tab)</span></a></span></h3>
               </div>
-              <time>Feb 2025 - Present</time>
+              <span class="job-dates">Feb 2025 &ndash; present</span>
             </div>
             <p>Internship at a financial services firm in Leominster, MA. Data management and database administration supporting client service operations.</p>
           </article>
@@ -108,9 +104,9 @@
           <article class="job">
             <div class="job-top">
               <div>
-                <h3>Photographer &amp; Founder <span class="job-org">&middot; <a href="https://www.charmingphotography.com/" target="_blank" rel="noopener">Charming Memories Photography<span class="sr-only"> (opens in new tab)</span><svg class="ext-icon" aria-hidden="true" focusable="false" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a></span></h3>
+                <h3>Photographer &amp; Founder <span class="job-org"><a href="https://www.charmingphotography.com/" target="_blank" rel="noopener">Charming Memories Photography<span class="sr-only"> (opens in new tab)</span></a></span></h3>
               </div>
-              <time>Nov 2024 - Present</time>
+              <span class="job-dates">Nov 2024 &ndash; present</span>
             </div>
             <p>Founded and run a freelance photography business offering portrait, event, headshot, real estate, sports, and corporate photography.</p>
           </article>
@@ -118,9 +114,9 @@
           <article class="job">
             <div class="job-top">
               <div>
-                <h3>Certified Trainer &amp; Consultant <span class="job-org">&middot; <a href="https://www.trainingactivebystanders.org/" target="_blank" rel="noopener">Training Active Bystanders<span class="sr-only"> (opens in new tab)</span><svg class="ext-icon" aria-hidden="true" focusable="false" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a></span></h3>
+                <h3>Certified Trainer &amp; Consultant <span class="job-org"><a href="https://www.trainingactivebystanders.org/" target="_blank" rel="noopener">Training Active Bystanders<span class="sr-only"> (opens in new tab)</span></a></span></h3>
               </div>
-              <time>Jul 2023 - Present</time>
+              <span class="job-dates">Jul 2023 &ndash; present</span>
             </div>
             <p>Deliver bystander-intervention training programs. Certified trainer since 2023; consultant since 2025, including a summer youth consultancy.</p>
           </article>
@@ -128,9 +124,9 @@
           <article class="job">
             <div class="job-top">
               <div>
-                <h3>Consultant <span class="job-org">&middot; <a href="https://www.gatheringcurrents.org/" target="_blank" rel="noopener">Gathering Currents<span class="sr-only"> (opens in new tab)</span><svg class="ext-icon" aria-hidden="true" focusable="false" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a></span></h3>
+                <h3>Consultant <span class="job-org"><a href="https://www.gatheringcurrents.org/" target="_blank" rel="noopener">Gathering Currents<span class="sr-only"> (opens in new tab)</span></a></span></h3>
               </div>
-              <time>Sep 2025 - Present</time>
+              <span class="job-dates">Sep 2025 &ndash; present</span>
             </div>
             <p>Part-time consulting in a hybrid role supporting mediation and conflict-resolution programming.</p>
           </article>
@@ -138,16 +134,16 @@
           <article class="job">
             <div class="job-top">
               <div>
-                <h3>Guest Experience Roles <span class="job-org">&middot; <a href="https://www.greatwolf.com/new-england" target="_blank" rel="noopener">Great Wolf Lodge, Fitchburg MA<span class="sr-only"> (opens in new tab)</span><svg class="ext-icon" aria-hidden="true" focusable="false" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a></span></h3>
+                <h3>Guest Experience Roles <span class="job-org"><a href="https://www.greatwolf.com/new-england" target="_blank" rel="noopener">Great Wolf Lodge, Fitchburg MA<span class="sr-only"> (opens in new tab)</span></a></span></h3>
               </div>
-              <time>May 2024 - Mar 2026</time>
+              <span class="job-dates">May 2024 &ndash; Mar 2026</span>
             </div>
             <p>Four guest-facing roles over two years across retail, food service, entertainment, and front-of-house operations.</p>
             <ul class="roles">
-              <li><b>Retail Attendant</b> <span>Sep 2025 - Mar 2026</span></li>
-              <li><b>Banquet Server</b> <span>Nov 2024 - Nov 2025</span></li>
-              <li><b>Entertainment Ambassador</b> <span>Aug 2024 - Sep 2025</span></li>
-              <li><b>Restaurant Host</b> <span>May 2024 - Aug 2024</span></li>
+              <li><b>Retail Attendant</b> <span>Sep 2025 &ndash; Mar 2026</span></li>
+              <li><b>Banquet Server</b> <span>Nov 2024 &ndash; Nov 2025</span></li>
+              <li><b>Entertainment Ambassador</b> <span>Aug 2024 &ndash; Sep 2025</span></li>
+              <li><b>Restaurant Host</b> <span>May 2024 &ndash; Aug 2024</span></li>
             </ul>
           </article>
         </section>
@@ -158,9 +154,9 @@
           <article class="job">
             <div class="job-top">
               <div>
-                <h3>Board Multimedia Director <span class="job-org">&middot; <a href="https://www.massyouthleadership.org/" target="_blank" rel="noopener">Massachusetts Youth Leadership Foundation<span class="sr-only"> (opens in new tab)</span><svg class="ext-icon" aria-hidden="true" focusable="false" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a></span></h3>
+                <h3>Board Multimedia Director <span class="job-org"><a href="https://www.massyouthleadership.org/" target="_blank" rel="noopener">Massachusetts Youth Leadership Foundation<span class="sr-only"> (opens in new tab)</span></a></span></h3>
               </div>
-              <time>Nov 2025 - Present</time>
+              <span class="job-dates">Nov 2025 &ndash; present</span>
             </div>
             <p>Lead video production for the MassSTAR conference: capturing the full weekend, editing on the fly, and delivering a finished recap video the same Sunday. Conference Multimedia Director for the 2025 and 2026 conferences; MassSTAR delegate in 2024.</p>
           </article>
@@ -168,9 +164,9 @@
           <article class="job">
             <div class="job-top">
               <div>
-                <h3>Multimedia Director, Volunteer <span class="job-org">&middot; Gardner Emergency Housing Mission</span></h3>
+                <h3>Multimedia Director, Volunteer <span class="job-org">Gardner Emergency Housing Mission</span></h3>
               </div>
-              <time>Jul 2023 - Nov 2025</time>
+              <span class="job-dates">Jul 2023 &ndash; Nov 2025</span>
             </div>
             <p>Communication and graphic design support for an emergency housing nonprofit in Gardner, MA.</p>
           </article>
@@ -178,9 +174,9 @@
           <article class="job">
             <div class="job-top">
               <div>
-                <h3>Youth Leader <span class="job-org">&middot; <a href="https://www.luk.org/" target="_blank" rel="noopener">LUK, Inc.<span class="sr-only"> (opens in new tab)</span><svg class="ext-icon" aria-hidden="true" focusable="false" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a></span></h3>
+                <h3>Youth Leader <span class="job-org"><a href="https://www.luk.org/" target="_blank" rel="noopener">LUK, Inc.<span class="sr-only"> (opens in new tab)</span></a></span></h3>
               </div>
-              <time>Jun 2023 - Jan 2025</time>
+              <span class="job-dates">Jun 2023 &ndash; Jan 2025</span>
             </div>
             <p>Youth leadership role with a Fitchburg-based social services nonprofit.</p>
           </article>
@@ -188,9 +184,9 @@
           <article class="job">
             <div class="job-top">
               <div>
-                <h3>Founder <span class="job-org">&middot; <a href="https://www.lgbtqiasafezone.org/" target="_blank" rel="noopener">LGBTQIA Safe Zone<span class="sr-only"> (opens in new tab)</span><svg class="ext-icon" aria-hidden="true" focusable="false" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a></span></h3>
+                <h3>Founder <span class="job-org"><a href="https://www.lgbtqiasafezone.org/" target="_blank" rel="noopener">LGBTQIA Safe Zone<span class="sr-only"> (opens in new tab)</span></a></span></h3>
               </div>
-              <time>Apr 2021 - Present</time>
+              <span class="job-dates">Apr 2021 &ndash; present</span>
             </div>
             <p>Founded and maintain a remote community resource project.</p>
           </article>
@@ -202,11 +198,11 @@
           <h2 id="education-heading">Education</h2>
           <div class="edu">
             <h3>UMass Amherst, Isenberg School of Management</h3>
-            <p>Incoming, Fall 2026 &middot; Class of 2030</p>
+            <p>Started Fall 2026 &middot; Class of 2030</p>
           </div>
           <div class="edu">
             <h3>Montachusett Regional Vocational Technical School</h3>
-            <p>High School Diploma, Business Technology &middot; 2022 - 2026</p>
+            <p>High School Diploma, Business Technology &middot; 2022&ndash;2026</p>
           </div>
         </section>
 
@@ -222,22 +218,22 @@
 
         <section class="aside-block" aria-labelledby="skills-heading">
           <h2 id="skills-heading">Skills</h2>
-          <div class="skill-chips">
-            <span>Leadership</span>
-            <span>Communication</span>
-            <span>Customer Service</span>
-            <span>Guest Experience</span>
-            <span>Public Speaking</span>
-            <span>Data Management</span>
-            <span>Database Administration</span>
-            <span>Graphic Design</span>
-            <span>Video Production</span>
-            <span>Photography</span>
-            <span>Teamwork</span>
-            <span>Financial Literacy</span>
-            <span>Problem Solving</span>
-            <span>Youth Engagement</span>
-          </div>
+          <ul class="skill-list">
+            <li>Leadership</li>
+            <li>Communication</li>
+            <li>Customer Service</li>
+            <li>Guest Experience</li>
+            <li>Public Speaking</li>
+            <li>Data Management</li>
+            <li>Database Administration</li>
+            <li>Graphic Design</li>
+            <li>Video Production</li>
+            <li>Photography</li>
+            <li>Teamwork</li>
+            <li>Financial Literacy</li>
+            <li>Problem Solving</li>
+            <li>Youth Engagement</li>
+          </ul>
         </section>
 
         <section class="aside-block" aria-labelledby="certifications-heading">
@@ -254,11 +250,13 @@
 
   <section class="contact-band" id="contact" aria-labelledby="contact-heading">
     <div class="wrap reveal">
-      <h2 id="contact-heading">Let's connect.</h2>
-      <p>Whether it's an opportunity, a project, or a question about anything I'm involved in, my inbox is open.</p>
-      <div class="contact-actions">
-        <a class="btn btn-primary" href="mailto:contact@jackjaillet.com">Get in touch</a>
-        <a class="btn btn-ghost" href="https://www.linkedin.com/in/jackjaillet/" target="_blank" rel="noopener">Connect on LinkedIn<span class="sr-only"> (opens in new tab)</span></a>
+      <h2 id="contact-heading">Get in touch</h2>
+      <div>
+        <p>Email is the quickest way to reach me, whether it&rsquo;s about a shoot, a project or something you read here. I&rsquo;m also on LinkedIn.</p>
+        <div class="contact-actions">
+          <a class="btn" href="mailto:contact@jackjaillet.com">Email me</a>
+          <a class="go" href="https://www.linkedin.com/in/jackjaillet/" target="_blank" rel="noopener">LinkedIn<span class="sr-only"> (opens in new tab)</span></a>
+        </div>
       </div>
     </div>
   </section>
@@ -266,21 +264,19 @@
   </main>
 
   <footer class="site-footer">
-    <div class="wrap">
-      <a class="brand" href="/" aria-label="Jack Jaillet, back to home">
-        <img class="brand-img" src="/assets/favicon.png" alt="" width="32" height="32" loading="lazy" decoding="async">
-      </a>
+    <div class="wrap footer-line">
+      <p class="footer-id">Jack Jaillet, Massachusetts</p>
       <nav aria-label="Footer">
-      <ul class="footer-links">
-        <li><a href="mailto:contact@jackjaillet.com">contact@jackjaillet.com</a></li>
-        <li><a href="https://www.linkedin.com/in/jackjaillet/" target="_blank" rel="noopener">LinkedIn<span class="sr-only"> (opens in new tab)</span></a></li>
-        <li><a href="/privacy">Privacy</a></li>
-        <li><a href="/terms">Terms</a></li>
-        <li><a href="/accessibility">Accessibility</a></li>
-        <li hidden data-cookie-settings><button type="button">Cookie settings</button></li>
-      </ul>
+        <ul class="footer-links">
+          <li><a href="mailto:contact@jackjaillet.com">contact@jackjaillet.com</a></li>
+          <li><a href="https://www.linkedin.com/in/jackjaillet/" target="_blank" rel="noopener">LinkedIn<span class="sr-only"> (opens in new tab)</span></a></li>
+          <li><a href="/privacy">Privacy</a></li>
+          <li><a href="/terms">Terms</a></li>
+          <li><a href="/accessibility">Accessibility</a></li>
+          <li hidden data-cookie-settings><button type="button">Cookie settings</button></li>
+        </ul>
       </nav>
-      <small>&copy; <span id="year">2026</span> Jack Jaillet</small>
+      <p class="footer-year"><small>&copy; <span id="year">2026</span> Jack Jaillet</small></p>
     </div>
   </footer>
 

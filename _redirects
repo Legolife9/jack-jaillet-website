@@ -1,0 +1,4 @@
+# Cloudflare redirects.
+# The "Now" page (/updates) was removed on 2026-11-18; old links and search results land on the homepage.
+/updates       /  301
+/updates.html  /  301
