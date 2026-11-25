@@ -8,8 +8,9 @@ Contact: contact@jackjaillet.com · LinkedIn: https://www.linkedin.com/in/jackja
 
 - [About](https://jackjaillet.com/about): background, where Jack has been involved, and why he does the work
 - [Resume](https://jackjaillet.com/resume): experience, activities, volunteer work, education, awards, skills and certifications
-- [Services](https://jackjaillet.com/services): Signature Studio (a free email signature builder) and photography and video
+- [Services](https://jackjaillet.com/services): free tools Jack made, When You Free? (group scheduling) and Signature Studio (email signatures)
 - [Signature Studio](https://jackjaillet.com/signatures/): the free, open-source email signature builder Jack made
+- [When You Free?](https://jackjaillet.com/when/): a free group scheduling poll; make a poll, share the link, see when everyone overlaps
 - [Blog](https://jackjaillet.com/blog/): longer writing (no posts yet)
 
 ## Key facts

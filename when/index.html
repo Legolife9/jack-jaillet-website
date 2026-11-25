@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>When You Free? | Find a time that works for everyone</title>
+<meta name="description" content="A free group scheduling poll. Make a poll in under two minutes, send the link, and see when everyone overlaps. No sign-up needed, works on any phone, and shows each person their own time zone.">
+<link rel="canonical" href="https://jackjaillet.com/when/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Jack Jaillet">
+<meta property="og:title" content="When You Free?">
+<meta property="og:description" content="Find a time that works for everyone. Make a poll, send the link, see the overlap. No sign-up needed.">
+<meta property="og:url" content="https://jackjaillet.com/when/">
+<meta property="og:image" content="https://jackjaillet.com/assets/og-image.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#10131a">
+<meta name="format-detection" content="telephone=no">
+<link rel="icon" type="image/png" href="/assets/favicon.png">
+<link rel="apple-touch-icon" href="/assets/favicon.png">
+<script src="js/theme.js"></script>
+<link rel="preload" href="fonts/instrument-sans-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="top">
+  <div class="brandwrap">
+    <a class="sitelogo" href="/" tabindex="-1" aria-hidden="true"><img src="/assets/favicon.png" alt="" width="32" height="32"></a>
+    <a class="sitebrand" href="/" title="Back to jackjaillet.com">Jack Jaillet</a>
+    <span class="crumb" aria-hidden="true">/</span>
+    <a class="appname" href="./" id="homelink">When You Free?</a>
+  </div>
+  <span class="spacer"></span>
+  <button id="aboutbtn" class="btn ghost sm" type="button">About &amp; privacy</button>
+  <button id="acctbtn" class="btn sm" type="button" hidden>Sign in</button>
+  <button type="button" class="themebtn" id="themebtn" role="switch" aria-checked="true" aria-label="Dark mode" title="Light or dark"><svg class="icon-sun" aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg><svg class="icon-moon" aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><span class="knob" aria-hidden="true"></span></button>
+</header>
+
+<main id="main" tabindex="-1">
+  <noscript><div class="wrap"><p class="card">When You Free? needs JavaScript to run. Turn it on and reload the page.</p></div></noscript>
+
+  <div id="view-loading" class="wrap loading" aria-live="polite"><p class="note">Loading…</p></div>
+
+  <!-- home: make a poll, and the polls this browser (or your account) knows about -->
+  <div id="view-home" class="wrap home" hidden>
+    <section class="hero" aria-labelledby="home-title">
+      <h1 id="home-title">When You <em>Free?</em></h1>
+      <p class="lede">Find the time that works for everyone. Make a poll, send the link, and watch the overlap fill in. No sign-up needed.</p>
+    </section>
+    <div class="homegrid">
+      <section class="card createcard" aria-labelledby="create-title">
+        <h2 id="create-title">Make a poll</h2>
+        <div id="createbox"></div>
+      </section>
+      <div class="homeside">
+        <section class="card" id="mypolls-card" aria-labelledby="mypolls-title" hidden>
+          <h2 id="mypolls-title">Your polls</h2>
+          <div id="claimbanner"></div>
+          <ul class="polllist" id="mypolls"></ul>
+        </section>
+        <section class="card how" aria-labelledby="how-title">
+          <h2 id="how-title">How it works</h2>
+          <ol class="steps">
+            <li><b>Make a poll.</b> Pick the days and the hours you're considering. It takes about a minute.</li>
+            <li><b>Send the link.</b> Text it, email it, post it. People just type their name, no account.</li>
+            <li><b>See the overlap.</b> Everyone drags across the times they're free. The best times rise to the top, and you can lock one in and send it to everyone's calendar.</li>
+          </ol>
+          <p class="note">Everyone sees the times in their own time zone. You can mark times as "if needed", and compare against your own calendar without it ever leaving your device.</p>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <!-- one poll -->
+  <div id="view-event" class="wrap eventview" hidden>
+    <div id="ev-gate"></div>
+    <div id="ev-body">
+      <header class="evhead" id="ev-head"></header>
+      <div id="ev-final"></div>
+      <div id="ev-org"></div>
+      <div class="tzbar" id="ev-tz"></div>
+      <div class="tabs" id="ev-tabs" role="tablist" aria-label="Poll sections">
+        <button type="button" role="tab" id="tab-mine" aria-controls="pane-mine" aria-selected="true">Your answers</button>
+        <button type="button" role="tab" id="tab-group" aria-controls="pane-group" aria-selected="false" tabindex="-1">Everyone <span class="tabcount" id="tabcount"></span></button>
+      </div>
+      <div class="panes" id="panes" data-tab="mine">
+        <section class="pane card" id="pane-mine" role="tabpanel" aria-labelledby="tab-mine"></section>
+        <section class="pane card" id="pane-group" role="tabpanel" aria-labelledby="tab-group"></section>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <a class="brand" href="/" aria-label="Jack Jaillet, back to home">
+      <img class="brand-img" src="/assets/favicon.png" alt="" width="32" height="32" loading="lazy" decoding="async">
+    </a>
+    <nav aria-label="Footer">
+    <ul class="footer-links">
+      <li><a href="mailto:contact@jackjaillet.com">contact@jackjaillet.com</a></li>
+      <li><a href="https://www.linkedin.com/in/jackjaillet/" target="_blank" rel="noopener">LinkedIn<span class="sr-only"> (opens in new tab)</span></a></li>
+      <li><a href="/privacy">Privacy</a></li>
+      <li><a href="/terms">Terms</a></li>
+      <li><a href="/accessibility">Accessibility</a></li>
+      <li hidden data-cookie-settings><button type="button">Cookie settings</button></li>
+    </ul>
+    </nav>
+    <small>&copy; <span id="year">2026</span> Jack Jaillet</small>
+  </div>
+</footer>
+
+<dialog id="dlg" aria-labelledby="dlgtitle">
+  <div class="dlghead"><h2 id="dlgtitle"></h2><button type="button" class="iconbtn" id="dlgclose" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></div>
+  <div class="dlgbody" id="dlgbody"></div>
+</dialog>
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+<script src="vendor/supabase.js" defer></script>
+<script src="js/core.js" defer></script>
+<script src="js/ics.js" defer></script>
+<script src="js/app.js" defer></script>
+<script src="/js/footer.js" defer></script>
+</body>
+</html>

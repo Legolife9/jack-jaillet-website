@@ -43,3 +43,14 @@
   ! Content-Security-Policy
   Content-Security-Policy: default-src 'self'; script-src 'self' https://accounts.google.com/gsi/client https://www.googletagmanager.com https://static.cloudflareinsights.com; connect-src 'self' https://cloudflareinsights.com https://rizgpvzmazuvidvbpkoa.supabase.co https://accounts.google.com/gsi/ https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com; frame-src https://accounts.google.com/gsi/; style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style; font-src 'self'; img-src 'self' data: blob: https:; base-uri 'self'; form-action 'none'; frame-ancestors 'none'; object-src 'none'; upgrade-insecure-requests
   Cache-Control: public, max-age=0, must-revalidate
+
+# When You Free? (/when/) talks to the same Supabase project and uses the same optional
+# Google sign-in as Signature Studio, so it needs those hosts too. 'unsafe-inline' in
+# style-src is for Google's sign-in button, which styles itself inline (the page's own
+# code has no inline styles). No inline scripts. Unlike Signature Studio it shows no
+# outside images, and calendar files people check against are read in the page, never
+# fetched, so nothing else is allowed out.
+/when/*
+  ! Content-Security-Policy
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://accounts.google.com/gsi/client https://www.googletagmanager.com https://static.cloudflareinsights.com; connect-src 'self' https://cloudflareinsights.com https://rizgpvzmazuvidvbpkoa.supabase.co https://accounts.google.com/gsi/ https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com; frame-src https://accounts.google.com/gsi/; style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style; font-src 'self'; img-src 'self' data: https://*.google-analytics.com https://www.googletagmanager.com; base-uri 'self'; form-action 'none'; frame-ancestors 'none'; object-src 'none'; upgrade-insecure-requests
+  Cache-Control: public, max-age=0, must-revalidate

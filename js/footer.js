@@ -43,7 +43,7 @@
     gtag("consent", "default", { analytics_storage: "granted", ad_storage: "denied", ad_user_data: "denied", ad_personalization: "denied" });
     gtag("js", new Date());
     // Query strings are dropped (campaign utm_ tags kept) so private Signature Studio
-    // links (?p=...) never reach Google, from this page or as a referrer. "set" makes
+    // links (?p=...) and When You Free? poll links (?e=...) never reach Google, from this page or as a referrer. "set" makes
     // every event on the page use the cleaned addresses, not just the first page view.
     var utm = location.search.slice(1).split("&").filter(function (kv) { return /^utm_/.test(kv); }).join("&");
     gtag("set", {
