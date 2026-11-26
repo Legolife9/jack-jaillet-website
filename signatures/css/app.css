@@ -96,10 +96,16 @@ button.brand:hover{background:var(--panel2)}
 .tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--sel)}
 .section{padding:14px 14px 4px}
 .label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;margin:0 0 8px}
-.addgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+.addto{margin:-2px 0 12px;font-size:12px;line-height:1.45;color:var(--muted)}
+.addto b{color:var(--ink);font-weight:600}
+.addgrp+.addgrp{margin-top:10px}
+.addgl{display:block;font-size:12px;font-weight:600;color:var(--ink);margin:0 0 5px}
+.addtiles{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
 .addgrid button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 2px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);font-size:11px}
 .addgrid button:hover{border-color:var(--sel)}
 .addgrid svg{width:14px;height:14px;fill:currentColor;opacity:.8}
+.laysec{border-top:1px solid var(--line);margin-top:12px;padding-bottom:6px}
+.laysec .note{margin:-2px 0 0;font-size:12px}
 
 .blist{list-style:none;margin:0;padding:0 8px 10px;display:flex;flex-direction:column;gap:2px}
 .bitem{display:flex;align-items:center;gap:7px;padding:6px 8px;border-radius:8px;border:1px solid transparent;cursor:pointer;background:var(--panel);min-height:34px}
@@ -119,7 +125,17 @@ button.brand:hover{background:var(--panel2)}
 .bitem:hover .acts,.bitem.sel .acts,.bitem:focus-within .acts{display:flex}
 @media (hover:none){.bitem .acts{display:flex}}
 .emptycol{margin-left:36px;padding:6px 8px;border:1px dashed var(--line);border-radius:8px;font-size:12px;color:var(--muted)}
-.addrow{display:flex;gap:5px;flex-wrap:wrap;padding:6px 8px 16px}
+.bitem .nm small{display:block;font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis}
+.colsel{flex:none;max-width:104px;padding:3px 6px;border:1px solid var(--line);border-radius:6px;background:var(--panel);font-size:12px;cursor:pointer}
+.bitem.colh .ic,.bitem.divh .ic{width:18px;height:18px;background:none}
+.bitem.divh{padding-left:22px;font-size:12px;color:var(--muted);min-height:28px}
+.divadd{padding:1px 0 1px 22px}
+.divadd button{display:flex;align-items:center;gap:6px;width:100%;padding:4px 8px;border:1px dashed var(--line);border-radius:8px;background:none;color:var(--muted);font-size:12px;text-align:left}
+.divadd button:hover{border-color:var(--sel);color:var(--ink)}
+.divadd svg{width:10px;height:10px;fill:currentColor}
+.addrow{position:sticky;bottom:0;z-index:1;display:flex;align-items:center;gap:6px;padding:10px 12px;border-top:1px solid var(--line);background:var(--panel);font-size:12px;color:var(--muted)}
+.addrow select{flex:1;min-width:0;padding:5px 6px;border:1px solid var(--line);border-radius:6px;background:var(--panel2);font-size:12px;color:var(--ink)}
+.addrow .btn{flex:none;gap:5px}
 .iconbtn{width:24px;height:24px;display:grid;place-items:center;border:0;background:none;border-radius:5px;color:var(--muted)}
 .iconbtn:hover{background:var(--line);color:var(--ink)}
 .iconbtn svg{width:12px;height:12px;fill:currentColor}
@@ -158,6 +174,8 @@ button.brand:hover{background:var(--panel2)}
 .sigwrap [data-bid]:hover{outline:1px dashed rgba(36,83,230,.55);outline-offset:1px}
 .sigwrap [data-bid].on,.sigwrap [data-cid].on{outline:2px solid var(--sel);outline-offset:1px}
 .sigwrap [data-rid].on{outline:2px dashed var(--sel);outline-offset:2px}
+.sigwrap [data-did],.sigwrap [data-dhit]{cursor:pointer}
+.sigwrap [data-did].on{outline:2px solid var(--sel);outline-offset:2px}
 .meter{font-family:var(--mono);font-size:12px;color:var(--muted)}
 .checks{width:100%;max-width:760px;display:flex;flex-direction:column;gap:6px}
 .chkline{display:flex;gap:8px;align-items:flex-start;border-radius:8px;padding:7px 10px;font-size:12.5px;background:var(--panel);border:1px solid var(--line)}

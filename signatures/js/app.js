@@ -579,6 +579,11 @@ function buttonCell(b, ctx){
   return `<table ${T0} style="border-collapse:separate;display:inline-table"><tr><td bgcolor="${b.bg}" style="background:${b.bg};${bord}border-radius:${b.radius}px">${a}</td></tr></table>`;
 }
 const pv = (ctx, k, id) => ctx.mode === 'preview' ? ` data-${k}="${id}"` : '';
+// numbers from saved, shared or imported signatures go into inline styles, so they must really be numbers
+const N0 = v => Math.round(+v || 0);
+const LSTYLE_OK = new Set(['solid', 'dashed', 'dotted', 'double']);
+// a row's lines share one look; each gap (before column i) can have its line switched off
+const lineOn = (r, i) => r.divW > 0 && !(r.divHide && r.divHide[i]);
 function renderColumn(blocks, ctx){
   const rows = [];
   for (let i = 0; i < blocks.length; i++){
@@ -623,8 +628,17 @@ function render(st, mode, pid){
     let any = false;
     r.cols.forEach((c, i) => {
       if (i){
-        const g = Math.max(r.gap, 0), h1 = Math.floor(g / 2), h2 = g - h1, sp = w => `<td width="${w}" style="width:${w}px;font-size:0;line-height:0">&nbsp;</td>`;
-        cells.push(r.divW ? (h1 ? sp(h1) : '') + `<td width="1" style="width:1px;border-left:${r.divW}px ${r.divS} ${r.divC};font-size:0;line-height:0">&nbsp;</td>` + (h2 ? sp(h2) : '') : g ? sp(g) : '');
+        // the space on each side of the line is clickable in the preview too, since the line itself is only a pixel or two wide
+        const did = `dv:${r.id}:${i}`, hit = pv(ctx, 'dhit', did);
+        const g = Math.max(N0(r.gap), 0), sp = (w, h = '') => `<td${h} width="${w}" style="width:${w}px;font-size:0;line-height:0">&nbsp;</td>`;
+        if (lineOn(r, i)){
+          const L = r.divL ?? Math.floor(g / 2), R = r.divR ?? g - Math.floor(g / 2), H = N0(r.divH);
+          const ln = `border-left:${Math.max(1, N0(r.divW))}px ${LSTYLE_OK.has(r.divS) ? r.divS : 'solid'} ${r.divC}`;
+          // a fixed length is its own small cell (Outlook ignores borders on divs), lined up like the columns
+          const line = H ? `<td${pv(ctx, 'did', did)} valign="${r.valign}" style="vertical-align:${r.valign};font-size:0;line-height:0"><table ${T0}><tr><td width="1" height="${H}" style="width:1px;height:${H}px;${ln};font-size:0;line-height:0">&nbsp;</td></tr></table></td>`
+            : `<td${pv(ctx, 'did', did)} width="1" style="width:1px;${ln};font-size:0;line-height:0">&nbsp;</td>`;
+          cells.push((N0(L) ? sp(N0(L), hit) : '') + line + (N0(R) ? sp(N0(R), hit) : ''));
+        } else if (g) cells.push(sp(g, hit));
       }
       let inner = renderColumn(c.blocks, ctx);
       if (inner) any = true;
@@ -665,6 +679,32 @@ function find(id){
     }
   }
   return null;
+}
+// a line between columns is selected as "dv:<row id>:<index of the column to its right>"
+function findDiv(id){
+  const m = /^dv:(.+):(\d+)$/.exec(id || ''); if (!m) return null;
+  const r = state.rows.find(x => x.id === m[1]), i = +m[2];
+  return r && i >= 1 && i < r.cols.length ? { r, i } : null;
+}
+const exists = id => id === 'style' || !!find(id) || !!findDiv(id);
+function setLine(r, i, on){
+  const hide = Object.assign({}, r.divHide);
+  if (on){
+    // the first line in a row turns on just that one; later ones join the row's shared look
+    if (!(r.divW > 0)){ r.divW = 1; Object.keys(hide).forEach(k => delete hide[k]); for (let k = 1; k < r.cols.length; k++) if (k !== i) hide[k] = true; }
+    else delete hide[i];
+  } else {
+    hide[i] = true;
+    let any = false; for (let k = 1; k < r.cols.length; k++) if (!hide[k]) any = true;
+    if (!any){ r.divW = 0; Object.keys(hide).forEach(k => delete hide[k]); }
+  }
+  r.divHide = hide;
+}
+function setCols(r, n){
+  const before = r.cols.length, moved = r.cols.slice(n).some(c => c.blocks.length);
+  while (r.cols.length < n) r.cols.push(mkCol([]));
+  while (r.cols.length > n) removeCol(r, r.cols[r.cols.length - 1]);
+  if (moved) toast(`Blocks from the removed column${before - n > 1 ? 's' : ''} moved into ${colLabel(r, r.cols[n - 1])}.`, UNDO);
 }
 const allCols = () => state.rows.flatMap(r => r.cols.map(c => ({ r, c })));
 const rowName = r => r.label || `Row ${state.rows.indexOf(r) + 1}`;
@@ -717,7 +757,7 @@ async function closeEditor(){
 }
 function undo(){ clearTimeout(histT); const cur = snapshot(); if (cur !== lastSnap) past.push(lastSnap); if (!past.length) return; future.push(cur); state = JSON.parse(past.pop()); lastSnap = snapshot(); afterHistory(); }
 function redo(){ if (!future.length) return; past.push(snapshot()); state = JSON.parse(future.pop()); lastSnap = snapshot(); afterHistory(); }
-function afterHistory(){ if (sel !== 'style' && !find(sel)) sel = 'style'; renderAll(); queueSave(); }
+function afterHistory(){ if (!exists(sel)) sel = 'style'; renderAll(); queueSave(); }
 function updateHead(){
   if (!state) return;
   const s = $('#savestate');
@@ -836,7 +876,7 @@ function noteBroken(src){
   box.insertAdjacentHTML('afterbegin', `<div class="chkline warn" data-broken="${esc(src)}"><span class="dot"></span><span>An image link didn't load: <code>${esc(short)}</code>. Check the address, and that the image is public (not behind a login).</span></div>`);
   box.querySelectorAll('.chkline.ok').forEach(x => x.remove());
 }
-function markSel(){ document.querySelectorAll('#sig [data-bid],#sig [data-cid],#sig [data-rid]').forEach(el => el.classList.toggle('on', (el.dataset.bid || el.dataset.cid || el.dataset.rid) === sel)); }
+function markSel(){ document.querySelectorAll('#sig [data-bid],#sig [data-cid],#sig [data-rid],#sig [data-did]').forEach(el => el.classList.toggle('on', (el.dataset.bid || el.dataset.cid || el.dataset.rid || el.dataset.did) === sel)); }
 // double-click text in the preview to jump straight to editing it
 $('#sig').addEventListener('dblclick', e => {
   const el = e.target.closest('[data-bid]'); if (!el) return;
@@ -849,8 +889,8 @@ $('#sig').addEventListener('click', e => {
   e.preventDefault();
   if (step !== 'design') return;
   if (colDragged){ colDragged = false; return; } // the end of a column drag isn't a click
-  const el = e.target.closest('[data-bid],[data-cid]');
-  select(el ? (el.dataset.bid || el.dataset.cid) : 'style');
+  const el = e.target.closest('[data-bid],[data-cid],[data-did],[data-dhit]');
+  select(el ? (el.dataset.bid || el.dataset.cid || el.dataset.did || el.dataset.dhit) : 'style');
   toInspector();
 });
 // drag a column's right edge in the preview to make it wider or narrower
@@ -894,7 +934,7 @@ $('#pv-person').onchange = e => { state.team.active = e.target.value; changed({ 
 
 
 /* ---------- layers ---------- */
-const GLYPH = { text:'fas:font', image:'fas:image', divider:'fas:minus', spacer:'fas:arrows-up-down', contact:'fas:address-card', social:'fas:share-nodes', button:'fas:hand-pointer', html:'fas:code', style:'fas:sliders', row:'fas:table-columns', col:'fas:table-cells-large', icon:'fas:star' };
+const GLYPH = { text:'fas:font', image:'fas:image', divider:'fas:minus', spacer:'fas:arrows-up-down', contact:'fas:address-card', social:'fas:share-nodes', button:'fas:hand-pointer', html:'fas:code', style:'fas:sliders', row:'fas:table-columns', col:'fas:table-cells-large', icon:'fas:star', vline:'fas:grip-lines-vertical' };
 const glyph = t => { const [s, n] = GLYPH[t].split(':'); return G(s, n); };
 const ADD = [
   ['Name', 'text', () => mk('text', { label:'Name', text:'{{name}}', size:18, weight:700, pb:2 })],
@@ -913,7 +953,30 @@ const ADD = [
   ['Fine print', 'text', () => mk('text', { label:'Disclaimer', text:'Confidentiality notice…', size:10, color:'#98a2b3' })],
   ['HTML', 'html', () => mk('html')]
 ];
-$('#addgrid').innerHTML = ADD.map(([n, t], i) => `<button data-add="${i}" title="Add ${n}">${glyph(t)}<span>${n}</span></button>`).join('');
+// grouped by what they're for, with a plain-words tooltip each
+const ADDGROUPS = [
+  ['Text', [['Name', 'Your name, large and bold'], ['Text', 'A line of text, like a job title'], ['Pronouns', 'Pronouns in small italics'], ['Fine print', 'A small disclaimer or notice']]],
+  ['Pictures', [['Photo', 'A headshot, cropped to a circle'], ['Logo', 'A company logo'], ['Banner', 'A wide image, like a promo banner']]],
+  ['Contact & links', [['Contact', 'Phone, email, website and address, with icons'], ['Icons', 'A row of social media icons'], ['Icon', 'One icon on its own'], ['Button', 'A button that opens a link']]],
+  ['Layout & more', [['Line', 'A horizontal line inside a column. For a line between columns, use "Add a line" in the list below'], ['Space', 'Empty space between blocks'], ['HTML', 'Your own HTML, for experts']]]
+];
+$('#addgrid').innerHTML = ADDGROUPS.map(([g, items]) => `<div class="addgrp"><span class="addgl">${g}</span><div class="addtiles">${items.map(([n, tip]) => {
+  const i = ADD.findIndex(a => a[0] === n);
+  return `<button type="button" data-add="${i}" title="${esc(tip)}">${glyph(ADD[i][1])}<span>${n}</span></button>`; }).join('')}</div></div>`).join('');
+// where a new block goes: after the selected block, at the end of the selected column, or into the last row
+function addTarget(){
+  const dv = findDiv(sel); if (dv) return { r:dv.r, c:dv.r.cols[dv.i] };
+  const f = find(sel);
+  if (f && f.kind === 'block') return { r:f.r, c:f.c, after:f.b };
+  if (f && f.kind === 'col') return { r:f.r, c:f.c };
+  if (f && f.kind === 'row') return { r:f.r, c:f.r.cols[0] };
+  const r = state.rows[state.rows.length - 1];
+  return r ? { r, c:r.cols[0] } : null;
+}
+function renderAddTo(){
+  const t = addTarget(), n = $('#addto'); if (!n) return;
+  n.innerHTML = t ? `Goes into <b>${esc(colName(t.r, t.c))}</b>${t.after ? `, below <b>${esc(blockName(t.after).slice(0, 40))}</b>` : ', at the bottom'}. Select a row, column or block to change where.` : 'Goes into a new row.';
+}
 $('#addgrid').onclick = e => {
   const btn = e.target.closest('[data-add]'); if (!btn) return;
   const b = ADD[+btn.dataset.add][2]();
@@ -925,20 +988,19 @@ $('#addgrid').onclick = e => {
     if (b.text) b.text = fix(b.text);
     (b.items || []).forEach(it => { it.text = fix(it.text); it.link = fix(it.link); });
   }
-  const f = find(sel);
-  if (f && f.kind === 'block') f.c.blocks.splice(f.i + 1, 0, b);
-  else if (f && f.kind === 'col') f.c.blocks.push(b);
-  else if (f && f.kind === 'row') f.r.cols[0].blocks.push(b);
-  else { if (!state.rows.length) state.rows.push(mkRow([[]])); state.rows[state.rows.length - 1].cols[0].blocks.push(b); }
+  let t = addTarget();
+  if (!t){ state.rows.push(mkRow([[]])); t = addTarget(); }
+  if (t.after) t.c.blocks.splice(t.c.blocks.indexOf(t.after) + 1, 0, b); else t.c.blocks.push(b);
   sel = b.id; changed({ list:true, insp:true });
 };
-$('#addrow').innerHTML = `<span class="note" style="width:100%">Add a row</span>` + [1, 2, 3, 4].map(n => `<button class="btn sm" data-cols="${n}">${n} column${n > 1 ? 's' : ''}</button>`).join('');
-$('#addrow').onclick = e => {
-  const b = e.target.closest('[data-cols]'); if (!b) return;
-  const n = +b.dataset.cols, r = mkRow(Array.from({ length:n }, () => []));
+const COLOPTS = [1, 2, 3, 4, 5].map(n => [n, n === 1 ? '1 column' : `${n} columns`]);
+$('#addrow').innerHTML = `<label for="newcols">New row with</label><select id="newcols">${COLOPTS.map(([v, l]) => `<option value="${v}">${l}</option>`).join('')}</select><button type="button" class="btn sm" id="addrowbtn">${G('fas', 'plus')}Add row</button>`;
+$('#addrowbtn').onclick = () => {
+  const n = +$('#newcols').value, r = mkRow(Array.from({ length:n }, () => []));
   sc(r, SHRINK.row, SCALE);
-  const f = find(sel), at = f && f.r ? state.rows.indexOf(f.r) + 1 : state.rows.length;
+  const f = find(sel) || findDiv(sel), at = f && f.r ? state.rows.indexOf(f.r) + 1 : state.rows.length;
   state.rows.splice(at, 0, r); sel = r.id; changed({ list:true, insp:true });
+  const li = $(`#blist [data-id="${r.id}"]`); if (li) li.scrollIntoView({ block:'nearest' });
 };
 function blockName(b){
   if (b.inline) return '↔ ' + blockName(Object.assign({}, b, { inline:false }));
@@ -950,20 +1012,29 @@ function blockName(b){
 const ACTS = { ren:['fas:pen','Rename'], up:['fas:arrow-up','Move up'], down:['fas:arrow-down','Move down'], left:['fas:arrow-left','Move left'], right:['fas:arrow-right','Move right'], dup:['far:copy','Duplicate'], del:['far:trash-can','Delete'] };
 const acts = keys => `<span class="acts">${keys.map(k => { const [g, t] = ACTS[k], [s, n] = g.split(':'); return `<button class="iconbtn" data-act="${k}" title="${t}" aria-label="${t}">${G(s, n)}</button>`; }).join('')}</span>`;
 let dragId = null;
+function divItem(r, i){
+  const id = `dv:${r.id}:${i}`;
+  if (lineOn(r, i)) return `<li class="bitem divh${sel === id ? ' sel' : ''}" data-id="${id}"><span class="ic">${glyph('vline')}</span><span class="nm">Line between columns</span>${acts(['del'])}</li>`;
+  return `<li class="divadd"><button type="button" data-addline="${id}" title="Draw a vertical line between ${esc(colLabel(r, r.cols[i - 1]))} and ${esc(colLabel(r, r.cols[i]))}">${G('fas', 'plus')}Add a line between columns</button></li>`;
+}
 function renderList(){
-  let h = `<li class="bitem${sel === 'style' ? ' sel' : ''}" data-id="style"><span class="ic">${glyph('style')}</span><span class="nm"><b>Signature style</b></span></li>`;
+  renderAddTo();
+  let h = `<li class="bitem${sel === 'style' ? ' sel' : ''}" data-id="style"><span class="ic">${glyph('style')}</span><span class="nm"><b>Signature style</b><small>Colors, font, background and border</small></span></li>`;
   state.rows.forEach((r, ri) => {
-    h += `<li class="bitem rowh${sel === r.id ? ' sel' : ''}" data-id="${r.id}"><span class="ic">${glyph('row')}</span><span class="nm"><b>${esc(rowName(r))}</b> · ${r.cols.length} column${r.cols.length > 1 ? 's' : ''}</span>${acts(['ren','up','down','dup','del'])}</li>`;
-    const multi = r.cols.length > 1;
+    const n = r.cols.length;
+    h += `<li class="bitem rowh${sel === r.id ? ' sel' : ''}" data-id="${r.id}"><span class="ic">${glyph('row')}</span><span class="nm"><b>${esc(rowName(r))}</b></span>` +
+      `<select class="colsel" data-row="${r.id}" aria-label="Columns in ${esc(rowName(r))}" title="How many columns sit side by side in this row">${COLOPTS.map(([v, l]) => `<option value="${v}"${v === n ? ' selected' : ''}>${l}</option>`).join('')}</select>${acts(['up','down','dup','del'])}</li>`;
+    const multi = n > 1;
     r.cols.forEach((c, ci) => {
-      if (multi) h += `<li class="bitem colh${sel === c.id ? ' sel' : ''}" data-id="${c.id}" data-drop="${c.id}"><span class="nm">${esc(colLabel(r, c))}${c.width ? ` · ${c.width}px` : ''}</span>${acts(['ren','left','right','del'])}</li>`;
+      if (ci) h += divItem(r, ci);
+      if (multi) h += `<li class="bitem colh${sel === c.id ? ' sel' : ''}" data-id="${c.id}" data-drop="${c.id}"><span class="ic">${glyph('col')}</span><span class="nm">${esc(colLabel(r, c))}${c.width ? ` · ${c.width}px` : ''}</span>${acts(['ren','left','right','del'])}</li>`;
       c.blocks.forEach(b => {
         h += `<li class="bitem blk${multi ? ' in' : ''}${sel === b.id ? ' sel' : ''}" data-id="${b.id}" draggable="true"><span class="ic">${glyph(b.type)}</span><span class="nm">${esc(blockName(b))}</span>${acts(['up','down','dup','del'])}</li>`;
       });
-      if (!c.blocks.length) h += `<li class="emptycol" data-drop="${c.id}" style="${multi ? '' : 'margin-left:22px'}">Empty. Select it and add a block, or drag one here.</li>`;
+      if (!c.blocks.length) h += `<li class="emptycol" data-drop="${c.id}" style="${multi ? '' : 'margin-left:22px'}">Empty. Click here, then pick a block above, or drag one here.</li>`;
     });
   });
-  if (!state.rows.length) h += `<li class="empty" style="margin:6px">No rows yet. Add one below.</li>`;
+  if (!state.rows.length) h += `<li class="empty" style="margin:6px">No rows yet. Add one with the button at the bottom.</li>`;
   $('#blist').innerHTML = h;
 }
 function moveBlock(f, dir){
@@ -975,14 +1046,9 @@ function moveBlock(f, dir){
   if (dir < 0) to.c.blocks.push(f.b); else to.c.blocks.unshift(f.b);
 }
 function colCount(r, label){
-  const nc = { n:r.cols.length };
-  const cnt = segs(nc, 'n', label, [[1,'1'],[2,'2'],[3,'3'],[4,'4']]);
-  cnt.querySelector('.seg').addEventListener('click', () => {
-    while (r.cols.length < nc.n) r.cols.push(mkCol([]));
-    while (r.cols.length > nc.n) removeCol(r, r.cols[r.cols.length - 1]);
-    changed({ list:true, insp:true });
-  });
-  return cnt;
+  const f = field(label, el(`<select>${COLOPTS.map(([v, l]) => `<option value="${v}"${v === r.cols.length ? ' selected' : ''}>${l}</option>`).join('')}</select>`));
+  f.querySelector('select').onchange = e => { setCols(r, +e.target.value); changed({ list:true, insp:true }); };
+  return f;
 }
 function removeCol(r, c){
   const i = r.cols.indexOf(c);
@@ -992,11 +1058,21 @@ function removeCol(r, c){
   r.cols.splice(i, 1);
 }
 function freshIds(o){ o.id = uid(); (o.cols || []).forEach(freshIds); (o.blocks || []).forEach(freshIds); return o; }
+$('#blist').addEventListener('change', e => {
+  const s = e.target.closest('.colsel'); if (!s) return;
+  const f = find(s.dataset.row); if (!f) return;
+  setCols(f.r, +s.value); changed({ list:true, insp:true });
+});
 $('#blist').addEventListener('click', e => {
+  if (e.target.closest('.colsel')) return; // the columns menu works on its own and doesn't change the selection
+  const add = e.target.closest('[data-addline]');
+  if (add){ const d = findDiv(add.dataset.addline); if (d){ setLine(d.r, d.i, true); sel = add.dataset.addline; changed({ list:true, insp:true }); markSel(); toInspector(); } return; }
   const li = e.target.closest('[data-id]');
   if (!li){ const d = e.target.closest('[data-drop]'); if (d) select(d.dataset.drop); return; }
   const act = e.target.closest('[data-act]');
   if (!act){ select(li.dataset.id); toInspector(); return; }
+  const dv = findDiv(li.dataset.id);
+  if (dv){ setLine(dv.r, dv.i, false); sel = dv.r.id; toast('Line removed.', UNDO); changed({ list:true, insp:true }); return; }
   const f = find(li.dataset.id), k = act.dataset.act;
   if (k === 'ren'){ renameLayer(li.dataset.id); return; }
   if (f.kind === 'row'){
@@ -1018,7 +1094,7 @@ $('#blist').addEventListener('click', e => {
   changed({ list:true, insp:true });
 });
 function renameLayer(id){ select(id); toInspector(); const n = $('#layername'); if (n){ n.focus(); n.select(); } }
-$('#blist').addEventListener('dblclick', e => { const li = e.target.closest('.rowh,.colh'); if (li && !e.target.closest('[data-act]')) renameLayer(li.dataset.id); });
+$('#blist').addEventListener('dblclick', e => { const li = e.target.closest('.rowh,.colh'); if (li && !e.target.closest('[data-act],.colsel')) renameLayer(li.dataset.id); });
 const BL = $('#blist');
 BL.addEventListener('dragstart', e => { const li = e.target.closest('.blk'); if (!li) return; dragId = li.dataset.id; li.classList.add('drag'); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', dragId); });
 BL.addEventListener('dragover', e => {
@@ -1364,6 +1440,20 @@ function styleToggles(b){
   w.append(bold, chk(b, 'italic', 'Italic'), chk(b, 'upper', 'All caps'));
   return w;
 }
+const VALIGN = [['top','Top'],['middle','Middle'],['bottom','Bottom']];
+function lineCount(r){ let n = 0; for (let i = 1; i < r.cols.length; i++) if (lineOn(r, i)) n++; return n; }
+// the look of a row's lines; every line in the row shares it
+function lineFields(r, shared){
+  const g = Math.max(N0(r.gap), 0);
+  if (r.divL == null) r.divL = Math.floor(g / 2);
+  if (r.divR == null) r.divR = g - Math.floor(g / 2);
+  if (!LSTYLE_OK.has(r.divS)) r.divS = 'solid';
+  return [
+    grp(shared ? 'Look (every line in this row)' : 'Look', color(r, 'divC', 'Color'), row(num(r, 'divW', 'Thickness', 1, 8), sel_(r, 'divS', 'Style', LSTYLES))),
+    grp('Size & spacing', row(num(r, 'divH', 'Length (0 = full height)', 0, 200), sel_(r, 'valign', 'Line up', VALIGN)),
+      row(num(r, 'divL', 'Space on the left', 0, 60), num(r, 'divR', 'Space on the right', 0, 60)))
+  ];
+}
 function renderInspector(){
   const Pn = $('#insp'); Pn.innerHTML = ''; fid = 0; lastText = null;
   if (sel === 'style'){
@@ -1381,17 +1471,31 @@ function renderInspector(){
     );
     return;
   }
-  const f = find(sel); if (!f){ sel = 'style'; return renderInspector(); }
+  const dv = findDiv(sel), f = dv ? null : find(sel);
+  if (!dv && !f){ sel = 'style'; return renderInspector(); }
   const head = (title, sub) => { const h = el(`<div style="display:flex;align-items:center;gap:8px"><h3 style="flex:1">${esc(title)}</h3><button type="button" class="btn sm ghost">Done</button></div>`); h.querySelector('button').onclick = () => select('style'); Pn.appendChild(h); if (sub) Pn.appendChild(note(esc(sub))); };
+  if (dv){
+    const { r, i } = dv, on = lineOn(r, i), shown = lineCount(r);
+    head('Line between columns', `The vertical line between ${colLabel(r, r.cols[i - 1])} and ${colLabel(r, r.cols[i])} in ${rowName(r)}.`);
+    const t = { on }, sw = chk(t, 'on', 'Show this line');
+    sw.querySelector('input').onchange = e => { setLine(r, i, e.target.checked); changed({ list:true, insp:true }); markSel(); };
+    Pn.appendChild(grp('Line', sw, on ? null : note(`Without a line, these columns are ${Math.max(N0(r.gap), 0)}px apart. Change that in the ${esc(rowName(r))} settings.`)));
+    if (on) lineFields(r, r.cols.length > 2 && shown > 1).forEach(g => Pn.appendChild(g));
+    const back = el(`<button type="button" class="btn sm ghost">${esc(rowName(r))} settings</button>`); back.onclick = () => select(r.id);
+    Pn.appendChild(back);
+    return;
+  }
   if (f.kind === 'row'){
-    const r = f.r, ri = state.rows.indexOf(r) + 1;
-    head(rowName(r), 'A row holds side-by-side columns. Stack rows to build any layout.');
+    const r = f.r, ri = state.rows.indexOf(r) + 1, multi = r.cols.length > 1;
+    head(rowName(r), 'A row holds columns that sit side by side. Stack rows to build any layout.');
     Pn.appendChild(nameField(r, `Row ${ri}`));
-    const cnt = colCount(r, 'Columns');
-    [grp('Columns', cnt, r.cols.length > 1 ? [row(num(r, 'gap', 'Gap between', 0, 60), sel_(r, 'valign', 'Line up', [['top','Top'],['middle','Middle'],['bottom','Bottom']]))] : null,
-        r.cols.map((c, i) => num(c, 'width', `Column ${i + 1} width (0 = auto)`, 0, COLMAX, 2, { list:true })),
+    const lines = { on:lineCount(r) > 0 }, tg = chk(lines, 'on', 'Draw lines between columns');
+    tg.querySelector('input').onchange = e => { r.divW = e.target.checked ? Math.max(1, N0(r.divW)) : 0; r.divHide = {}; changed({ list:true, insp:true }); };
+    [grp('Columns', colCount(r, 'Number of columns'), multi ? [row(num(r, 'gap', 'Space between', 0, 60), sel_(r, 'valign', 'Line up', VALIGN))] : null,
+        r.cols.map((c, i) => num(c, 'width', `${colLabel(r, c)} width (0 = auto)`, 0, COLMAX, 2, { list:true })),
         chk(r, 'full', 'Stretch row to full signature width')),
-      r.cols.length > 1 ? grp('Divider between columns', row(num(r, 'divW', 'Thickness (0 = none)', 0, 8), sel_(r, 'divS', 'Style', LSTYLES)), color(r, 'divC', 'Color')) : null,
+      multi ? grp('Lines between columns', tg, lines.on ? note('To hide a single line, click it in the list on the left or in the preview.') : null) : null,
+      ...(multi && lines.on ? lineFields(r, r.cols.length > 2) : []),
       grp('Spacing', row(num(r, 'pt', 'Space above', 0, 60), num(r, 'pb', 'Space below', 0, 60)))].filter(Boolean).forEach(g => Pn.appendChild(g));
     return;
   }
@@ -1416,7 +1520,7 @@ function renderInspector(){
     segs(b, 'align', 'Alignment', ALIGN), row(num(b, 'pt', 'Space above', -20, 60), num(b, 'pb', 'Space below', -20, 60))
   ];
   place.push(colCount(f.r, 'Columns in this row'));
-  if (f.i > 0 && f.r.cols.length < 4){
+  if (f.i > 0 && f.r.cols.length < 5){
     const sp = el('<button type="button" class="btn sm">Move this and the blocks below into a new column</button>');
     sp.onclick = () => { const moved = f.c.blocks.splice(f.i); moved[0].inline = false; f.r.cols.splice(f.r.cols.indexOf(f.c) + 1, 0, mkCol(moved)); changed({ list:true, insp:true }); };
     place.push(sp);
@@ -2481,7 +2585,7 @@ addEventListener('storage', e => {
   if (user || (e.key !== LIBKEY && e.key !== COKEY)) return;
   templates = loadList(LIBKEY).sort((a, b) => b.updatedAt - a.updatedAt); companies = loadList(COKEY);
   const mine = view === 'editor' && sigId && templates.find(t => t.id === sigId);
-  if (mine && saveStatus === 'saved' && !saving){ const remote = migrate(mine.state); if (canon(remote) !== canon(state)){ state = remote; lastSnap = snapshot(); if (sel !== 'style' && !find(sel)) sel = 'style'; renderAll(); toast('Updated with changes from another tab.'); } }
+  if (mine && saveStatus === 'saved' && !saving){ const remote = migrate(mine.state); if (canon(remote) !== canon(state)){ state = remote; lastSnap = snapshot(); if (!exists(sel)) sel = 'style'; renderAll(); toast('Updated with changes from another tab.'); } }
   renderHome(); renderCompanySelect();
 });
 /* ---------- keyboard ---------- */
