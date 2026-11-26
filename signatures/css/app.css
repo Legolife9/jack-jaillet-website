@@ -134,7 +134,8 @@ button.brand:hover{background:var(--panel2)}
 .divadd button:hover{border-color:var(--sel);color:var(--ink)}
 .divadd svg{width:10px;height:10px;fill:currentColor}
 .addrow{position:sticky;bottom:0;z-index:1;display:flex;align-items:center;gap:6px;padding:10px 12px;border-top:1px solid var(--line);background:var(--panel);font-size:12px;color:var(--muted)}
-.addrow select{flex:1;min-width:0;padding:5px 6px;border:1px solid var(--line);border-radius:6px;background:var(--panel2);font-size:12px;color:var(--ink)}
+.addrow label{white-space:nowrap}
+.addrow select{flex:1;min-width:96px;padding:5px 6px;border:1px solid var(--line);border-radius:6px;background:var(--panel2);font-size:12px;color:var(--ink)}
 .addrow .btn{flex:none;gap:5px}
 .iconbtn{width:24px;height:24px;display:grid;place-items:center;border:0;background:none;border-radius:5px;color:var(--muted)}
 .iconbtn:hover{background:var(--line);color:var(--ink)}
@@ -190,6 +191,22 @@ button.brand:hover{background:var(--panel2)}
 .insp h3{margin:0;font-size:15px}
 .grp{border-top:1px solid var(--line);padding-top:12px;display:flex;flex-direction:column;gap:10px}
 .grp>.label{margin:0}
+.ghead{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;margin:-4px 0 -2px;padding:4px 0;border:0;background:none;text-align:left;cursor:pointer}
+.ghead .label{margin:0}
+.ghead svg{width:10px;height:10px;fill:var(--muted);transition:transform .15s}
+.ghead:hover .label,.ghead:hover svg{color:var(--ink);fill:var(--ink)}
+.grp.closed{padding-bottom:2px}
+.grp.closed>:not(.ghead){display:none}
+.grp.closed .ghead svg{transform:rotate(-90deg)}
+@media (prefers-reduced-motion:reduce){.ghead svg{transition:none}}
+.grp .sub{display:flex;flex-direction:column;gap:10px}
+.grp .sub[hidden]{display:none}
+.help{display:inline-grid;place-items:center;width:15px;height:15px;margin-left:5px;padding:0;border:1px solid var(--line);border-radius:50%;background:var(--panel2);color:var(--muted);font-size:10px;font-weight:600;line-height:1;vertical-align:1px;cursor:help;flex:none}
+.help:hover,.help[aria-expanded="true"]{border-color:var(--sel);color:var(--ink)}
+.help:focus-visible{outline:2px solid var(--sel);outline-offset:1px}
+.helptip{position:fixed;z-index:1000;max-width:260px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);font-size:12px;line-height:1.45;box-shadow:0 6px 24px rgba(0,0,0,.18);pointer-events:none}
+.helptip[hidden]{display:none}
+@media (pointer:coarse){.help{width:22px;height:22px;font-size:12px}}
 .field{display:flex;flex-direction:column;gap:4px;min-width:0}
 .field>span{font-size:12px;color:var(--muted)}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}

@@ -994,7 +994,7 @@ $('#addgrid').onclick = e => {
   sel = b.id; changed({ list:true, insp:true });
 };
 const COLOPTS = [1, 2, 3, 4, 5].map(n => [n, n === 1 ? '1 column' : `${n} columns`]);
-$('#addrow').innerHTML = `<label for="newcols">New row with</label><select id="newcols">${COLOPTS.map(([v, l]) => `<option value="${v}">${l}</option>`).join('')}</select><button type="button" class="btn sm" id="addrowbtn">${G('fas', 'plus')}Add row</button>`;
+$('#addrow').innerHTML = `<label for="newcols">New row</label><select id="newcols">${COLOPTS.map(([v, l]) => `<option value="${v}">${l}</option>`).join('')}</select><button type="button" class="btn sm" id="addrowbtn">${G('fas', 'plus')}Add row</button>`;
 $('#addrowbtn').onclick = () => {
   const n = +$('#newcols').value, r = mkRow(Array.from({ length:n }, () => []));
   sc(r, SHRINK.row, SCALE);
@@ -1123,8 +1123,139 @@ function select(id){
 /* ---------- inspector field builders ---------- */
 function el(html){ const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstElementChild; }
 let fid = 0, lastText = null;
+// what each setting does, in plain words; shown from the ? beside its name
+const LINK_TIP = 'Makes it clickable. Type a web address, an email address (opens a new email to it) or a phone number (calls it).';
+const PAD_TIP = 'Space inside, between the edge and what\'s in it, in pixels.';
+const HELP = {
+  // text
+  'Text':'The words that show. Fields like {{name}} fill in each person\'s details from the People step. For bold type **like this**, for italic *like this*, and for a link [the words](https://…).',
+  'Pronouns or credentials':'Small text right next to the line, like she/her or MBA. Leave it empty for none.',
+  'Side':'Whether the pronouns or credentials sit before or after the text.',
+  'Pronoun color':'Color of the pronouns or credentials. Tick "Same as the text" to match the line they\'re on.',
+  'Italic pronouns':'Slants the pronouns or credentials, which sets them apart from the text.',
+  'Link the whole line':LINK_TIP,
+  'Size':'Text size in pixels. Around 13 is normal reading size; 16 to 20 suits a name.',
+  'Weight':'How thick the letters are. Bold works for names; regular for most other text.',
+  'Color':'Pick any color, or click one of the swatches to use a brand color. A brand color updates everywhere when you change it in Signature style.',
+  'Font':'"Same as signature" uses the font set in Signature style. Pick another only for this block.',
+  'Letter spacing':'Extra space between letters, in pixels. A little helps text in capitals look neater.',
+  'Line height':'Space between lines of text, as a multiple of the text size. 1.4 is comfortable; lower numbers pack lines closer.',
+  // position & spacing
+  'Place it':'"Below" puts this block under the one above it. "Next to" puts the two side by side on the same line.',
+  'Space between them':'Pixels between this block and the one it sits next to.',
+  'Move to column':'Moves this block to the bottom of another column or row.',
+  'Alignment':'Lines this block up with the left edge, center or right edge of its column.',
+  'Space above':'Empty space above it, in pixels. On a block, a negative number pulls it closer to the block above.',
+  'Space below':'Empty space below it, in pixels. On a block, a negative number pulls the next block closer.',
+  'Columns in this row':'How many columns sit side by side in this row. Removing a column moves its blocks into the one next to it.',
+  'Number of columns':'How many columns sit side by side in this row. Removing a column moves its blocks into the one next to it.',
+  'Line up side-by-side blocks':'When blocks next to each other are different heights, this lines them up at the top, middle or bottom.',
+  'Layer name':'A name just for you, so you can tell parts apart in the list on the left. It never shows in the signature.',
+  'Name':'A name just for you, shown in the list on the left. It never shows in the signature.',
+  // images
+  'Image comes from':'"One link for everyone" shows the same picture in every copy. "Each person\'s link" shows each person\'s own picture, from their card in the People step.',
+  'Image link':'The web address of the picture, usually ending in .png or .jpg. It has to be public, because each email app loads it from there. Nothing is uploaded here.',
+  'Person field':'Which box on each person\'s card holds their picture link.',
+  'Shape':'The outline of the picture. A circle suits headshots; square or rounded suits logos.',
+  'Width (px)':'How wide the picture shows, in pixels. The height follows from the crop.',
+  'Crop to':'Trims the picture to a shape, like square or wide. "Original" keeps it as it is. Drag the preview below to choose which part shows.',
+  'Corner radius':'How rounded the corners are, in pixels. 0 gives square corners.',
+  'Alt text':'A short description of the picture. It shows if the picture can\'t load, and screen readers read it aloud.',
+  'Link':LINK_TIP,
+  'Border thickness':'How thick the outline is, in pixels. 0 means no outline.',
+  'Border color':'Color of the outline.',
+  'Border style':'Whether the outline is solid, dashed, dotted or a double line.',
+  // lines, space
+  'Thickness':'How thick the line is, in pixels.',
+  'Style':'Whether the line is solid, dashed, dotted or double.',
+  'Length (%)':'How far the line reaches across its column. 100% is the full width.',
+  'Height':'How much empty space, in pixels.',
+  // contact & icons
+  'Layout':'"Stacked" puts each item on its own line. "One line" puts them side by side with a separator between.',
+  'Separator':'The character between items when they\'re on one line, like | or •.',
+  'Text size':'Size of the text, in pixels.',
+  'Space between lines':'Pixels between one line and the next (or between items, when they\'re on one line).',
+  'Text color':'Color of the text. Tick the box to use the signature\'s text color.',
+  'Icon':'Pick from 2,000+ icons, or add your own PNG. Gmail can\'t show SVG icons, so they\'re turned into pictures.',
+  'Icon size':'Size of the icons, in pixels.',
+  'Icon color':'Color of the icons.',
+  'Icon background':'An optional shape behind each icon, like a circle.',
+  'Background shape':'An optional shape behind each icon, like a circle.',
+  'Background':'Color of the shape behind each icon.',
+  'Padding':PAD_TIP,
+  'Space between icons':'Pixels between one icon and the next.',
+  'Text on this line':'What this line says, like a phone number or address. Fields like {{phone}} fill in each person\'s details.',
+  'Title beside the icon':'Optional words next to the icon, like "Follow us". Leave empty for just the icon.',
+  'Title size':'Size of the title text beside the icons.',
+  'Title color':'Color of the title text beside the icons.',
+  'Link (URL, email or phone)':'Where clicking it goes. A web address, an email address or a phone number.',
+  'Public URL of this icon':'Your icon\'s picture needs a public web address so Gmail can load it.',
+  // buttons
+  'Button text':'The words on the button, like "Book a meeting".',
+  'Sit beside the previous button':'Puts this button on the same line as the button above it.',
+  'Position':'Whether the icon comes before or after the text.',
+  'Button color':'The button\'s fill color.',
+  'Text & icon color':'Color of the button\'s words and icon.',
+  'Padding left/right':'Space inside the button on each side of the text. Bigger makes the button wider.',
+  'Padding top/bottom':'Space inside the button above and below the text. Bigger makes the button taller.',
+  'HTML':'Your own code. Email apps ignore style sheets, so put styles on each tag (style="…"). Fields like {{name}} work here too.',
+  // signature style
+  'Font family':'The font for the whole signature. Only fonts found on almost every computer and phone are listed, so it looks the same for everyone.',
+  'Base size':'The normal text size for the signature, in pixels. Blocks can set their own.',
+  'Link color':'Color of links inside your text.',
+  'Fixed width (0 = fit content)':'Makes the whole signature a set width, in pixels. 0 lets it be as wide as what\'s in it.',
+  'Inner padding':'Space between the signature\'s edge (or border) and what\'s inside.',
+  'Background fill':'Puts a color behind the whole signature.',
+  'Background color':'Color behind the whole signature.',
+  'Border sides':'Which sides of the signature get the border.',
+  'Brand colors':'Your five brand colors. Anything set to one of these swatches changes with it, so you can recolor the whole signature in one place.',
+  'Match colors to a logo or photo':'Pulls the main colors out of your logo or a photo and makes them your brand colors. The file is only read in your browser, never uploaded.',
+  'Reframe':'Drag the picture to choose which part shows inside the crop.',
+  'Zoom':'Enlarges the picture inside the crop, to show less around the edges.',
+  // rows, columns, lines between columns
+  'Space between':'Pixels between columns that have no line between them.',
+  'Line up':'When columns are different heights, this lines them up at the top, middle or bottom.',
+  'Stretch row to full signature width':'Spreads the row across the signature\'s full width, which helps with a fixed width or a background.',
+  'Draw lines between columns':'Puts a vertical line between every pair of columns in this row. You can turn single lines off by clicking them.',
+  'Show this line':'Turns this one line on or off. The others in the row stay as they are.',
+  'Length (0 = full height)':'How tall the line is, in pixels. 0 runs it the full height of the row.',
+  'Space on the left':'Pixels between the line and the column on its left.',
+  'Space on the right':'Pixels between the line and the column on its right.',
+  'Fill this column':'Puts a color behind this column.'
+};
+function helpFor(label){
+  const l = String(label).replace(/\s*\((optional|shown in the layers list|needed for Gmail|inline styles work best in email)\)\s*$/, '').replace(/ beside it$/, '');
+  if (HELP[l]) return HELP[l];
+  if (/width \(0 = auto\)$/i.test(l)) return 'A set width in pixels. 0 lets it size to what\'s in it. You can also drag the column\'s right edge in the preview.';
+  return '';
+}
+const helpBtn = label => { const t = helpFor(label); return t ? `<button type="button" class="help" aria-label="What is ${esc(label)}?" data-tip="${esc(t)}">?</button>` : ''; };
+// one shared tip: shows on hover or keyboard focus, stays put when clicked, and closes on Escape or a click elsewhere
+const tipEl = document.body.appendChild(el('<div id="helptip" class="helptip" role="tooltip" hidden></div>'));
+let tipFor = null, tipPinned = false;
+function showTip(b, pin){
+  tipFor = b; tipPinned = !!pin; tipEl.textContent = b.dataset.tip; tipEl.hidden = false;
+  b.setAttribute('aria-describedby', 'helptip'); b.setAttribute('aria-expanded', tipPinned);
+  const r = b.getBoundingClientRect(), w = tipEl.offsetWidth, h = tipEl.offsetHeight;
+  const x = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2));
+  const below = r.bottom + 8 + h < innerHeight;
+  tipEl.style.left = x + 'px'; tipEl.style.top = (below ? r.bottom + 8 : r.top - h - 8) + 'px';
+}
+function hideTip(){ if (tipFor){ tipFor.removeAttribute('aria-describedby'); tipFor.setAttribute('aria-expanded', 'false'); } tipFor = null; tipPinned = false; tipEl.hidden = true; }
+document.addEventListener('click', e => {
+  const b = e.target.closest && e.target.closest('.help');
+  if (!b){ if (tipPinned && !tipEl.contains(e.target)) hideTip(); return; }
+  e.preventDefault(); e.stopPropagation(); // inside a checkbox label, the ? must not tick the box
+  if (tipFor === b && tipPinned) hideTip(); else showTip(b, true);
+}, true);
+document.addEventListener('mouseover', e => { const b = e.target.closest && e.target.closest('.help'); if (b && !tipPinned) showTip(b); });
+document.addEventListener('mouseout', e => { const b = e.target.closest && e.target.closest('.help'); if (b && !tipPinned && tipFor === b) hideTip(); });
+document.addEventListener('focusin', e => { const b = e.target.closest && e.target.closest('.help'); if (b && !tipPinned) showTip(b); });
+document.addEventListener('focusout', e => { if (e.target === tipFor && !tipPinned) hideTip(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && tipFor){ const b = tipFor; hideTip(); b.focus(); } });
+addEventListener('scroll', () => { if (tipFor) hideTip(); }, true);
 function field(label, node){
-  const f = el(`<div class="field"><span>${esc(label)}</span></div>`);
+  const f = el(`<div class="field"><span>${esc(label)}${helpBtn(label)}</span></div>`);
   [node, ...node.querySelectorAll('input,select,textarea')].forEach(x => { if (/INPUT|SELECT|TEXTAREA/.test(x.tagName) && !x.getAttribute('aria-label')) x.setAttribute('aria-label', label); });
   f.appendChild(node); return f;
 }
@@ -1177,7 +1308,7 @@ function sel_(obj, key, label, options, opts = {}){
   return field(label, n);
 }
 function chk(obj, key, label, opts = {}){
-  const w = el(`<label class="chk"><input id="f${++fid}" type="checkbox">${esc(label)}</label>`);
+  const w = el(`<label class="chk"><input id="f${++fid}" type="checkbox">${esc(label)}${helpBtn(label)}</label>`);
   const c = w.querySelector('input'); c.checked = !!obj[key];
   c.onchange = () => { obj[key] = c.checked; changed(opts); };
   return w;
@@ -1210,7 +1341,18 @@ function iconField(obj, key, label, allowNone, onPick){
   if (obj[key] && obj[key].set === 'custom') f.appendChild(txt(obj[key], 'url', 'Public URL of this icon (needed for Gmail)', { ph:'https://…/icon.png' }));
   return f;
 }
-function grp(title, ...nodes){ const g = el(`<div class="grp"><p class="label">${esc(title)}</p></div>`); nodes.flat(9).filter(Boolean).forEach(n => g.appendChild(n)); return g; }
+// a section of settings; its header folds it away, and the app remembers which sections you folded
+const CLOSED_KEY = 'sigstudio.closedGroups';
+function grp(title, ...nodes){
+  const closed = (store.get(CLOSED_KEY) || []).includes(title);
+  const g = el(`<div class="grp${closed ? ' closed' : ''}"><button type="button" class="ghead" aria-expanded="${!closed}"><span class="label">${esc(title)}</span>${G('fas', 'chevron-down')}</button></div>`);
+  g.firstChild.onclick = () => {
+    const now = !g.classList.toggle('closed'); g.firstChild.setAttribute('aria-expanded', now);
+    const list = (store.get(CLOSED_KEY) || []).filter(t => t !== title); if (!now) list.push(title); store.set(CLOSED_KEY, list);
+  };
+  nodes.flat(9).filter(Boolean).forEach(n => g.appendChild(n));
+  return g;
+}
 function row(...nodes){ const r = el('<div class="row2"></div>'); nodes.forEach(n => r.appendChild(n)); return r; }
 function note(html){ return el(`<p class="note">${html}</p>`); }
 
@@ -1281,7 +1423,7 @@ function framedSrc(b){
 }
 function reframer(b){
   const c = b.crop, src = framedSrc(b), ar = ratioOf(c.aspect);
-  const w = el(`<div class="field"><span>Reframe</span><div class="reframe" tabindex="0" role="application" aria-label="Picture position. Drag, or use the arrow keys; plus and minus zoom."><div class="rf-img"></div></div></div>`);
+  const w = el(`<div class="field"><span>Reframe${helpBtn('Reframe')}</span><div class="reframe" tabindex="0" role="application" aria-label="Picture position. Drag, or use the arrow keys; plus and minus zoom."><div class="rf-img"></div></div></div>`);
   const box = w.querySelector('.reframe'), pic = box.querySelector('.rf-img');
   const BW = 220, BH = Math.round(BW / ar);
   box.style.cssText = `width:${BW}px;height:${BH}px;border-radius:${b.shape === 'circle' ? '50%' : b.shape === 'rounded' ? Math.min(b.radius, 30) + 'px' : '4px'}`;
@@ -1339,7 +1481,7 @@ function itemsEditor(b, kind){
       bar.appendChild(btn);
     });
     card.appendChild(iconField(it, 'icon', 'Icon', kind === 'contact', ref => prefillLink(it, ref)));
-    card.appendChild(kind === 'contact' ? txt(it, 'text', 'Text') : txt(it, 'text', 'Title beside the icon (optional)', { ph:'e.g. LinkedIn' }));
+    card.appendChild(kind === 'contact' ? txt(it, 'text', 'Text on this line') : txt(it, 'text', 'Title beside the icon (optional)', { ph:'e.g. LinkedIn' }));
     card.appendChild(txt(it, 'link', 'Link (URL, email or phone)', { ph:'https://… or name@site.com' }));
     box.appendChild(card);
   });
@@ -1408,7 +1550,7 @@ function applyPaletteIn(st, next){
 function applyPalette(next){ applyPaletteIn(state, next); changed({ insp:true, list:true }); }
 function paletteEditor(){
   const S = state.style;
-  const w = el(`<div class="field"><span>Brand colors. Changing one updates it everywhere it's used.</span><div style="display:flex;gap:6px;flex-wrap:wrap"></div></div>`);
+  const w = el(`<div class="field"><span>Brand colors${helpBtn('Brand colors')}</span><div style="display:flex;gap:6px;flex-wrap:wrap"></div></div>`);
   S.palette.forEach((p, i) => {
     const c = el(`<input type="color" aria-label="Brand color ${i + 1}" style="width:40px;height:32px;padding:0;border:1px solid var(--line);border-radius:6px;background:none">`);
     c.value = p; let from = p;
@@ -1426,7 +1568,7 @@ function paletteEditor(){
     const base = b.label || 'image'; named[base] = (named[base] || 0) + 1;
     imgs.push({ src, label:named[base] > 1 ? base + ' ' + named[base] : base });
   });
-  const m = el(`<div class="field"><span>Match colors to a logo or photo</span><div style="display:flex;gap:6px;flex-wrap:wrap">${imgs.map((x, i) => `<button type="button" class="btn sm" data-img="${i}"><img src="${esc(x.src)}" alt="" width="18" height="18" referrerpolicy="no-referrer" style="object-fit:contain;background:#fff;border-radius:3px;vertical-align:middle;margin-right:6px">From ${esc(x.label)}</button>`).join('')}<label class="btn sm">From a file<input type="file" accept="image/*" hidden></label></div><p class="note">A file is only read for its colors. It isn't uploaded or saved.</p></div>`);
+  const m = el(`<div class="field"><span>Match colors to a logo or photo${helpBtn('Match colors to a logo or photo')}</span><div style="display:flex;gap:6px;flex-wrap:wrap">${imgs.map((x, i) => `<button type="button" class="btn sm" data-img="${i}"><img src="${esc(x.src)}" alt="" width="18" height="18" referrerpolicy="no-referrer" style="object-fit:contain;background:#fff;border-radius:3px;vertical-align:middle;margin-right:6px">From ${esc(x.label)}</button>`).join('')}<label class="btn sm">From a file<input type="file" accept="image/*" hidden></label></div><p class="note">A file is only read for its colors. It isn't uploaded or saved.</p></div>`);
   m.onclick = e => { const b = e.target.closest('[data-img]'); if (b) paletteFromImage(imgs[+b.dataset.img].src, p => { applyPalette(p); toast('Colors matched.', UNDO); }); };
   m.querySelector('input').onchange = e => { const f = e.target.files[0]; if (f) readImage(f, 300, d => paletteFromImage(d, p => { applyPalette(p); toast('Colors matched to your logo.', UNDO); })); };
   return [w, m];
@@ -1441,6 +1583,17 @@ function styleToggles(b){
   return w;
 }
 const VALIGN = [['top','Top'],['middle','Middle'],['bottom','Bottom']];
+// one line under each block's title saying what it is
+const BLOCK_DESC = {
+  text:'A line or paragraph of words, like a name, job title or company.',
+  image:'A picture, like a headshot, logo or banner. It\'s shown from a link, never uploaded.',
+  divider:'A horizontal line across this column. For a line between columns, use "Add a line" in the list on the left.',
+  spacer:'Empty space between the blocks above and below.',
+  contact:'Your phone, email, website and so on, each on its own line with an optional icon.',
+  social:'Clickable icons, like LinkedIn or Instagram, each with its own link.',
+  button:'A button that opens a link, like a booking page.',
+  html:'Your own HTML, for anything the other blocks can\'t do.'
+};
 function lineCount(r){ let n = 0; for (let i = 1; i < r.cols.length; i++) if (lineOn(r, i)) n++; return n; }
 // the look of a row's lines; every line in the row shares it
 function lineFields(r, shared){
@@ -1467,7 +1620,7 @@ function renderInspector(){
       grp('Background & border', chk(S, 'bgOn', 'Background fill', { insp:true }), S.bgOn ? color(S, 'bg', 'Background color') : null,
         row(num(S, 'bw', 'Border thickness', 0, 12), sel_(S, 'bs', 'Border style', LSTYLES)),
         color(S, 'bc', 'Border color'), num(S, 'br', 'Corner radius', 0, 40),
-        (() => { const w = el('<div class="field"><span>Border sides</span><div class="sides"></div></div>'); [['t','Top'],['r','Right'],['b','Bottom'],['l','Left']].forEach(([k, l]) => w.lastChild.appendChild(chk(S.sides, k, l))); return w; })())
+        (() => { const w = el(`<div class="field"><span>Border sides${helpBtn('Border sides')}</span><div class="sides"></div></div>`); [['t','Top'],['r','Right'],['b','Bottom'],['l','Left']].forEach(([k, l]) => w.lastChild.appendChild(chk(S.sides, k, l))); return w; })())
     );
     return;
   }
@@ -1508,17 +1661,16 @@ function renderInspector(){
     return;
   }
   const b = f.b;
-  head(DEF[b.type].label, b.type === 'text' ? 'Supports **bold**, *italic* and [link text](https://…).' : '');
+  head(DEF[b.type].label, BLOCK_DESC[b.type] || '');
+  const place = [];
   if (f.i > 0){
     const pos = { v:b.inline ? 'beside' : 'below' };
     const sg = segs(pos, 'v', 'Place it', [['below','Below the block above'],['beside','Next to the block above']]);
     sg.querySelector('.seg').addEventListener('click', () => { b.inline = pos.v === 'beside'; if (b.inline && b.gapL == null) b.gapL = 8; changed({ insp:true, list:true }); });
-    Pn.appendChild(grp('Layout', sg, b.inline ? num(b, 'gapL', 'Space between them', 0, 60) : null));
+    place.push(sg, b.inline ? num(b, 'gapL', 'Space between them', 0, 60) : null);
   }
-  const place = [
-    sel_({ to:f.c.id }, 'to', 'Position', allCols().map(x => [x.c.id, colName(x.r, x.c)])),
-    segs(b, 'align', 'Alignment', ALIGN), row(num(b, 'pt', 'Space above', -20, 60), num(b, 'pb', 'Space below', -20, 60))
-  ];
+  const mover = sel_({ to:f.c.id }, 'to', 'Move to column', allCols().map(x => [x.c.id, colName(x.r, x.c)]));
+  place.push(mover, segs(b, 'align', 'Alignment', ALIGN), row(num(b, 'pt', 'Space above', -20, 60), num(b, 'pb', 'Space below', -20, 60)));
   place.push(colCount(f.r, 'Columns in this row'));
   if (f.i > 0 && f.r.cols.length < 5){
     const sp = el('<button type="button" class="btn sm">Move this and the blocks below into a new column</button>');
@@ -1528,23 +1680,28 @@ function renderInspector(){
   const nxt = f.c.blocks[f.i + 1];
   if (!b.inline && nxt && nxt.inline && !b.rowAlign) b.rowAlign = 'middle';
   if (!b.inline && nxt && nxt.inline) place.push(sel_(b, 'rowAlign', 'Line up side-by-side blocks', [['top','Top'],['middle','Middle'],['bottom','Bottom']]));
-  place[0].querySelector('select').onchange = e => { const to = find(e.target.value); f.c.blocks.splice(f.i, 1); to.c.blocks.push(b); changed({ list:true, insp:true }); };
+  mover.querySelector('select').onchange = e => { const to = find(e.target.value); f.c.blocks.splice(f.i, 1); to.c.blocks.push(b); changed({ list:true, insp:true }); };
   switch (b.type){
-    case 'text':
-      Pn.append(grp('Content', txt(b, 'text', 'Text', { area:true, list:true }),
-          row(txt(b, 'tag', 'Pronouns or credentials beside it', { ph:'she/her' }), segs(b, 'tagPos', 'Side', [['before','Left'],['after','Right']])),
-          color(b, 'tagColor', 'Pronoun color', 'Default'),
-          (() => { if (b.tagItalic === undefined) b.tagItalic = true; return chk(b, 'tagItalic', 'Italic pronouns'); })(),
-          txt(b, 'link', 'Link the whole line (optional)', { ph:'https://… or name@site.com' }), chips()),
-        grp('Style', row(num(b, 'size', 'Size', 6, 48), sel_(b, 'weight', 'Weight', WEIGHTS)), styleToggles(b), color(b, 'color', 'Color', 'Default'),
+    case 'text': {
+      // the pronoun color and italic options only matter once there are pronouns, so they appear as you type them
+      if (b.tagItalic === undefined) b.tagItalic = true;
+      const tagF = txt(b, 'tag', 'Pronouns or credentials beside it', { ph:'she/her or MBA' });
+      const extras = el('<div class="sub"></div>');
+      extras.append(segs(b, 'tagPos', 'Side', [['before','Before the text'],['after','After the text']]), color(b, 'tagColor', 'Pronoun color', 'Same as the text'), chk(b, 'tagItalic', 'Italic pronouns'));
+      extras.hidden = !String(b.tag || '').trim();
+      tagF.querySelector('input').addEventListener('input', () => { extras.hidden = !String(b.tag || '').trim(); });
+      Pn.append(grp('Content', txt(b, 'text', 'Text', { area:true, list:true }), chips(), txt(b, 'link', 'Link the whole line (optional)', { ph:'https://… or name@site.com' })),
+        grp('Pronouns or credentials', tagF, extras),
+        grp('Style', row(num(b, 'size', 'Size', 6, 48), sel_(b, 'weight', 'Weight', WEIGHTS)), styleToggles(b), color(b, 'color', 'Color', 'Same as signature'),
           sel_(b, 'font', 'Font', [['','Same as signature'], ...FONTS]),
           row(num(b, 'spacing', 'Letter spacing', 0, 10, .5), num(b, 'lh', 'Line height', .5, 2.4, .05))));
       break;
+    }
     case 'image':
       Pn.append(grp('Image', imageEditor(b)),
         grp('Shape & size', shapeEditor(b)),
         grp('Crop', cropEditor(b)),
-        grp('Border & link', row(num(b, 'borderW', 'Border', 0, 10), color(b, 'borderColor', 'Border color')), txt(b, 'alt', 'Alt text'), txt(b, 'link', 'Link (optional)', { ph:'https://' })));
+        grp('Border, link & alt text', row(num(b, 'borderW', 'Border thickness', 0, 10), color(b, 'borderColor', 'Border color')), txt(b, 'link', 'Link (optional)', { ph:'https://' }), txt(b, 'alt', 'Alt text')));
       break;
     case 'divider':
       Pn.append(grp('Line', row(num(b, 'thickness', 'Thickness', 1, 12), sel_(b, 'style', 'Style', LSTYLES)), color(b, 'color', 'Color'), num(b, 'width', 'Length (%)', 5, 100)));
@@ -1553,10 +1710,10 @@ function renderInspector(){
       Pn.append(grp('Space', num(b, 'height', 'Height', 2, 80)));
       break;
     case 'contact':
-      Pn.append(grp('Lines', itemsEditor(b, 'contact'), chips()),
+      Pn.append(grp('Contact lines', itemsEditor(b, 'contact'), chips()),
         grp('Style', segs(b, 'layout', 'Layout', [['stack','Stacked'],['inline','One line']], { insp:true }),
           b.layout === 'inline' ? txt(b, 'sep', 'Separator') : null,
-          row(num(b, 'size', 'Text size', 8, 24), num(b, 'gap', 'Spacing', 0, 20)), color(b, 'color', 'Text color', 'Default'),
+          row(num(b, 'size', 'Text size', 8, 24), num(b, 'gap', 'Space between lines', 0, 20)), color(b, 'color', 'Text color', 'Same as signature'),
           row(num(b, 'iconSize', 'Icon size', 8, 32), color(b, 'iconColor', 'Icon color')),
           sel_(b, 'iconShape', 'Icon background', [['none','None'],['circle','Circle'],['rounded','Rounded square'],['square','Square']], { insp:true }),
           b.iconShape !== 'none' ? row(color(b, 'iconBg', 'Background'), num(b, 'iconPad', 'Padding', 0, 14)) : null));
@@ -1564,25 +1721,25 @@ function renderInspector(){
     case 'social':
       if (b.tsize == null) b.tsize = 12;
       Pn.append(grp('Icons', itemsEditor(b, 'social'), chips()),
-        grp('Style', row(num(b, 'size', 'Icon size', 8, 48), num(b, 'gap', 'Gap', 0, 30)), color(b, 'color', 'Icon color'),
-          row(num(b, 'tsize', 'Title size', 8, 24), color(b, 'tcolor', 'Title color', 'Default')),
+        grp('Style', row(num(b, 'size', 'Icon size', 8, 48), num(b, 'gap', 'Space between icons', 0, 30)), color(b, 'color', 'Icon color'),
+          row(num(b, 'tsize', 'Title size', 8, 24), color(b, 'tcolor', 'Title color', 'Same as signature')),
           sel_(b, 'shape', 'Background shape', [['none','None'],['circle','Circle'],['rounded','Rounded square'],['square','Square']], { insp:true }),
           b.shape !== 'none' ? row(color(b, 'bg', 'Background'), num(b, 'pad', 'Padding', 0, 20)) : null));
       break;
     case 'button':
-      Pn.append(grp('Button', txt(b, 'text', 'Label', { list:true }), txt(b, 'link', 'Link', { ph:'https://… or name@site.com' }), chips(),
+      Pn.append(grp('Button', txt(b, 'text', 'Button text', { list:true }), txt(b, 'link', 'Link', { ph:'https://… or name@site.com' }), chips(),
           chk(b, 'inline', 'Sit beside the previous button', { insp:true })),
         grp('Icon', iconField(b, 'icon', 'Icon', true), row(sel_(b, 'iconPos', 'Position', [['left','Before text'],['right','After text']]), num(b, 'iconSize', 'Icon size', 8, 32))),
-        grp('Style', row(color(b, 'bg', 'Fill'), color(b, 'color', 'Text & icon')),
+        grp('Style', row(color(b, 'bg', 'Button color'), color(b, 'color', 'Text & icon color')),
           row(num(b, 'size', 'Text size', 9, 24), sel_(b, 'weight', 'Weight', WEIGHTS)),
-          row(num(b, 'padX', 'Padding sides', 0, 40), num(b, 'padY', 'Padding top/bottom', 0, 24)),
-          num(b, 'radius', 'Corner radius', 0, 40), row(num(b, 'borderW', 'Border', 0, 8), color(b, 'borderColor', 'Border color'))));
+          row(num(b, 'padX', 'Padding left/right', 0, 40), num(b, 'padY', 'Padding top/bottom', 0, 24)),
+          num(b, 'radius', 'Corner radius', 0, 40), row(num(b, 'borderW', 'Border thickness', 0, 8), color(b, 'borderColor', 'Border color'))));
       break;
     case 'html':
       Pn.append(grp('Custom HTML', txt(b, 'html', 'HTML (inline styles work best in email)', { area:true, code:true }), chips()));
       break;
   }
-  Pn.append(grp('Placement', ...place, txt(b, 'label', 'Layer name (shown in the layers list)', { list:true })));
+  Pn.append(grp('Position & spacing', ...place), grp('Layer name', txt(b, 'label', 'Name', { list:true, ph:blockName(Object.assign({}, b, { label:'' })) })));
 }
 
 /* ---------- step 2: people (one design, a signature for everyone) ---------- */
