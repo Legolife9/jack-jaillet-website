@@ -134,10 +134,14 @@ const STYLE0 = {
   bw:0, bs:'solid', bc:'#d0d5dd', br:0, sides:{t:true,r:true,b:true,l:true},
   palette:['#2453e6','#1f2328','#5b6470','#e8eefc','#f2f4f7']
 };
+// the details every new signature's people start with: who they are, how to reach them, then their pictures
 const FIELDS0 = [
-  { key:'name', label:'Name' }, { key:'title', label:'Job title' }, { key:'email', label:'Email' },
-  { key:'phone', label:'Phone' }, { key:'photo', label:'Photo', type:'image' }
+  { key:'name', label:'Name' }, { key:'pronouns', label:'Pronouns' }, { key:'title', label:'Job title' }, { key:'company', label:'Company' },
+  { key:'email', label:'Email address' }, { key:'phone', label:'Phone number' }, { key:'fax', label:'Fax number' },
+  { key:'web', label:'Website' }, { key:'booking', label:'Booking link' },
+  { key:'photo', label:'Photo link', type:'image' }, { key:'logo', label:'Logo link', type:'image' }
 ];
+const FIELD_LABEL = Object.fromEntries(FIELDS0.map(f => [f.key, f.label]));
 const DEF = {
   text:   { label:'Text', text:'Text', size:14, color:'', weight:400, italic:false, upper:false, spacing:0, lh:1.4, link:'', font:'', tag:'', tagPos:'before', tagColor:'', tagItalic:true },
   image:  { label:'Image', orig:'', url:'', source:'upload', field:'photo', width:96, shape:'square', radius:10, crop:{ aspect:'orig', zoom:1, x:50, y:50 }, borderW:0, borderColor:'#d0d5dd', alt:'', link:'' },
@@ -204,6 +208,8 @@ function migrate(s){
   s.style = Object.assign(clone(STYLE0), s.style || {});
   ['layout','sideW','gap','valign','divW','divS','divC','sideBg','sideBgOn','sidePad'].forEach(k => delete s.style[k]);
   s.team = s.team || { fields:clone(FIELDS0), people:[], active:null };
+  // signatures made before the longer field list, with nobody added yet, get the new list (the old keys are all in it)
+  if (!(s.team.people || []).length && (s.team.fields || []).map(f => f.key).join() === 'name,title,email,phone,photo') s.team.fields = clone(FIELDS0);
   if (!s.linked){ linkBrandColors(s); s.linked = 1; }
   if ((s.shrunk || 0) < 2){ shrink(s, s.shrunk ? SCALE / .93 : SCALE); s.shrunk = 2; }
   // ids and field keys go into attributes and selectors all over the editor; keep only the characters the app makes
@@ -532,7 +538,9 @@ function renderBlock(b, ctx){
         return `<table ${T0}><tr><td bgcolor="${b.iconBg}" align="center" width="${b.iconSize + 2 * b.iconPad}" style="background:${b.iconBg};border-radius:${rad};padding:${b.iconPad}px 0;width:${b.iconSize + 2 * b.iconPad}px">${img}</td></tr></table>`;
       };
       const ts = `font-family:${S.font};font-size:${b.size}px;color:${color};line-height:1.35`;
-      const items = b.items.map(i => Object.assign({}, i, { t:M(i.text) })).filter(i => i.t.trim());
+      // a line whose {{fields}} are all blank for this person ("F: {{fax}}" with no fax) is left out
+      const filled = s => !usesField(s) || (s.match(/\{\{\s*[\w-]+\s*\}\}/g) || []).map(M).join('').trim();
+      const items = b.items.map(i => Object.assign({}, i, { t:M(i.text) })).filter(i => i.t.trim() && filled(i.text));
       if (!items.length) return '';
       if (b.layout === 'inline'){
         const cells = items.map((it, n) =>
@@ -570,6 +578,7 @@ function renderBlock(b, ctx){
 function buttonCell(b, ctx){
   const S = ctx.S, t = M(b.text);
   if (!t.trim() && !b.icon) return '';
+  if (usesField(b.link) && !M(b.link).trim()) return ''; // a person without a booking link gets no booking button
   const ic = b.icon ? `<td valign="middle" style="${t ? (b.iconPos === 'left' ? 'padding-right:7px' : 'padding-left:7px') : ''}">${iconImg(b.icon, b.color, b.iconSize, ctx)}</td>` : '';
   const tx = t ? `<td valign="middle" style="font-family:${S.font};font-size:${b.size}px;font-weight:${b.weight};color:${b.color};line-height:1.2;white-space:nowrap">${esc(t)}</td>` : '';
   const inner = `<table ${T0}><tr>${b.iconPos === 'left' ? ic + tx : tx + ic}</tr></table>`;
@@ -1150,6 +1159,7 @@ const HELP = {
   'Columns in this row':'How many columns sit side by side in this row. Removing a column moves its blocks into the one next to it.',
   'Number of columns':'How many columns sit side by side in this row. Removing a column moves its blocks into the one next to it.',
   'Line up side-by-side blocks':'When blocks next to each other are different heights, this lines them up at the top, middle or bottom.',
+  'Insert a field':'Puts a person\'s detail, like their name, where your cursor is. It shows as {{name}} here, and each person\'s signature fills in their own from the People step.',
   'Layer name':'A name just for you, so you can tell parts apart in the list on the left. It never shows in the signature.',
   'Name':'A name just for you, shown in the list on the left. It never shows in the signature.',
   // images
@@ -1259,7 +1269,6 @@ function field(label, node){
   [node, ...node.querySelectorAll('input,select,textarea')].forEach(x => { if (/INPUT|SELECT|TEXTAREA/.test(x.tagName) && !x.getAttribute('aria-label')) x.setAttribute('aria-label', label); });
   f.appendChild(node); return f;
 }
-function nameField(o, ph){ const w = txt(o, 'label', 'Name', { list:true, ph }); w.querySelector('input').id = 'layername'; return w; }
 function txt(obj, key, label, opts = {}){
   const id = 'f' + (++fid);
   const n = opts.area ? el(`<textarea id="${id}" class="${opts.code ? 'code' : ''}"></textarea>`) : el(`<input id="${id}" type="text" placeholder="${esc(opts.ph || '')}">`);
@@ -1279,22 +1288,21 @@ function num(obj, key, label, min, max, step = 1, opts){
 }
 function color(obj, key, label, auto){
   const id = 'f' + (++fid);
-  const w = el(`<div class="clr"><input type="color" aria-label="${esc(label)}"><input id="${id}" type="text" maxlength="9"><span class="sw5"></span>${auto ? `<label class="chk"><input type="checkbox">${esc(auto)}</label>` : ''}</div>`);
-  const [c, t, a] = w.querySelectorAll('input');
+  const w = el(`<div class="clr">${auto ? `<label class="chk"><input type="checkbox">${esc(auto)}</label>` : ''}<div class="clrpick"><input type="color" aria-label="${esc(label)}: pick any color" title="Pick any color"><input id="${id}" type="text" maxlength="9" aria-label="${esc(label)} code, like #2453e6"><span class="sw5" role="group" aria-label="Brand colors"></span></div></div>`);
+  const a = auto ? w.querySelector('.chk input') : null, c = w.querySelector('input[type=color]'), t = w.querySelector('#' + id), pick = w.querySelector('.clrpick');
   t.onfocus = () => { if (isTok(obj[key])) t.select(); };
   const sync = () => {
     const v = obj[key], hx = isTok(v) ? state.style.palette[+v[1]] : v;
     c.value = /^#[0-9a-f]{6}$/i.test(hx) ? hx : '#000000'; t.value = isTok(v) ? `Brand ${+v[1] + 1}` : v;
-    w.querySelectorAll('.sw5 button').forEach((b, i) => b.classList.toggle('on', v === '@' + i));
-    if (a){ a.checked = !v; c.disabled = t.disabled = !v; }
+    w.querySelectorAll('.sw5 button').forEach((b, i) => { b.classList.toggle('on', v === '@' + i); b.setAttribute('aria-pressed', v === '@' + i); });
+    if (a){ a.checked = !v; pick.hidden = !v; }
   };
-  sync();
-  c.oninput = () => { obj[key] = c.value; t.value = c.value; changed(); };
+  c.oninput = () => { obj[key] = c.value; t.value = c.value; w.querySelectorAll('.sw5 button').forEach(b => { b.classList.remove('on'); b.setAttribute('aria-pressed', false); }); changed(); };
   t.onchange = () => { if (/^#([0-9a-f]{3}){1,2}$/i.test(t.value.trim())){ obj[key] = t.value.trim(); sync(); changed(); } else sync(); };
-  if (a) a.onchange = () => { obj[key] = a.checked ? '' : (c.value || '#000000'); sync(); changed(); };
+  if (a) a.onchange = () => { obj[key] = a.checked ? '' : (c.value || '#000000'); sync(); changed(); if (!a.checked) t.focus(); };
   const sw = w.querySelector('.sw5');
   // picking a swatch links to that brand color, so it follows later brand changes
-  state.style.palette.forEach((p, i) => { const b = el(`<button type="button" title="Brand color ${i + 1} (stays in sync with the brand)" aria-label="Use brand color ${i + 1}" style="background:${p}"></button>`); b.onclick = () => { obj[key] = '@' + i; sync(); changed(); }; sw.appendChild(b); });
+  state.style.palette.forEach((p, i) => { const b = el(`<button type="button" title="Brand color ${i + 1} (stays in sync with the brand)" aria-label="Brand color ${i + 1}" style="background:${p}"></button>`); b.onclick = () => { obj[key] = '@' + i; sync(); changed(); }; sw.appendChild(b); });
   sync();
   return field(label, w);
 }
@@ -1320,13 +1328,13 @@ function segs(obj, key, label, options, opts){
 }
 function chips(){
   const fs = state.team.fields.filter(f => f.type !== 'image');
-  const w = el(`<div class="chips"><span>Insert field:</span>${fs.map(f => `<button type="button" class="chip" data-k="${f.key}" title="${esc(f.label)}">{{${f.key}}}</button>`).join('')}</div>`);
-  w.addEventListener('mousedown', e => e.preventDefault());
-  w.onclick = e => {
-    const b = e.target.closest('[data-k]'); if (!b) return;
+  const w = el(`<div class="insf"><span class="insic" aria-hidden="true">${G('fas', 'plus')}</span><select aria-label="Insert a person's detail"><option value="">Insert a person's detail…</option>${fs.map(f => `<option value="${esc(f.key)}">${esc(f.label)}</option>`).join('')}</select>${helpBtn('Insert a field')}</div>`);
+  const sl = w.querySelector('select');
+  sl.onchange = () => {
+    const k = sl.value; sl.value = ''; if (!k) return;
     const n = lastText && document.body.contains(lastText) ? lastText : w.parentElement.querySelector('input[type=text],textarea');
     if (!n) return;
-    const tok = `{{${b.dataset.k}}}`, s = n.selectionStart ?? n.value.length, e2 = n.selectionEnd ?? s;
+    const tok = `{{${k}}}`, s = n.selectionStart ?? n.value.length, e2 = n.selectionEnd ?? s;
     n.value = n.value.slice(0, s) + tok + n.value.slice(e2); n.focus(); n.setSelectionRange(s + tok.length, s + tok.length);
     n.dispatchEvent(new Event('input'));
   };
@@ -1573,13 +1581,15 @@ function paletteEditor(){
   m.querySelector('input').onchange = e => { const f = e.target.files[0]; if (f) readImage(f, 300, d => paletteFromImage(d, p => { applyPalette(p); toast('Colors matched to your logo.', UNDO); })); };
   return [w, m];
 }
-// bold / italic / all caps as one row right under size, where people look for them
+// bold / italic / all caps as toggle buttons right under size, where people look for them
 function styleToggles(b){
-  const w = el('<div class="sides"></div>');
-  const bold = el('<label class="chk"><input id="f-bold" type="checkbox"><b>Bold</b></label>');
-  const c = bold.querySelector('input'); c.checked = b.weight >= 600;
-  c.onchange = () => { b.weight = c.checked ? 700 : 400; changed({ insp:true }); };
-  w.append(bold, chk(b, 'italic', 'Italic'), chk(b, 'upper', 'All caps'));
+  const opts = [
+    ['Bold', '<b>B</b>', () => b.weight >= 600, v => { b.weight = v ? 700 : 400; }],
+    ['Italic', '<i style="font-family:Georgia,serif">I</i>', () => !!b.italic, v => { b.italic = v; }],
+    ['All caps', '<span style="font-size:10px;letter-spacing:.04em">AA</span>', () => !!b.upper, v => { b.upper = v; }]
+  ];
+  const w = el(`<div class="tgls" role="group" aria-label="Text style">${opts.map(([l, g, on], i) => `<button type="button" data-i="${i}" aria-pressed="${on()}"><span class="g">${g}</span>${l}</button>`).join('')}</div>`);
+  w.onclick = e => { const x = e.target.closest('[data-i]'); if (!x) return; const o = opts[+x.dataset.i]; o[3](!o[2]()); changed({ insp:true }); };
   return w;
 }
 const VALIGN = [['top','Top'],['middle','Middle'],['bottom','Bottom']];
@@ -1607,61 +1617,95 @@ function lineFields(r, shared){
       row(num(r, 'divL', 'Space on the left', 0, 60), num(r, 'divR', 'Space on the right', 0, 60)))
   ];
 }
+// the top of the settings panel: where this part sits (each step clickable), what kind of thing it is, and its name
+let inspTab = 'Content';
+const TAB_ICON = { Content:'fas:pen', Style:'fas:palette', Layout:'fas:up-down-left-right', Colors:'fas:palette', Text:'fas:font', Box:'far:square' };
+function ihead(o){
+  const crumbs = o.crumbs ? o.crumbs.map(([l, id]) => `<button type="button" data-go="${esc(id)}">${esc(l)}</button>`).join('<span aria-hidden="true">›</span>') : '';
+  const h = el(`<div class="ihead">${o.crumbs ? `<div class="ibar"><nav class="crumbs" aria-label="Where this is">${crumbs}</nav><button type="button" class="btn sm" data-done title="Back to the whole signature's style">Done</button></div>` : ''}
+    <div class="imain"><span class="itype" aria-hidden="true">${glyph(o.glyph)}</span><div class="iwho"><span class="ikind">${esc(o.kind)}</span>
+    ${o.obj ? `<div class="iname"><input id="layername" type="text" maxlength="60" aria-label="Name in the layers list" placeholder="${esc(o.ph || '')}" title="Rename it. The name is only for you, in the list on the left."><span class="pen" aria-hidden="true">${G('fas', 'pen')}</span>${helpBtn('Layer name')}</div>` : `<h3>${esc(o.title)}</h3>`}</div></div>
+    ${o.desc ? `<p class="note">${esc(o.desc)}</p>` : ''}</div>`);
+  h.querySelectorAll('[data-go]').forEach(b => { b.onclick = () => select(b.dataset.go); });
+  const d = h.querySelector('[data-done]'); if (d) d.onclick = () => select('style');
+  if (o.obj){ const n = h.querySelector('#layername'); n.value = o.obj.label || ''; n.oninput = () => { o.obj.label = n.value; changed({ list:true }); }; }
+  return h;
+}
+// settings split into tabs (Content / Style / Layout); a tab with nothing in it is left out, and one tab means no tab bar
+function tabbed(head, tabs){
+  tabs = tabs.map(([n, nodes]) => [n, [nodes].flat(9).filter(Boolean)]).filter(t => t[1].length);
+  const body = el('<div class="ibody"></div>');
+  if (tabs.length < 2){ (tabs[0] ? tabs[0][1] : []).forEach(x => body.appendChild(x)); return [head, body]; }
+  const cur = tabs.some(t => t[0] === inspTab) ? inspTab : tabs[0][0];
+  const bar = el(`<div class="itabs" role="tablist" aria-label="Settings">${tabs.map(([n]) => { const [gs, gn] = TAB_ICON[n].split(':'); return `<button type="button" role="tab" data-tab="${n}" id="itab-${n}" aria-controls="ipanel-${n}" aria-selected="${n === cur}" tabindex="${n === cur ? 0 : -1}">${G(gs, gn)}${n}</button>`; }).join('')}</div>`);
+  head.appendChild(bar);
+  tabs.forEach(([n, nodes]) => { const pn = el(`<div class="ipanel" role="tabpanel" id="ipanel-${n}" aria-labelledby="itab-${n}"${n === cur ? '' : ' hidden'}></div>`); nodes.forEach(x => pn.appendChild(x)); body.appendChild(pn); });
+  const btns = [...bar.querySelectorAll('[role=tab]')];
+  const pick = b => {
+    inspTab = b.dataset.tab;
+    btns.forEach(x => { const on = x === b; x.setAttribute('aria-selected', on); x.tabIndex = on ? 0 : -1; });
+    body.querySelectorAll('.ipanel').forEach(pn => { pn.hidden = pn.id !== 'ipanel-' + inspTab; });
+    const pane = $('#insp').parentElement; if (pane.scrollTop > head.offsetHeight) pane.scrollTop = 0;
+  };
+  bar.onclick = e => { const b = e.target.closest('[role=tab]'); if (b) pick(b); };
+  bar.onkeydown = e => {
+    const k = btns.indexOf(document.activeElement); if (k < 0) return;
+    const to = { ArrowRight:k + 1, ArrowLeft:k - 1, Home:0, End:btns.length - 1 }[e.key]; if (to === undefined) return;
+    e.preventDefault(); const b = btns[(to + btns.length) % btns.length]; pick(b); b.focus();
+  };
+  return [head, body];
+}
 function renderInspector(){
   const Pn = $('#insp'); Pn.innerHTML = ''; fid = 0; lastText = null;
+  const put = parts => parts.forEach(x => Pn.appendChild(x));
+  const top = [['Signature', 'style']];
   if (sel === 'style'){
     const S = state.style;
-    Pn.append(el('<h3>Signature style</h3>'),
-      note('Settings for the whole signature. Click any part of the preview to select it, or double-click text to edit it.'),
-      grp('Brand', paletteEditor()),
-      grp('Type', sel_(S, 'font', 'Font family', FONTS), row(num(S, 'size', 'Base size', 9, 24), color(S, 'color', 'Text color')), color(S, 'link', 'Link color'),
-        note('Email apps only show fonts installed on the reader\'s device, so these are the email-safe ones.')),
-      grp('Size', num(S, 'width', 'Fixed width (0 = fit content)', 0, 700, 10), num(S, 'pad', 'Inner padding', 0, 60)),
-      grp('Background & border', chk(S, 'bgOn', 'Background fill', { insp:true }), S.bgOn ? color(S, 'bg', 'Background color') : null,
-        row(num(S, 'bw', 'Border thickness', 0, 12), sel_(S, 'bs', 'Border style', LSTYLES)),
-        color(S, 'bc', 'Border color'), num(S, 'br', 'Corner radius', 0, 40),
-        (() => { const w = el(`<div class="field"><span>Border sides${helpBtn('Border sides')}</span><div class="sides"></div></div>`); [['t','Top'],['r','Right'],['b','Bottom'],['l','Left']].forEach(([k, l]) => w.lastChild.appendChild(chk(S.sides, k, l))); return w; })())
-    );
+    put(tabbed(ihead({ glyph:'style', kind:'Whole signature', title:'Signature style', desc:'Colors, font and the box around everything. To change one part, click it in the preview or in the list on the left.' }), [
+      ['Colors', [grp('Brand', paletteEditor()), grp('Text & links', row(color(S, 'color', 'Text color'), color(S, 'link', 'Link color')))]],
+      ['Text', [grp('Font', sel_(S, 'font', 'Font family', FONTS), num(S, 'size', 'Base size', 9, 24),
+        note('Email apps only show fonts installed on the reader\'s device, so these are the email-safe ones.'))]],
+      ['Box', [grp('Size', num(S, 'width', 'Fixed width (0 = fit content)', 0, 700, 10), num(S, 'pad', 'Inner padding', 0, 60)),
+        grp('Background', chk(S, 'bgOn', 'Background fill', { insp:true }), S.bgOn ? color(S, 'bg', 'Background color') : null),
+        grp('Border', row(num(S, 'bw', 'Border thickness', 0, 12), sel_(S, 'bs', 'Border style', LSTYLES)),
+          color(S, 'bc', 'Border color'), num(S, 'br', 'Corner radius', 0, 40),
+          (() => { const w = el(`<div class="field"><span>Border sides${helpBtn('Border sides')}</span><div class="sides"></div></div>`); [['t','Top'],['r','Right'],['b','Bottom'],['l','Left']].forEach(([k, l]) => w.lastChild.appendChild(chk(S.sides, k, l))); return w; })())]]
+    ]));
     return;
   }
   const dv = findDiv(sel), f = dv ? null : find(sel);
   if (!dv && !f){ sel = 'style'; return renderInspector(); }
-  const head = (title, sub) => { const h = el(`<div style="display:flex;align-items:center;gap:8px"><h3 style="flex:1">${esc(title)}</h3><button type="button" class="btn sm ghost">Done</button></div>`); h.querySelector('button').onclick = () => select('style'); Pn.appendChild(h); if (sub) Pn.appendChild(note(esc(sub))); };
   if (dv){
     const { r, i } = dv, on = lineOn(r, i), shown = lineCount(r);
-    head('Line between columns', `The vertical line between ${colLabel(r, r.cols[i - 1])} and ${colLabel(r, r.cols[i])} in ${rowName(r)}.`);
     const t = { on }, sw = chk(t, 'on', 'Show this line');
     sw.querySelector('input').onchange = e => { setLine(r, i, e.target.checked); changed({ list:true, insp:true }); markSel(); };
-    Pn.appendChild(grp('Line', sw, on ? null : note(`Without a line, these columns are ${Math.max(N0(r.gap), 0)}px apart. Change that in the ${esc(rowName(r))} settings.`)));
-    if (on) lineFields(r, r.cols.length > 2 && shown > 1).forEach(g => Pn.appendChild(g));
-    const back = el(`<button type="button" class="btn sm ghost">${esc(rowName(r))} settings</button>`); back.onclick = () => select(r.id);
-    Pn.appendChild(back);
+    put(tabbed(ihead({ glyph:'vline', kind:'Line between columns', title:`${colLabel(r, r.cols[i - 1])} and ${colLabel(r, r.cols[i])}`, crumbs:[...top, [rowName(r), r.id]],
+      desc:`The vertical line between ${colLabel(r, r.cols[i - 1])} and ${colLabel(r, r.cols[i])} in ${rowName(r)}.` }), [['', [
+      grp('Line', sw, on ? null : note(`Without a line, these columns are ${Math.max(N0(r.gap), 0)}px apart. Change that in the ${esc(rowName(r))} settings.`)),
+      on ? lineFields(r, r.cols.length > 2 && shown > 1) : null]]]));
     return;
   }
   if (f.kind === 'row'){
     const r = f.r, ri = state.rows.indexOf(r) + 1, multi = r.cols.length > 1;
-    head(rowName(r), 'A row holds columns that sit side by side. Stack rows to build any layout.');
-    Pn.appendChild(nameField(r, `Row ${ri}`));
     const lines = { on:lineCount(r) > 0 }, tg = chk(lines, 'on', 'Draw lines between columns');
     tg.querySelector('input').onchange = e => { r.divW = e.target.checked ? Math.max(1, N0(r.divW)) : 0; r.divHide = {}; changed({ list:true, insp:true }); };
-    [grp('Columns', colCount(r, 'Number of columns'), multi ? [row(num(r, 'gap', 'Space between', 0, 60), sel_(r, 'valign', 'Line up', VALIGN))] : null,
-        r.cols.map((c, i) => num(c, 'width', `${colLabel(r, c)} width (0 = auto)`, 0, COLMAX, 2, { list:true })),
+    put(tabbed(ihead({ glyph:'row', kind:'Row', obj:r, ph:`Row ${ri}`, crumbs:top, desc:'A row holds columns that sit side by side. Stack rows to build any layout.' }), [['', [
+      grp('Columns', colCount(r, 'Number of columns'), multi ? row(num(r, 'gap', 'Space between', 0, 60), sel_(r, 'valign', 'Line up', VALIGN)) : null,
+        r.cols.map(c => num(c, 'width', `${colLabel(r, c)} width (0 = auto)`, 0, COLMAX, 2, { list:true })),
         chk(r, 'full', 'Stretch row to full signature width')),
       multi ? grp('Lines between columns', tg, lines.on ? note('To hide a single line, click it in the list on the left or in the preview.') : null) : null,
-      ...(multi && lines.on ? lineFields(r, r.cols.length > 2) : []),
-      grp('Spacing', row(num(r, 'pt', 'Space above', 0, 60), num(r, 'pb', 'Space below', 0, 60)))].filter(Boolean).forEach(g => Pn.appendChild(g));
+      multi && lines.on ? lineFields(r, r.cols.length > 2) : null,
+      grp('Spacing', row(num(r, 'pt', 'Space above', 0, 60), num(r, 'pb', 'Space below', 0, 60)))]]]));
     return;
   }
   if (f.kind === 'col'){
     const c = f.c;
-    head(colName(f.r, c), 'Select a block in this column to edit it, or add one from the left.');
-    Pn.appendChild(nameField(c, `Column ${f.r.cols.indexOf(c) + 1}`));
-    Pn.append(grp('Layout', colCount(f.r, 'Columns in this row'), num(c, 'width', 'Width (0 = auto)', 0, COLMAX, 2, { list:true })),
-      grp('Background', chk(c, 'bgOn', 'Fill this column', { insp:true }), c.bgOn ? [color(c, 'bg', 'Color'), row(num(c, 'pad', 'Padding', 0, 40), num(c, 'radius', 'Corner radius', 0, 30))] : num(c, 'pad', 'Padding', 0, 40)));
+    put(tabbed(ihead({ glyph:'col', kind:'Column', obj:c, ph:`Column ${f.r.cols.indexOf(c) + 1}`, crumbs:[...top, [rowName(f.r), f.r.id]], desc:'Select a block in this column to edit it, or add one from the left.' }), [['', [
+      grp('Layout', colCount(f.r, 'Columns in this row'), num(c, 'width', 'Width (0 = auto)', 0, COLMAX, 2, { list:true })),
+      grp('Background', chk(c, 'bgOn', 'Fill this column', { insp:true }), c.bgOn ? [color(c, 'bg', 'Color'), row(num(c, 'pad', 'Padding', 0, 40), num(c, 'radius', 'Corner radius', 0, 30))] : num(c, 'pad', 'Padding', 0, 40))]]]));
     return;
   }
   const b = f.b;
-  head(DEF[b.type].label, BLOCK_DESC[b.type] || '');
   const place = [];
   if (f.i > 0){
     const pos = { v:b.inline ? 'beside' : 'below' };
@@ -1670,17 +1714,18 @@ function renderInspector(){
     place.push(sg, b.inline ? num(b, 'gapL', 'Space between them', 0, 60) : null);
   }
   const mover = sel_({ to:f.c.id }, 'to', 'Move to column', allCols().map(x => [x.c.id, colName(x.r, x.c)]));
-  place.push(mover, segs(b, 'align', 'Alignment', ALIGN), row(num(b, 'pt', 'Space above', -20, 60), num(b, 'pb', 'Space below', -20, 60)));
-  place.push(colCount(f.r, 'Columns in this row'));
+  place.push(segs(b, 'align', 'Alignment', ALIGN), row(num(b, 'pt', 'Space above', -20, 60), num(b, 'pb', 'Space below', -20, 60)));
+  const nxt = f.c.blocks[f.i + 1];
+  if (!b.inline && nxt && nxt.inline && !b.rowAlign) b.rowAlign = 'middle';
+  if (!b.inline && nxt && nxt.inline) place.push(sel_(b, 'rowAlign', 'Line up side-by-side blocks', VALIGN));
+  const where = [mover, colCount(f.r, 'Columns in this row')];
   if (f.i > 0 && f.r.cols.length < 5){
     const sp = el('<button type="button" class="btn sm">Move this and the blocks below into a new column</button>');
     sp.onclick = () => { const moved = f.c.blocks.splice(f.i); moved[0].inline = false; f.r.cols.splice(f.r.cols.indexOf(f.c) + 1, 0, mkCol(moved)); changed({ list:true, insp:true }); };
-    place.push(sp);
+    where.push(sp);
   }
-  const nxt = f.c.blocks[f.i + 1];
-  if (!b.inline && nxt && nxt.inline && !b.rowAlign) b.rowAlign = 'middle';
-  if (!b.inline && nxt && nxt.inline) place.push(sel_(b, 'rowAlign', 'Line up side-by-side blocks', [['top','Top'],['middle','Middle'],['bottom','Bottom']]));
   mover.querySelector('select').onchange = e => { const to = find(e.target.value); f.c.blocks.splice(f.i, 1); to.c.blocks.push(b); changed({ list:true, insp:true }); };
+  let content = [], style = [], layout = [grp('Position & spacing', ...place), grp('Column', ...where)];
   switch (b.type){
     case 'text': {
       // the pronoun color and italic options only matter once there are pronouns, so they appear as you type them
@@ -1690,56 +1735,55 @@ function renderInspector(){
       extras.append(segs(b, 'tagPos', 'Side', [['before','Before the text'],['after','After the text']]), color(b, 'tagColor', 'Pronoun color', 'Same as the text'), chk(b, 'tagItalic', 'Italic pronouns'));
       extras.hidden = !String(b.tag || '').trim();
       tagF.querySelector('input').addEventListener('input', () => { extras.hidden = !String(b.tag || '').trim(); });
-      Pn.append(grp('Content', txt(b, 'text', 'Text', { area:true, list:true }), chips(), txt(b, 'link', 'Link the whole line (optional)', { ph:'https://… or name@site.com' })),
-        grp('Pronouns or credentials', tagF, extras),
-        grp('Style', row(num(b, 'size', 'Size', 6, 48), sel_(b, 'weight', 'Weight', WEIGHTS)), styleToggles(b), color(b, 'color', 'Color', 'Same as signature'),
-          sel_(b, 'font', 'Font', [['','Same as signature'], ...FONTS]),
-          row(num(b, 'spacing', 'Letter spacing', 0, 10, .5), num(b, 'lh', 'Line height', .5, 2.4, .05))));
+      content = [grp('Words', txt(b, 'text', 'Text', { area:true, list:true }), chips(), txt(b, 'link', 'Link the whole line (optional)', { ph:'https://… or name@site.com' })),
+        grp('Pronouns or credentials', tagF, extras)];
+      style = [grp('Type', row(num(b, 'size', 'Size', 6, 48), sel_(b, 'weight', 'Weight', WEIGHTS)), styleToggles(b), color(b, 'color', 'Color', 'Same as signature'), sel_(b, 'font', 'Font', [['','Same as signature'], ...FONTS])),
+        grp('Spacing', row(num(b, 'spacing', 'Letter spacing', 0, 10, .5), num(b, 'lh', 'Line height', .5, 2.4, .05)))];
       break;
     }
     case 'image':
-      Pn.append(grp('Image', imageEditor(b)),
-        grp('Shape & size', shapeEditor(b)),
-        grp('Crop', cropEditor(b)),
-        grp('Border, link & alt text', row(num(b, 'borderW', 'Border thickness', 0, 10), color(b, 'borderColor', 'Border color')), txt(b, 'link', 'Link (optional)', { ph:'https://' }), txt(b, 'alt', 'Alt text')));
+      content = [grp('Picture', imageEditor(b)), grp('Link & alt text', txt(b, 'link', 'Link (optional)', { ph:'https://' }), txt(b, 'alt', 'Alt text'))];
+      style = [grp('Shape & size', shapeEditor(b)), grp('Crop', cropEditor(b)), grp('Border', row(num(b, 'borderW', 'Border thickness', 0, 10), color(b, 'borderColor', 'Border color')))];
       break;
     case 'divider':
-      Pn.append(grp('Line', row(num(b, 'thickness', 'Thickness', 1, 12), sel_(b, 'style', 'Style', LSTYLES)), color(b, 'color', 'Color'), num(b, 'width', 'Length (%)', 5, 100)));
+      style = [grp('Line', row(num(b, 'thickness', 'Thickness', 1, 12), sel_(b, 'style', 'Style', LSTYLES)), color(b, 'color', 'Color'), num(b, 'width', 'Length (%)', 5, 100))];
       break;
     case 'spacer':
-      Pn.append(grp('Space', num(b, 'height', 'Height', 2, 80)));
+      layout.unshift(grp('Space', num(b, 'height', 'Height', 2, 80)));
       break;
     case 'contact':
-      Pn.append(grp('Contact lines', itemsEditor(b, 'contact'), chips()),
-        grp('Style', segs(b, 'layout', 'Layout', [['stack','Stacked'],['inline','One line']], { insp:true }),
+      content = [grp('Contact lines', itemsEditor(b, 'contact'), chips())];
+      style = [grp('Text', segs(b, 'layout', 'Layout', [['stack','Stacked'],['inline','One line']], { insp:true }),
           b.layout === 'inline' ? txt(b, 'sep', 'Separator') : null,
-          row(num(b, 'size', 'Text size', 8, 24), num(b, 'gap', 'Space between lines', 0, 20)), color(b, 'color', 'Text color', 'Same as signature'),
-          row(num(b, 'iconSize', 'Icon size', 8, 32), color(b, 'iconColor', 'Icon color')),
+          row(num(b, 'size', 'Text size', 8, 24), num(b, 'gap', 'Space between lines', 0, 20)), color(b, 'color', 'Text color', 'Same as signature')),
+        grp('Icons', row(num(b, 'iconSize', 'Icon size', 8, 32), color(b, 'iconColor', 'Icon color')),
           sel_(b, 'iconShape', 'Icon background', [['none','None'],['circle','Circle'],['rounded','Rounded square'],['square','Square']], { insp:true }),
-          b.iconShape !== 'none' ? row(color(b, 'iconBg', 'Background'), num(b, 'iconPad', 'Padding', 0, 14)) : null));
+          b.iconShape !== 'none' ? row(color(b, 'iconBg', 'Background'), num(b, 'iconPad', 'Padding', 0, 14)) : null)];
       break;
     case 'social':
       if (b.tsize == null) b.tsize = 12;
-      Pn.append(grp('Icons', itemsEditor(b, 'social'), chips()),
-        grp('Style', row(num(b, 'size', 'Icon size', 8, 48), num(b, 'gap', 'Space between icons', 0, 30)), color(b, 'color', 'Icon color'),
-          row(num(b, 'tsize', 'Title size', 8, 24), color(b, 'tcolor', 'Title color', 'Same as signature')),
+      content = [grp('Icons', itemsEditor(b, 'social'), chips())];
+      style = [grp('Icons', row(num(b, 'size', 'Icon size', 8, 48), num(b, 'gap', 'Space between icons', 0, 30)), color(b, 'color', 'Icon color'),
           sel_(b, 'shape', 'Background shape', [['none','None'],['circle','Circle'],['rounded','Rounded square'],['square','Square']], { insp:true }),
-          b.shape !== 'none' ? row(color(b, 'bg', 'Background'), num(b, 'pad', 'Padding', 0, 20)) : null));
+          b.shape !== 'none' ? row(color(b, 'bg', 'Background'), num(b, 'pad', 'Padding', 0, 20)) : null),
+        grp('Titles beside the icons', row(num(b, 'tsize', 'Title size', 8, 24), color(b, 'tcolor', 'Title color', 'Same as signature')))];
       break;
     case 'button':
-      Pn.append(grp('Button', txt(b, 'text', 'Button text', { list:true }), txt(b, 'link', 'Link', { ph:'https://… or name@site.com' }), chips(),
-          chk(b, 'inline', 'Sit beside the previous button', { insp:true })),
+      content = [grp('Button', txt(b, 'text', 'Button text', { list:true }), txt(b, 'link', 'Link', { ph:'https://… or name@site.com' }), chips(),
+          chk(b, 'inline', 'Sit beside the previous button', { insp:true }))];
+      style = [grp('Colors', row(color(b, 'bg', 'Button color'), color(b, 'color', 'Text & icon color'))),
         grp('Icon', iconField(b, 'icon', 'Icon', true), row(sel_(b, 'iconPos', 'Position', [['left','Before text'],['right','After text']]), num(b, 'iconSize', 'Icon size', 8, 32))),
-        grp('Style', row(color(b, 'bg', 'Button color'), color(b, 'color', 'Text & icon color')),
-          row(num(b, 'size', 'Text size', 9, 24), sel_(b, 'weight', 'Weight', WEIGHTS)),
-          row(num(b, 'padX', 'Padding left/right', 0, 40), num(b, 'padY', 'Padding top/bottom', 0, 24)),
-          num(b, 'radius', 'Corner radius', 0, 40), row(num(b, 'borderW', 'Border thickness', 0, 8), color(b, 'borderColor', 'Border color'))));
+        grp('Text', row(num(b, 'size', 'Text size', 9, 24), sel_(b, 'weight', 'Weight', WEIGHTS))),
+        grp('Shape', row(num(b, 'padX', 'Padding left/right', 0, 40), num(b, 'padY', 'Padding top/bottom', 0, 24)),
+          num(b, 'radius', 'Corner radius', 0, 40), row(num(b, 'borderW', 'Border thickness', 0, 8), color(b, 'borderColor', 'Border color')))];
       break;
     case 'html':
-      Pn.append(grp('Custom HTML', txt(b, 'html', 'HTML (inline styles work best in email)', { area:true, code:true }), chips()));
+      content = [grp('Custom HTML', txt(b, 'html', 'HTML (inline styles work best in email)', { area:true, code:true }), chips())];
       break;
   }
-  Pn.append(grp('Position & spacing', ...place), grp('Layer name', txt(b, 'label', 'Name', { list:true, ph:blockName(Object.assign({}, b, { label:'' })) })));
+  const crumbs = [...top, [rowName(f.r), f.r.id]]; if (f.r.cols.length > 1) crumbs.push([colLabel(f.r, f.c), f.c.id]);
+  put(tabbed(ihead({ glyph:b.type, kind:`${DEF[b.type].label} block`, obj:b, ph:blockName(Object.assign({}, b, { label:'' })), crumbs, desc:BLOCK_DESC[b.type] || '' }),
+    [['Content', content], ['Style', style], ['Layout', layout]]));
 }
 
 /* ---------- step 2: people (one design, a signature for everyone) ---------- */
@@ -1752,43 +1796,62 @@ function sampleTexts(){
   const s = new Set(['Your Name', 'Job title, Company', 'Job title · Company', '(555) 000-0000', 'you@example.com']);
   for (const p of presets()) for (const r of p.state.rows) for (const c of r.cols) for (const b of c.blocks){
     if (b.type === 'text' && typeof b.text === 'string') s.add(b.text.trim());
+    if (b.type === 'text' && b.tag) s.add(String(b.tag).trim());
+    if (b.type === 'button' && b.link) s.add(String(b.link).trim());
     if (b.type === 'contact') b.items.forEach(it => { if (typeof it.text === 'string') s.add(it.text.trim()); });
   }
   return sampleSet = s;
 }
-// turn the details written into the design into {{fields}}; returns what you'd typed yourself (not the template's samples)
+// turn the details written into the design into {{fields}}; returns what you'd typed yourself (not the template's samples).
+// Two blocks of the same kind (two Titles, two phone lines) each get their own field: {{title}} and {{title_2}}.
+const BOOKING = /calendly|cal\.com|acuityscheduling|youcanbook|hubspot\.com\/meetings|book|schedul|appointment/i;
 function convertDesign(){
   const tm = state.team, v = {}, samples = sampleTexts(); let n = 0, kept = 0;
-  // new text fields go before the photo, so the card reads name, title, … photo
+  const me = Object.values(myDetails()).map(x => String(x || '').trim()).filter(Boolean);
+  const used = new Set((JSON.stringify(state.rows).match(/\{\{\s*[\w-]+\s*\}\}/g) || []).map(t => t.replace(/[{}\s]/g, '')));
+  state.rows.forEach(r => r.cols.forEach(c => c.blocks.forEach(b => { if (b.type === 'image' && b.source === 'field' && b.field) used.add(b.field); })));
+  const baseOf = k => k.replace(/_\d+$/, '');
+  // a second Title goes right after the first on each card; anything else new goes before the pictures
   const ensure = (k, label, type) => {
     if (tm.fields.some(f => f.key === k)) return;
-    const f = Object.assign({ key:k, label }, type ? { type } : {}), img = tm.fields.findIndex(x => x.type === 'image');
-    if (type || img < 0) tm.fields.push(f); else tm.fields.splice(img, 0, f);
+    const f = Object.assign({ key:k, label }, type ? { type } : {});
+    const after = tm.fields.map(x => baseOf(x.key)).lastIndexOf(baseOf(k)), img = tm.fields.findIndex(x => x.type === 'image');
+    if (after >= 0) tm.fields.splice(after + 1, 0, f); else if (type || img < 0) tm.fields.push(f); else tm.fields.splice(img, 0, f);
   };
-  const take = (k, label, val) => {
-    ensure(k, label); n++;
+  const take = (base, val, type) => {
+    let k = base, i = 1; while (used.has(k)) k = `${base}_${++i}`;
+    used.add(k); ensure(k, k === base ? FIELD_LABEL[base] : `${FIELD_LABEL[base]} ${i}`, type); n++;
     const t = String(val || '').trim();
-    if (t && !samples.has(t) && !v[k]){ v[k] = t; kept++; }
-    return `{{${k}}}`;
+    // the template's sample text never carries over, unless it's what you saved under "Preview with your details"
+    if (t && (!samples.has(t) || me.includes(t)) && !v[k]){ v[k] = t; kept++; }
+    return k;
   };
+  const tok = k => `{{${k}}}`;
+  const TEXT = [[/^(full )?name$/i, 'name'], [/^pronouns?$/i, 'pronouns'], [/^((job )?title|role|position)$/i, 'title'], [/^(company|organi[sz]ation|business)$/i, 'company']];
   for (const r of state.rows) for (const c of r.cols) for (const b of c.blocks){
-    if (b.type === 'text' && !usesField(b.text)){
-      if (/^name$/i.test(b.label)) b.text = take('name', 'Name', b.text);
-      else if (/^(job )?title$/i.test(b.label)) b.text = take('title', 'Job title', b.text);
-      else if (/^company$/i.test(b.label)) b.text = take('company', 'Company', b.text);
+    if (b.type === 'text'){
+      const hit = !usesField(b.text) && TEXT.find(([re]) => re.test(String(b.label || '').trim()));
+      if (hit) b.text = tok(take(hit[1], b.text));
+      if (b.tag && String(b.tag).trim() && !usesField(b.tag)) b.tag = tok(take('pronouns', b.tag));
     }
     if (b.type === 'contact') b.items.forEach(it => {
       if (usesField(it.text)) return;
-      if (/^mailto:/i.test(it.link) || /@/.test(it.text)){ it.text = take('email', 'Email', it.text); it.link = '{{email}}'; }
-      else if (/^tel:/i.test(it.link) || /^\+?[\d\s().-]{7,}$/.test(it.text)){ it.text = take('phone', 'Phone', it.text); it.link = '{{phone}}'; }
-      else if (/^https?:/i.test(it.link) && /\.\w{2,}/.test(it.text)){ it.text = take('web', 'Website', it.text); it.link = '{{web}}'; }
+      const ic = it.icon && it.icon.name || '', link = String(it.link || '');
+      // a label in front ("F: ", "Mobile: ") stays in the design; only the detail after it becomes the person's
+      const m = String(it.text || '').match(/^\s*([A-Za-z][A-Za-z ]{0,10}:\s*)(\S.*)$/), pre = m && !/^\/\//.test(m[2]) ? m[1] : '', rest = pre ? m[2] : it.text;
+      const set = (k, linked) => { it.text = pre + tok(k); if (linked) it.link = tok(k); };
+      if (/fax/.test(ic) || /^f(ax)?\s*:/i.test(pre)){ set(take('fax', rest)); it.link = ''; }
+      else if (/^mailto:/i.test(link) || /@/.test(rest)) set(take('email', rest), true);
+      else if (/^tel:/i.test(link) || /^\+?[\d\s().-]{7,}$/.test(rest)) set(take('phone', rest), true);
+      else if (/^https?:/i.test(link) && BOOKING.test(link + ' ' + it.text)) it.link = tok(take('booking', link));
+      else if (/^https?:/i.test(link) && /\.\w{2,}/.test(rest)) set(take('web', rest), true);
     });
+    // a booking button keeps its words; only where it goes changes per person (it's left out for anyone without a link)
+    if (b.type === 'button' && /^https?:/i.test(b.link || '') && !usesField(b.link) && BOOKING.test(b.link + ' ' + b.text)) b.link = tok(take('booking', b.link));
     if (b.type === 'image' && /head|photo|portrait/i.test(b.label) && b.source !== 'field'){
-      ensure('photo', 'Photo', 'image'); n++;
       // a template's drawn sample picture isn't a real photo, so only a link you added carries over
       const u = /^https?:/i.test(b.url || '') ? b.url : /^https?:/i.test(b.orig || '') ? b.orig : '';
-      if (u && !v.photo){ v.photo = u; kept++; }
-      b.source = 'field'; b.field = 'photo';
+      b.field = take('photo', u, 'image'); b.source = 'field';
     }
   }
   return { v, n, kept };
@@ -1808,12 +1871,17 @@ function parseTable(text){
   row.push(cell); rows.push(row);
   return rows;
 }
+// spreadsheet headers people commonly use for each default field (checked in this order: "Logo image" is a logo, "Photo URL" a photo)
+const FIELD_ALIASES = [[/^(full_)?name$/, 'name'], [/pronoun/, 'pronouns'], [/^(job_)?title$|^role$|^position$/, 'title'], [/company|organi[sz]ation|employer/, 'company'],
+  [/e_?mail/, 'email'], [/fax/, 'fax'], [/phone|mobile|cell|^tel/, 'phone'], [/booking|calendly|schedul|appointment/, 'booking'], [/logo/, 'logo'],
+  [/photo|image|picture|headshot|avatar/, 'photo'], [/^(web_?site|website_url|web|site|url)$/, 'web']];
 function importRows(text){
   const rows = parseTable(text); if (rows.length < 2) return 0;
   const tm = state.team;
   const keys = rows[0].map(h => {
     const s = slug(h), hl = h.trim().toLowerCase();
-    const f = tm.fields.find(f => f.key === s || f.label.toLowerCase() === hl) || tm.fields.find(f => s.startsWith(f.key) || f.key.startsWith(s));
+    const alias = (FIELD_ALIASES.find(([re]) => re.test(s)) || [])[1];
+    const f = tm.fields.find(f => f.key === s || f.label.toLowerCase() === hl) || (alias && tm.fields.find(f => f.key === alias)) || tm.fields.find(f => s.startsWith(f.key) || f.key.startsWith(s));
     if (f) return f.key;
     if (!s) return null;
     tm.fields.push(/photo|image|picture|headshot/.test(s) ? { key:s, label:h.trim(), type:'image' } : { key:s, label:h.trim() });
@@ -1851,7 +1919,7 @@ function renderPeople(){
   Pn.innerHTML = `<div class="pwrap">
     <h2>People</h2>
     <p class="note">One design, a signature for everyone. Fields like <code>{{name}}</code> in the design fill in from each row. Blank fields are left out of that person's signature.</p>
-    ${tm.people.length ? '' : `<div class="sharecard"><h3>${G('fas','users')}Make this a team signature</h3><p class="note">Adding the first person turns the name, title, company, email, phone, website and photo in this design into fields like <code>{{name}}</code>. Anything you've already typed in place of the template's sample details fills in their card.</p><div class="row"><button class="btn primary sm" data-a="add" type="button">Add a person</button><button class="btn sm" data-a="import" type="button">Paste from a spreadsheet</button></div></div>`}
+    ${tm.people.length ? '' : `<div class="sharecard"><h3>${G('fas','users')}Make this a team signature</h3><p class="note">Adding the first person turns the name, pronouns, title, company, email, phone, fax, website, booking link and photo in this design into fields like <code>{{name}}</code>. If two blocks hold the same kind of detail, each gets its own field, like <code>{{title}}</code> and <code>{{title_2}}</code>. Anything you've already typed in place of the template's sample details fills in their card.</p><div class="row"><button class="btn primary sm" data-a="add" type="button">Add a person</button><button class="btn sm" data-a="import" type="button">Paste from a spreadsheet</button></div></div>`}
     <div class="field"><span>Fields (drag to reorder, or use the arrows)</span><div class="chips">${cols.map((f, i) => `<span class="chip fchip" draggable="true" data-fk="${f.key}" style="display:inline-flex;gap:4px;align-items:center;cursor:grab">${i ? `<button type="button" class="iconbtn" data-mvf="${f.key}" data-dir="-1" aria-label="Move ${esc(f.label)} earlier">${G('fas','chevron-left')}</button>` : ''}{{${f.key}}}${f.type === 'image' ? ' (image)' : ''}${i < cols.length - 1 ? `<button type="button" class="iconbtn" data-mvf="${f.key}" data-dir="1" aria-label="Move ${esc(f.label)} later">${G('fas','chevron-right')}</button>` : ''}<button type="button" class="iconbtn" data-rmf="${f.key}" aria-label="Remove field ${esc(f.label)}">${G('fas','xmark')}</button></span>`).join('')}</div>
       <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap"><input id="tnewf" type="text" placeholder="New field, e.g. Pronouns" aria-label="New field name" style="flex:1;min-width:140px;padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:var(--panel2)"><label class="chk" style="font-size:12px"><input id="tnewimg" type="checkbox">Image</label><button class="btn sm" data-a="addf" type="button">Add field</button></div></div>
     ${tm.people.length ? `<div class="plist">${rows}</div>` : ''}
