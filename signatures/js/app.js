@@ -1588,23 +1588,53 @@ function renderInspector(){
 /* ---------- step 2: people (one design, a signature for everyone) ---------- */
 const slug = s => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') || 'field';
 function newPerson(values){ return { id:uid(), values:Object.assign({}, values || {}) }; }
-function convertToTeam(){
-  // turn literal details in the design into {{fields}} and keep them as person 1
-  const v = {}; let n = 0;
-  const take = (k, val) => { if (val && !v[k]) v[k] = val; n++; return `{{${k}}}`; };
+// every detail the templates and new blocks start with; text that still matches one of these was never changed
+let sampleSet = null;
+function sampleTexts(){
+  if (sampleSet) return sampleSet;
+  const s = new Set(['Your Name', 'Job title, Company', 'Job title · Company', '(555) 000-0000', 'you@example.com']);
+  for (const p of presets()) for (const r of p.state.rows) for (const c of r.cols) for (const b of c.blocks){
+    if (b.type === 'text' && typeof b.text === 'string') s.add(b.text.trim());
+    if (b.type === 'contact') b.items.forEach(it => { if (typeof it.text === 'string') s.add(it.text.trim()); });
+  }
+  return sampleSet = s;
+}
+// turn the details written into the design into {{fields}}; returns what you'd typed yourself (not the template's samples)
+function convertDesign(){
+  const tm = state.team, v = {}, samples = sampleTexts(); let n = 0, kept = 0;
+  // new text fields go before the photo, so the card reads name, title, … photo
+  const ensure = (k, label, type) => {
+    if (tm.fields.some(f => f.key === k)) return;
+    const f = Object.assign({ key:k, label }, type ? { type } : {}), img = tm.fields.findIndex(x => x.type === 'image');
+    if (type || img < 0) tm.fields.push(f); else tm.fields.splice(img, 0, f);
+  };
+  const take = (k, label, val) => {
+    ensure(k, label); n++;
+    const t = String(val || '').trim();
+    if (t && !samples.has(t) && !v[k]){ v[k] = t; kept++; }
+    return `{{${k}}}`;
+  };
   for (const r of state.rows) for (const c of r.cols) for (const b of c.blocks){
-    if (b.type === 'text' && /^name$/i.test(b.label) && !usesField(b.text)) b.text = take('name', b.text);
-    else if (b.type === 'text' && /^title$/i.test(b.label) && !usesField(b.text)) b.text = take('title', b.text);
+    if (b.type === 'text' && !usesField(b.text)){
+      if (/^name$/i.test(b.label)) b.text = take('name', 'Name', b.text);
+      else if (/^(job )?title$/i.test(b.label)) b.text = take('title', 'Job title', b.text);
+      else if (/^company$/i.test(b.label)) b.text = take('company', 'Company', b.text);
+    }
     if (b.type === 'contact') b.items.forEach(it => {
       if (usesField(it.text)) return;
-      if (/^mailto:/i.test(it.link) || /@/.test(it.text)){ it.text = take('email', it.text); it.link = '{{email}}'; }
-      else if (/^tel:/i.test(it.link) || /^\+?[\d\s().-]{7,}$/.test(it.text)){ it.text = take('phone', it.text); it.link = '{{phone}}'; }
+      if (/^mailto:/i.test(it.link) || /@/.test(it.text)){ it.text = take('email', 'Email', it.text); it.link = '{{email}}'; }
+      else if (/^tel:/i.test(it.link) || /^\+?[\d\s().-]{7,}$/.test(it.text)){ it.text = take('phone', 'Phone', it.text); it.link = '{{phone}}'; }
+      else if (/^https?:/i.test(it.link) && /\.\w{2,}/.test(it.text)){ it.text = take('web', 'Website', it.text); it.link = '{{web}}'; }
     });
-    if (b.type === 'image' && /head|photo|portrait/i.test(b.label) && b.source !== 'field'){ v.photo = b.url || b.orig; b.source = 'field'; b.field = 'photo'; n++; }
+    if (b.type === 'image' && /head|photo|portrait/i.test(b.label) && b.source !== 'field'){
+      ensure('photo', 'Photo', 'image'); n++;
+      // a template's drawn sample picture isn't a real photo, so only a link you added carries over
+      const u = /^https?:/i.test(b.url || '') ? b.url : /^https?:/i.test(b.orig || '') ? b.orig : '';
+      if (u && !v.photo){ v.photo = u; kept++; }
+      b.source = 'field'; b.field = 'photo';
+    }
   }
-  const p = newPerson(v);
-  state.team.people.push(p); state.team.active = p.id;
-  return n;
+  return { v, n, kept };
 }
 function parseTable(text){
   const t = text.replace(/\r/g, '').trim(); if (!t) return [];
@@ -1664,7 +1694,7 @@ function renderPeople(){
   Pn.innerHTML = `<div class="pwrap">
     <h2>People</h2>
     <p class="note">One design, a signature for everyone. Fields like <code>{{name}}</code> in the design fill in from each row. Blank fields are left out of that person's signature.</p>
-    ${tm.people.length ? '' : `<div class="sharecard"><h3>${G('fas','users')}Make this a team signature</h3><p class="note">Convert turns the name, title, email, phone and photo in this design into fields and keeps the current details as the first person.</p><div class="row"><button class="btn primary sm" data-a="convert" type="button">Convert this design</button><button class="btn sm" data-a="add" type="button">Add a person</button><button class="btn sm" data-a="import" type="button">Paste from a spreadsheet</button></div></div>`}
+    ${tm.people.length ? '' : `<div class="sharecard"><h3>${G('fas','users')}Make this a team signature</h3><p class="note">Adding the first person turns the name, title, company, email, phone, website and photo in this design into fields like <code>{{name}}</code>. Anything you've already typed in place of the template's sample details fills in their card.</p><div class="row"><button class="btn primary sm" data-a="add" type="button">Add a person</button><button class="btn sm" data-a="import" type="button">Paste from a spreadsheet</button></div></div>`}
     <div class="field"><span>Fields (drag to reorder, or use the arrows)</span><div class="chips">${cols.map((f, i) => `<span class="chip fchip" draggable="true" data-fk="${f.key}" style="display:inline-flex;gap:4px;align-items:center;cursor:grab">${i ? `<button type="button" class="iconbtn" data-mvf="${f.key}" data-dir="-1" aria-label="Move ${esc(f.label)} earlier">${G('fas','chevron-left')}</button>` : ''}{{${f.key}}}${f.type === 'image' ? ' (image)' : ''}${i < cols.length - 1 ? `<button type="button" class="iconbtn" data-mvf="${f.key}" data-dir="1" aria-label="Move ${esc(f.label)} later">${G('fas','chevron-right')}</button>` : ''}<button type="button" class="iconbtn" data-rmf="${f.key}" aria-label="Remove field ${esc(f.label)}">${G('fas','xmark')}</button></span>`).join('')}</div>
       <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap"><input id="tnewf" type="text" placeholder="New field, e.g. Pronouns" aria-label="New field name" style="flex:1;min-width:140px;padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:var(--panel2)"><label class="chk" style="font-size:12px"><input id="tnewimg" type="checkbox">Image</label><button class="btn sm" data-a="addf" type="button">Add field</button></div></div>
     ${tm.people.length ? `<div class="plist">${rows}</div>` : ''}
@@ -1719,8 +1749,16 @@ $('#people').addEventListener('click', async e => {
   const act = a.dataset.a;
   if (act !== 'pdel') delPerson = null;
   if (act === 'pick'){ tm.active = p.id; changed({ team:true }); const f = $(`#pf-${p.id}-${tm.fields[0] ? tm.fields[0].key : 'name'}`); if (f) f.focus(); return; }
-  if (act === 'convert'){ const n = convertToTeam(); toast(n ? `Converted ${n} detail${n > 1 ? 's' : ''} to fields. Add more people below.` : 'Nothing to convert automatically. Use the field chips in the design inspector.'); changed({ team:true, list:true, insp:true }); }
-  if (act === 'add'){ const np = newPerson({}); tm.people.push(np); tm.active = np.id; changed({ team:true }); const f = $(`#pf-${np.id}-${tm.fields[0] ? tm.fields[0].key : 'name'}`); if (f) f.focus(); }
+  if (act === 'add'){
+    // the first person: the design's details become {{fields}}, and anything you'd already typed fills in their card
+    let np, first = !tm.people.length;
+    if (first){
+      const { v, n, kept } = convertDesign(); np = newPerson(v);
+      toast(n ? `Turned ${n} detail${n > 1 ? 's' : ''} in the design into fields like {{name}}.${kept ? ` Your ${kept === 1 ? 'change carried' : `${kept} changes carried`} over to their card.` : ' Fill in their details below.'}` : 'Added a person. Put fields like {{name}} in the design to fill them in from here.');
+    } else np = newPerson({});
+    tm.people.push(np); tm.active = np.id; changed({ team:true, list:first, insp:first });
+    const f = $(`#pf-${np.id}-${tm.fields[0] ? tm.fields[0].key : 'name'}`); if (f) f.focus();
+  }
   if (act === 'addf'){
     const lbl = $('#tnewf').value.trim(); if (!lbl) return;
     let k = slug(lbl); while (tm.fields.some(f => f.key === k)) k += '_2';
@@ -1736,6 +1774,8 @@ $('#people').addEventListener('click', async e => {
   }
   if (act === 'import'){ importOpen = !importOpen; renderPeople(); if (importOpen) $('#timptext').focus(); }
   if (act === 'doimport'){
+    // pasting a team into a design that still has one person's details written in swaps those for fields first
+    if (!tm.people.length && parseTable($('#timptext').value).length > 1) convertDesign();
     const n = importRows($('#timptext').value);
     toast(n ? `Imported ${n} ${n > 1 ? 'people' : 'person'}.` : 'No rows found. Include a header row, then one row per person.');
     if (n){ importOpen = false; changed({ team:true }); }
