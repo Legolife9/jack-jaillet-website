@@ -1,4 +1,4 @@
-/* When You Free? calendar files: reads an .ics export into busy times (on this device only)
+/* WhenUFree calendar files: reads an .ics export into busy times (on this device only)
    and writes the final time as an .ics file or an "add to calendar" link. MIT license.
    Needs core.js (WYFCore) for time zone math. */
 (function (root, factory) {
@@ -269,7 +269,7 @@
   // a one-event calendar file; times are epoch minutes, `weekly` repeats it every week
   function makeIcs(o) {
     const lines = [
-      'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//jackjaillet.com//When You Free//EN', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
+      'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//jackjaillet.com//WhenUFree//EN', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
       'BEGIN:VEVENT',
       'UID:' + o.uid,
       'DTSTAMP:' + stamp(o.now || Date.now()),

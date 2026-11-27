@@ -1,9 +1,10 @@
-/* When You Free? core: time zones, slots, grid layout and best-time ranking.
+/* WhenUFree core: time zones, slots, grid layout and best-time ranking.
    No DOM, so the tests in ../test run it under Node too. MIT license. Part of jackjaillet.com.
 
    A poll is { mode: 'dates' | 'week', days: ['YYYY-MM-DD', ...], start, end, step, tz }:
    every day gets slots from `start` to `end` (minutes after midnight) every `step` minutes,
-   in the organizer's time zone `tz`. Each slot is stored as epoch minutes (minutes since
+   in the organizer's time zone `tz`, except days listed in `hours` ({ 'YYYY-MM-DD': [start, end] }),
+   which use their own window. Each slot is stored as epoch minutes (minutes since
    1970-01-01 UTC), so a viewer anywhere can lay the same moments out in their own zone.
    "Days of the week" polls use the dates of one reference week and show only weekday names. */
 (function (root, factory) {
@@ -119,11 +120,23 @@
 
   /* ---------- slots and layout ---------- */
 
+  // a day's own [start, end], or the poll's general window
+  function hoursFor(ev, day) {
+    const h = ev.hours && ev.hours[day];
+    return Array.isArray(h) && h.length === 2 && h[1] > h[0] ? h : [ev.start, ev.end];
+  }
+
+  // how many slots a poll has (for the size limit), without working out the moments
+  function slotCount(ev) {
+    return ev.days.reduce((n, day) => { const [s, e] = hoursFor(ev, day); return n + Math.max(0, Math.ceil((e - s) / ev.step)); }, 0);
+  }
+
   // every slot of a poll, as sorted epoch minutes
   function slotKeys(ev) {
     const set = new Set();
     for (const day of ev.days) {
-      for (let t = ev.start; t < ev.end; t += ev.step) set.add(Math.round(zonedToMs(day, t, ev.tz) / 60000));
+      const [s, e] = hoursFor(ev, day);
+      for (let t = s; t < e; t += ev.step) set.add(Math.round(zonedToMs(day, t, ev.tz) / 60000));
     }
     return [...set].sort((a, b) => a - b);
   }
@@ -293,6 +306,6 @@
   return {
     DAY, partsIn, offsetMin, zonedToMs, validTz, localTz, allTimeZones, gmtLabel, tzLabel,
     addDays, weekdayOf, todayIn, weekDates, firstDayOfWeek,
-    slotKeys, layout, clock, dayLabel, slotLabel, rangeLabel, daysSummary, nextWeekly, tally, bestTimes
+    hoursFor, slotCount, slotKeys, layout, clock, dayLabel, slotLabel, rangeLabel, daysSummary, nextWeekly, tally, bestTimes
   };
 });

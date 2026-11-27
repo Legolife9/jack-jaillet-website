@@ -978,6 +978,27 @@ a.org-item:hover { color: var(--ink); text-decoration: none; }
 }
 .hl-cta { margin-top: 12px; }
 .hl-cta a { font-weight: 600; }
+/* the two tools on the services page: a logo and a real button each */
+.tool-logo { display: block; width: 56px; height: 56px; border-radius: 16px; margin-bottom: 14px; box-shadow: 0 8px 24px rgba(30, 79, 163, 0.35); }
+.hl-cta a.tool-btn {
+  gap: 8px;
+  min-height: 48px;
+  margin-top: 6px;
+  padding: 12px 24px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #3a7bff 0%, #2447c9 55%, #6a3df0 100%);
+  color: #fff;
+  font-size: 1rem;
+  text-decoration: none;
+  box-shadow: 0 8px 24px rgba(36, 71, 201, 0.35);
+  transition: transform 0.18s, box-shadow 0.18s, filter 0.18s;
+}
+.hl-cta a.tool-btn:hover { transform: translateY(-2px); filter: brightness(1.08); box-shadow: 0 12px 30px rgba(36, 71, 201, 0.5); }
+.hl-cta a.tool-btn span { transition: transform 0.18s; }
+.hl-cta a.tool-btn:hover span { transform: translateX(3px); }
+.hl-lead .tool-logo { box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.45), 0 8px 24px rgba(0, 0, 0, 0.3); }
+.hl-lead .hl-cta a.tool-btn-light { background: #fff; color: #1b2f86; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25); }
+@media (prefers-reduced-motion: reduce) { .hl-cta a.tool-btn, .hl-cta a.tool-btn span { transition: none; } .hl-cta a.tool-btn:hover, .hl-cta a.tool-btn:hover span { transform: none; } }
 
 /* Standalone CTA links sat at 19px tall, under the 24px target minimum. They
    are their own line rather than links inside a sentence, so the inline
