@@ -130,9 +130,10 @@ begin
   end if;
   -- days with their own times; entries for days not in the poll, or the same as the general window, are dropped
   hours := '{}'::jsonb;
-  total := cardinality(days) * ((end_min - start_min) / step);
   if p ? 'hours' and jsonb_typeof(p -> 'hours') = 'object' then
     for hk, hv in select * from jsonb_each(p -> 'hours') loop
+      -- only exact YYYY-MM-DD keys, so one day can't be listed twice under different spellings
+      if hk !~ '^\d{4}-\d{2}-\d{2}$' then raise exception 'wyf: Some of the poll settings are not valid.'; end if;
       begin
         hd := hk::date;
         hs := (hv ->> 0)::int;
@@ -148,9 +149,13 @@ begin
       end if;
       continue when hs = start_min and he = end_min;
       hours := hours || jsonb_build_object(to_char(hd, 'YYYY-MM-DD'), jsonb_build_array(hs, he));
-      total := total + (he - hs) / step - (end_min - start_min) / step;
     end loop;
   end if;
+  -- count the slots from what will actually be stored
+  select coalesce(sum(case when hours ? to_char(d, 'YYYY-MM-DD')
+                           then ((hours -> to_char(d, 'YYYY-MM-DD') ->> 1)::int - (hours -> to_char(d, 'YYYY-MM-DD') ->> 0)::int) / step
+                           else (end_min - start_min) / step end), 0)
+    into total from unnest(days) d;
   if total > 2000 then
     raise exception 'wyf: That is too many time slots. Pick fewer days, a shorter window, or longer slots.';
   end if;
