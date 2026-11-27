@@ -1,4 +1,4 @@
-/* When You Free? : group availability polls. MIT license. Part of jackjaillet.com.
+/* WhenUFree: group availability polls. MIT license. Part of jackjaillet.com.
    Plain JavaScript, no build step. Polls live in Supabase and every read and write goes
    through the wyf_* functions in ../supabase/schema.sql. Google sign-in is shared with
    Signature Studio and is optional: without it, this browser remembers your polls. */
@@ -28,6 +28,10 @@ const ICON = {
   star: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/></svg>',
   x: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
   cal: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3.5" y="5" width="17" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 10h17M8 3v4M16 3v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+  copy: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="8.5" y="8.5" width="11" height="11" rx="2.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M15.5 8.5V6.7a2.2 2.2 0 0 0-2.2-2.2H6.7a2.2 2.2 0 0 0-2.2 2.2v6.6a2.2 2.2 0 0 0 2.2 2.2h1.8" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>',
+  mail: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3.5" y="5.5" width="17" height="13" rx="2.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4.5 7l7.5 6 7.5-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+  chat: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 5.5h14a1.5 1.5 0 0 1 1.5 1.5v8.5A1.5 1.5 0 0 1 19 17h-7l-4.5 3.5V17H5a1.5 1.5 0 0 1-1.5-1.5V7A1.5 1.5 0 0 1 5 5.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+  google: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="#4285F4" d="M21.6 12.2c0-.7-.1-1.4-.2-2H12v3.8h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.3z"/><path fill="#34A853" d="M12 22c2.7 0 5-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.8-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22z"/><path fill="#FBBC05" d="M6.4 14c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V7.4H3.1a10 10 0 0 0 0 9.2L6.4 14z"/><path fill="#EA4335" d="M12 6c1.5 0 2.8.5 3.8 1.5l2.9-2.9A10 10 0 0 0 3.1 7.4L6.4 10c.8-2.3 3-4 5.6-4z"/></svg>',
   share: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 15V4M7.5 8.5L12 4l4.5 4.5M5 13v6h14v-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
 };
 
@@ -71,6 +75,7 @@ function openDialog(title, html, onMount, opts) {
   $('#dlgtitle').textContent = title;
   $('#dlgbody').innerHTML = html;
   dlg.classList.toggle('wide', !!(opts && opts.wide));
+  dlg.classList.toggle('ready', !!(opts && opts.cls === 'ready'));
   dlgOnClose = (opts && opts.onClose) || null;
   dlg.showModal();
   if (onMount) onMount($('#dlgbody'));
@@ -113,17 +118,20 @@ async function copyText(text, btn) {
     ta.remove();
   }
   if (btn) {
-    const old = btn.dataset.label || btn.textContent;
+    const old = btn.dataset.label || btn.innerHTML;
     btn.dataset.label = old;
-    btn.textContent = done ? 'Copied' : 'Select and copy';
-    setTimeout(() => { btn.textContent = old; }, 1800);
+    btn.innerHTML = done ? ICON.check + 'Copied' : 'Select and copy';
+    btn.classList.toggle('copied', done);
+    setTimeout(() => { btn.innerHTML = old; btn.classList.remove('copied'); }, 1800);
   }
   return done;
 }
-const copyRow = (value, label) => `<div class="copyrow"><input type="text" readonly value="${esc(value)}" aria-label="${esc(label)}"><button type="button" class="btn sm" data-copy="${esc(value)}">Copy</button></div>`;
-document.addEventListener('click', e => {
+const copyRow = (value, label, primary) => `<div class="copyrow"><input type="text" readonly value="${esc(value)}" aria-label="${esc(label)}"><button type="button" class="btn ${primary ? 'primary' : 'sm'}" data-copy="${esc(value)}">${ICON.copy}Copy</button></div>`;
+document.addEventListener('click', async e => {
   const b = e.target.closest('[data-copy]');
   if (b) { copyText(b.dataset.copy, b); return; }
+  const sh = e.target.closest('[data-share]');
+  if (sh) { try { await navigator.share({ title: sh.dataset.title, text: `When are you free for “${sh.dataset.title}”?`, url: sh.dataset.share }); } catch (x) {} }
 });
 document.addEventListener('focusin', e => { if (e.target.matches('.copyrow input')) e.target.select(); });
 
@@ -226,8 +234,18 @@ function pollForm(box, init, opts) {
     dates: new Set(init && init.mode === 'dates' ? init.days : []),
     weekdays: new Set(init && init.mode === 'week' ? init.days.map(C.weekdayOf) : [1, 2, 3, 4, 5]),
     ref: init && init.mode === 'week' ? init.days[0] : null, // weekly polls keep their reference week, so saved answers still line up
-    month: null
+    month: null,
+    picker: false, pickYear: 0, // the month and year chooser that opens from the calendar's title
+    hours: new Map(),  // specific dates with their own times: 'YYYY-MM-DD' -> [start, end]
+    whours: new Map(), // weekly polls: weekday -> [start, end]
+    dhOpen: false
   };
+  if (init && init.hours) {
+    for (const [d, h] of Object.entries(init.hours)) {
+      if (init.mode === 'week') st.whours.set(C.weekdayOf(d), h); else st.hours.set(d, h);
+    }
+    st.dhOpen = Object.keys(init.hours).length > 0;
+  }
   const today = C.todayIn(tz0);
   const firstPicked = init && init.mode === 'dates' && init.days.length ? [...init.days].sort()[0] : null;
   st.month = (firstPicked && firstPicked < today ? firstPicked : today).slice(0, 7);
@@ -254,6 +272,10 @@ function pollForm(box, init, opts) {
         <span aria-hidden="true">to</span>
         <select name="end" aria-label="Latest time"></select>
       </div>
+      <div class="dayhours">
+        <button type="button" class="dhtoggle" data-dhtoggle aria-expanded="false" aria-controls="${uid}-dh"></button>
+        <div class="dhlist" id="${uid}-dh" role="group" aria-label="Times for specific days" hidden></div>
+      </div>
     </div>
     <label class="field"><span>Time zone</span><select name="tz">${tzOptions(tz0)}</select>
       <small class="note">The times above are in this zone. Everyone else sees the poll in their own.</small></label>
@@ -269,25 +291,31 @@ function pollForm(box, init, opts) {
       </div>
     </details>
     <p class="formerr" role="alert" hidden></p>
-    <div class="formactions"><button type="submit" class="btn primary">${esc(opts.submit)}</button>${opts.cancel ? '<button type="button" class="btn ghost" data-cancel>Cancel</button>' : ''}</div>
+    <div class="formactions"><button type="submit" class="btn primary big">${esc(opts.submit)}</button>${opts.cancel ? '<button type="button" class="btn ghost" data-cancel>Cancel</button>' : ''}</div>
   </form>`;
 
   const form = box.querySelector('form');
   const F = form.elements;
   F.step.value = String(step0);
 
+  const inc = () => Math.min(+F.step.value, 60);
+  const snap = ([s, e]) => { const i = inc(); const a = Math.floor(s / i) * i, b = Math.min(1440, Math.ceil(e / i) * i); return [a, b > a ? b : Math.min(1440, a + i)]; };
+
   function drawTimes(keepStart, keepEnd) {
-    const step = +F.step.value, inc = Math.min(step, 60);
-    const s = Math.floor(keepStart / inc) * inc, e = Math.min(1440, Math.ceil(keepEnd / inc) * inc);
-    F.start.innerHTML = timeOptions(inc, 0, 1440 - inc, s);
-    F.end.innerHTML = timeOptions(inc, inc, 1440, e > s ? e : Math.min(1440, s + inc));
+    const i = inc();
+    const s = Math.floor(keepStart / i) * i, e = Math.min(1440, Math.ceil(keepEnd / i) * i);
+    F.start.innerHTML = timeOptions(i, 0, 1440 - i, s);
+    F.end.innerHTML = timeOptions(i, i, 1440, e > s ? e : Math.min(1440, s + i));
   }
   drawTimes(init ? init.start : 540, init ? init.end : 1020);
-  F.step.addEventListener('change', () => drawTimes(+F.start.value, +F.end.value));
-  F.start.addEventListener('change', () => { if (+F.end.value <= +F.start.value) { const inc = Math.min(+F.step.value, 60); drawTimes(+F.start.value, Math.min(1440, +F.start.value + 4 * 60 - (4 * 60) % inc)); } });
+  F.step.addEventListener('change', () => { drawTimes(+F.start.value, +F.end.value); drawHours(); });
+  F.start.addEventListener('change', () => { if (+F.end.value <= +F.start.value) { const i = inc(); drawTimes(+F.start.value, Math.min(1440, +F.start.value + 4 * 60 - (4 * 60) % i)); } drawHours(); });
+  F.end.addEventListener('change', drawHours);
 
   const wdName = (wd, style) => new Intl.DateTimeFormat(LOC, { weekday: style, timeZone: 'UTC' }).format(new Date(Date.UTC(2023, 0, 1 + wd))); // Jan 1 2023 was a Sunday
   const order = [0, 1, 2, 3, 4, 5, 6].map(i => (i + FIRST_DAY) % 7);
+  const ymOf = (y, m) => `${y}-${String(m).padStart(2, '0')}`;
+  const chev = d => `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="${d}" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
   function drawDays() {
     $$('.seg [data-mode]', form).forEach(b => b.setAttribute('aria-checked', String(b.dataset.mode === st.mode)));
@@ -297,31 +325,95 @@ function pollForm(box, init, opts) {
         `<button type="button" class="wd" data-wd="${wd}" aria-pressed="${st.weekdays.has(wd)}"><span aria-hidden="true">${esc(wdName(wd, 'short'))}</span><span class="sr-only">${esc(wdName(wd, 'long'))}</span></button>`).join('')}</div>`;
       const n = st.weekdays.size;
       count.textContent = n ? `Every ${order.filter(w => st.weekdays.has(w)).map(w => wdName(w, 'long')).join(', ')}` : 'Pick at least one day.';
+      drawHours();
       return;
     }
     const [y, m] = st.month.split('-').map(Number);
     const first = `${st.month}-01`;
     const nDays = new Date(Date.UTC(y, m, 0)).getUTCDate();
     const lead = (C.weekdayOf(first) - FIRST_DAY + 7) % 7;
+    const monthOnly = new Intl.DateTimeFormat(LOC, { month: 'long', timeZone: 'UTC' }).format(new Date(Date.UTC(y, m - 1, 1)));
     const monthName = new Intl.DateTimeFormat(LOC, { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(Date.UTC(y, m - 1, 1)));
     const todayNow = C.todayIn(F.tz.value);
     const maxMonth = C.addDays(todayNow, 400).slice(0, 7);
-    let cells = '';
-    for (let i = 0; i < lead; i++) cells += '<span class="dpad" aria-hidden="true"></span>';
-    for (let d = 1; d <= nDays; d++) {
-      const ds = `${st.month}-${String(d).padStart(2, '0')}`;
-      const on = st.dates.has(ds), past = ds < todayNow;
-      const label = new Intl.DateTimeFormat(LOC, { weekday: 'long', month: 'long', day: 'numeric', timeZone: 'UTC' }).format(new Date(Date.UTC(y, m - 1, d)));
-      cells += `<button type="button" class="dday${ds === todayNow ? ' today' : ''}" data-date="${ds}" aria-pressed="${on}" aria-label="${esc(label)}"${past && !on ? ' disabled' : ''}>${d}</button>`;
+    const minYear = +minMonth.slice(0, 4), maxYear = +maxMonth.slice(0, 4);
+    let body;
+    if (st.picker) {
+      const py = st.pickYear;
+      const short = new Intl.DateTimeFormat(LOC, { month: 'short', timeZone: 'UTC' });
+      let months = '';
+      for (let i = 1; i <= 12; i++) {
+        const ym = ymOf(py, i);
+        const off = ym < minMonth || ym > maxMonth;
+        const picked = [...st.dates].some(d => d.startsWith(ym));
+        months += `<button type="button" class="mpm${ym === st.month ? ' cur' : ''}${picked ? ' has' : ''}" data-pmonth="${ym}"${off ? ' disabled' : ''}${ym === st.month ? ' aria-current="true"' : ''}>${esc(short.format(new Date(Date.UTC(py, i - 1, 1))))}</button>`;
+      }
+      body = `<div class="mpick" role="group" aria-label="Choose a month in ${py}">${months}</div>`;
+    } else {
+      let cells = '';
+      for (let i = 0; i < lead; i++) cells += '<span class="dpad" aria-hidden="true"></span>';
+      for (let d = 1; d <= nDays; d++) {
+        const ds = `${st.month}-${String(d).padStart(2, '0')}`;
+        const on = st.dates.has(ds), past = ds < todayNow;
+        const label = new Intl.DateTimeFormat(LOC, { weekday: 'long', month: 'long', day: 'numeric', timeZone: 'UTC' }).format(new Date(Date.UTC(y, m - 1, d)));
+        cells += `<button type="button" class="dday${ds === todayNow ? ' today' : ''}" data-date="${ds}" aria-pressed="${on}" aria-label="${esc(label)}"${past && !on ? ' disabled' : ''}>${d}</button>`;
+      }
+      body = `<div class="calgrid"><div class="calwd" aria-hidden="true">${order.map(wd => `<span>${esc(wdName(wd, 'narrow'))}</span>`).join('')}</div><div class="caldays" role="group" aria-label="${esc(monthName)}">${cells}</div></div>`;
     }
-    pick.innerHTML = `<div class="cal">
-      <div class="calhead"><button type="button" class="iconbtn" data-month="-1" aria-label="Previous month"${st.month <= minMonth ? ' disabled' : ''}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-        <b aria-live="polite">${esc(monthName)}</b>
-        <button type="button" class="iconbtn" data-month="1" aria-label="Next month"${st.month >= maxMonth ? ' disabled' : ''}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
-      <div class="calgrid"><div class="calwd" aria-hidden="true">${order.map(wd => `<span>${esc(wdName(wd, 'narrow'))}</span>`).join('')}</div><div class="caldays" role="group" aria-label="${esc(monthName)}">${cells}</div></div>
+    const prevOff = st.picker ? st.pickYear <= minYear : st.month <= minMonth;
+    const nextOff = st.picker ? st.pickYear >= maxYear : st.month >= maxMonth;
+    pick.innerHTML = `<div class="cal${st.picker ? ' picking' : ''}">
+      <div class="calhead">
+        <button type="button" class="caltitle" data-picker aria-expanded="${st.picker}" title="${st.picker ? 'Back to the days' : 'Choose a month and year'}">
+          <span aria-live="polite">${st.picker ? `<b>${st.pickYear}</b>` : `<b>${esc(monthOnly)}</b> <span class="calyear">${y}</span>`}</span>${chev('M7 10l5 5 5-5')}
+          <span class="sr-only">${st.picker ? ', close the month list' : ', choose a different month or year'}</span></button>
+        <div class="calnav">
+          <button type="button" class="calarrow" data-month="-1" aria-label="${st.picker ? 'Previous year' : 'Previous month'}"${prevOff ? ' disabled' : ''}>${chev('M15 5l-7 7 7 7')}</button>
+          <button type="button" class="calarrow" data-month="1" aria-label="${st.picker ? 'Next year' : 'Next month'}"${nextOff ? ' disabled' : ''}>${chev('M9 5l7 7-7 7')}</button>
+        </div>
+      </div>
+      ${body}
     </div>`;
     const n = st.dates.size;
-    count.innerHTML = n ? `${plural(n, 'day')} picked${n > 1 ? '' : ''} · <button type="button" class="linkbtn" data-clear>Clear</button>` : 'Tap or drag across the dates you’re considering.';
+    count.innerHTML = n ? `${plural(n, 'day')} picked · <button type="button" class="linkbtn" data-clear>Clear</button>` : 'Tap or drag across the dates you’re considering.';
+    drawHours();
+  }
+
+  // days with their own times
+  function dayList() {
+    if (st.mode === 'week') return order.filter(w => st.weekdays.has(w)).map(w => ({ key: 'w' + w, label: wdName(w, 'long') }));
+    const f = new Intl.DateTimeFormat(LOC, { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' });
+    return [...st.dates].sort().map(d => { const [y, m, dd] = d.split('-').map(Number); return { key: d, label: f.format(new Date(Date.UTC(y, m - 1, dd))) }; });
+  }
+  const ownHours = key => key[0] === 'w' ? st.whours.get(+key.slice(1)) : st.hours.get(key);
+  const general = () => [+F.start.value, +F.end.value];
+  function setOwn(key, h) {
+    const g = general(), same = h && h[0] === g[0] && h[1] === g[1];
+    const map = key[0] === 'w' ? st.whours : st.hours, k = key[0] === 'w' ? +key.slice(1) : key;
+    if (!h || same) map.delete(k); else map.set(k, h);
+  }
+  function drawHours() {
+    const btn = $('[data-dhtoggle]', form), list = $('.dhlist', form);
+    const days = dayList();
+    const custom = days.filter(d => ownHours(d.key)).length;
+    btn.setAttribute('aria-expanded', String(st.dhOpen));
+    btn.innerHTML = st.dhOpen ? `${chev('M7 14l5-5 5 5')}Times for specific days${custom ? ` <span class="tag">${custom} changed</span>` : ''}`
+      : `${chev('M12 5v14M5 12h14')}Set different times for specific days`;
+    list.hidden = !st.dhOpen;
+    if (!st.dhOpen) return;
+    if (!days.length) { list.innerHTML = '<p class="note">Pick some days first, then give any of them their own times.</p>'; return; }
+    const i = inc();
+    list.innerHTML = days.map(d => {
+      const own = ownHours(d.key);
+      const [s, e] = own ? snap(own) : general();
+      return `<div class="dhrow${own ? ' own' : ''}" data-day="${esc(d.key)}">
+        <span class="dhday">${esc(d.label)}</span>
+        <select data-dh="s" aria-label="${esc(d.label)}, earliest time">${timeOptions(i, 0, 1440 - i, s)}</select>
+        <span class="dhto" aria-hidden="true">to</span>
+        <select data-dh="e" aria-label="${esc(d.label)}, latest time">${timeOptions(i, i, 1440, e)}</select>
+        ${own ? `<button type="button" class="iconbtn" data-dhreset aria-label="Use the general times for ${esc(d.label)}" title="Use the general times">${ICON.x}</button>` : '<span class="dhsame">Default</span>'}
+      </div>`;
+    }).join('') + `<p class="note dhnote">Days you don’t change use ${esc(C.clock(general()[0], false, LOC))} to ${esc(C.clock(general()[1] % 1440, false, LOC))}. <button type="button" class="linkbtn" data-dhoff>Use the same times every day</button></p>`;
   }
   drawDays();
 
@@ -357,28 +449,63 @@ function pollForm(box, init, opts) {
     $$('.dday', form).forEach(x => x.setAttribute('aria-pressed', String(st.dates.has(x.dataset.date))));
   }
 
+  const refocus = sel => { const again = $(sel, form); if (again) again.focus(); };
+  function moveMonth(by) {
+    const [y, m] = st.month.split('-').map(Number);
+    const d = new Date(Date.UTC(y, m - 1 + by, 1));
+    st.month = ymOf(d.getUTCFullYear(), d.getUTCMonth() + 1);
+  }
   form.addEventListener('click', e => {
     const t = e.target;
     const modeBtn = t.closest('[data-mode]');
-    if (modeBtn) { st.mode = modeBtn.dataset.mode; drawDays(); return; }
+    if (modeBtn) { st.mode = modeBtn.dataset.mode; st.picker = false; drawDays(); return; }
+    if (t.closest('[data-picker]')) { st.picker = !st.picker; st.pickYear = +st.month.slice(0, 4); drawDays(); refocus('[data-picker]'); return; }
+    const pm = t.closest('[data-pmonth]');
+    if (pm) { st.month = pm.dataset.pmonth; st.picker = false; drawDays(); refocus('[data-picker]'); return; }
     const mb = t.closest('[data-month]');
-    if (mb) { const [y, m] = st.month.split('-').map(Number); const d = new Date(Date.UTC(y, m - 1 + +mb.dataset.month, 1)); st.month = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`; drawDays(); return; }
+    if (mb) {
+      if (st.picker) st.pickYear += +mb.dataset.month; else moveMonth(+mb.dataset.month);
+      drawDays();
+      refocus(`[data-month="${mb.dataset.month}"]:not(:disabled)`);
+      return;
+    }
     const day = t.closest('.dday');
     if (day && e.detail === 0 && !day.disabled) { // keyboard: pointer taps were handled on pointerdown
       const ds = day.dataset.date;
       if (st.dates.has(ds)) st.dates.delete(ds); else if (st.dates.size < 62) st.dates.add(ds);
-      drawDays(); const again = $(`.dday[data-date="${ds}"]`, form); if (again) again.focus(); return;
+      drawDays(); refocus(`.dday[data-date="${ds}"]`); return;
     }
     const wd = t.closest('[data-wd]');
-    if (wd) { const w = +wd.dataset.wd; if (st.weekdays.has(w)) st.weekdays.delete(w); else st.weekdays.add(w); drawDays(); const again = $(`[data-wd="${w}"]`, form); if (again) again.focus(); return; }
+    if (wd) { const w = +wd.dataset.wd; if (st.weekdays.has(w)) st.weekdays.delete(w); else st.weekdays.add(w); drawDays(); refocus(`[data-wd="${w}"]`); return; }
     if (t.closest('[data-clear]')) { st.dates.clear(); drawDays(); return; }
+    if (t.closest('[data-dhtoggle]')) { st.dhOpen = !st.dhOpen; drawHours(); refocus('[data-dhtoggle]'); return; }
+    if (t.closest('[data-dhoff]')) { st.hours.clear(); st.whours.clear(); st.dhOpen = false; drawHours(); refocus('[data-dhtoggle]'); return; }
+    const rs = t.closest('[data-dhreset]');
+    if (rs) { const key = rs.closest('.dhrow').dataset.day; setOwn(key, null); drawHours(); refocus(`.dhrow[data-day="${CSS.escape(key)}"] [data-dh="s"]`); return; }
     if (t.closest('[data-cancel]') && opts.onCancel) opts.onCancel();
   });
-  // radio group arrows
+  form.addEventListener('change', e => {
+    const sel = e.target.closest('[data-dh]');
+    if (!sel) return;
+    const key = sel.closest('.dhrow').dataset.day;
+    let [s, en] = ownHours(key) ? snap(ownHours(key)) : general();
+    if (sel.dataset.dh === 's') { s = +sel.value; if (en <= s) en = Math.min(1440, s + Math.max(inc(), 60)); } else en = +sel.value;
+    if (en <= s) s = Math.max(0, en - inc());
+    setOwn(key, [s, en]);
+    drawHours();
+    refocus(`.dhrow[data-day="${CSS.escape(key)}"] [data-dh="${sel.dataset.dh}"]`);
+  });
   form.addEventListener('keydown', e => {
+    // radio group arrows
     const b = e.target.closest('.seg [data-mode]');
-    if (!b || !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) return;
-    e.preventDefault(); st.mode = st.mode === 'dates' ? 'week' : 'dates'; drawDays(); $(`.seg [data-mode="${st.mode}"]`, form).focus();
+    if (b && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+      e.preventDefault(); st.mode = st.mode === 'dates' ? 'week' : 'dates'; drawDays(); refocus(`.seg [data-mode="${st.mode}"]`); return;
+    }
+    // Escape closes the month list; Page Up / Page Down move a month from anywhere in the calendar
+    if (e.target.closest('.cal')) {
+      if (e.key === 'Escape' && st.picker) { e.preventDefault(); e.stopPropagation(); st.picker = false; drawDays(); refocus('[data-picker]'); }
+      if ((e.key === 'PageUp' || e.key === 'PageDown') && !st.picker) { e.preventDefault(); const n = $(`[data-month="${e.key === 'PageUp' ? -1 : 1}"]`, form); if (n && !n.disabled) n.click(); }
+    }
   });
   F.tz.addEventListener('change', drawDays);
 
@@ -388,12 +515,19 @@ function pollForm(box, init, opts) {
     const days = st.mode === 'week'
       ? C.weekDates([...st.weekdays], st.ref || C.todayIn(tz))
       : [...st.dates].sort();
+    const hours = {};
+    for (const d of days) {
+      const own = st.mode === 'week' ? st.whours.get(C.weekdayOf(d)) : st.hours.get(d);
+      if (!own) continue;
+      const [s, e] = snap(own);
+      if (e > s && !(s === start && e === end)) hours[d] = [s, e];
+    }
     let err = '';
     if (!title) err = 'Give the poll a name.';
     else if (!days.length) err = 'Pick at least one day.';
     else if (end <= start) err = 'The end time has to be after the start time.';
-    else if (days.length * ((end - start) / step) > 2000) err = 'That’s a lot of time slots. Pick fewer days, a shorter window, or longer slots.';
-    return { err, v: { title, details: F.details.value.trim(), mode: st.mode, days, start, end, step, tz, password: F.password.value, nopass: !!(F.nopass && F.nopass.checked) } };
+    else if (C.slotCount({ days, start, end, step, hours }) > 2000) err = 'That’s a lot of time slots. Pick fewer days, a shorter window, or longer slots.';
+    return { err, v: { title, details: F.details.value.trim(), mode: st.mode, days, start, end, step, tz, hours, password: F.password.value, nopass: !!(F.nopass && F.nopass.checked) } };
   }
 
   form.addEventListener('submit', async e => {
@@ -409,7 +543,7 @@ function pollForm(box, init, opts) {
   });
 
   return {
-    reset() { form.reset(); st.dates.clear(); st.mode = 'dates'; F.step.value = '30'; drawTimes(540, 1020); F.tz.value = HOME_TZ; drawDays(); },
+    reset() { form.reset(); st.dates.clear(); st.hours.clear(); st.whours.clear(); st.dhOpen = false; st.picker = false; st.mode = 'dates'; F.step.value = '30'; drawTimes(540, 1020); F.tz.value = HOME_TZ; drawDays(); },
     focus() { F.title.focus(); }
   };
 }
@@ -421,33 +555,56 @@ function openHome() {
   stopPolling();
   S.view = 'home'; S.id = null; S.ev = null;
   show('home');
-  document.title = 'When You Free? | Find a time that works for everyone';
+  document.title = 'WhenUFree | Find a time that works for everyone';
   if (!homeForm) homeForm = pollForm($('#createbox'), null, { submit: 'Create poll', onSubmit: createPoll });
   renderMyPolls();
 }
 
 async function createPoll(v) {
-  const res = await rpc('wyf_create_event', { p: { title: v.title, details: v.details, mode: v.mode, days: v.days, start: v.start, end: v.end, step: v.step, tz: v.tz, password: v.password || null } });
+  const res = await rpc('wyf_create_event', { p: { title: v.title, details: v.details, mode: v.mode, days: v.days, start: v.start, end: v.end, step: v.step, tz: v.tz, hours: v.hours, password: v.password || null } });
   remember(res.id, { title: v.title, admin: res.admin, organizer: true, mode: v.mode, days: v.days, tz: v.tz, created: Date.now(), pass: v.password || null, seenIds: [] });
   if (homeForm) homeForm.reset();
   go(pollUrl(res.id));
   showAdminLink(res.id, res.admin, true);
 }
 
+// the organizer link, with its secret end blurred: it can only be taken with the Copy button
+function secretRow(base, secret, label) {
+  return `<div class="secretrow"><div class="secretlink" role="img" aria-label="${esc(label)}, hidden. Use Copy to copy it.">
+      <span class="sl-base">${esc(base.replace(/^https?:\/\//, ''))}</span><span class="sl-secret" aria-hidden="true">${esc(secret)}</span></div>
+    <button type="button" class="btn sm" data-copy="${esc(base + secret)}">${ICON.copy}Copy</button></div>`;
+}
+
+function shareButtons(url, title) {
+  const text = `When are you free for “${title}”? Add your times here: ${url}`;
+  return `<div class="sharebtns">
+    ${navigator.share ? `<button type="button" class="btn sm" data-share="${esc(url)}" data-title="${esc(title)}">${ICON.share}Share</button>` : ''}
+    <a class="btn sm" href="mailto:?subject=${encodeURIComponent('When are you free? ' + title)}&amp;body=${encodeURIComponent(text)}">${ICON.mail}Email</a>
+    <a class="btn sm" href="sms:?&amp;body=${encodeURIComponent(text)}">${ICON.chat}Text</a>
+  </div>`;
+}
+
 function showAdminLink(id, token, fresh) {
-  const admin = pollUrl(id) + '#admin=' + token;
+  const url = pollUrl(id), title = (known()[id] || {}).title || (S.ev && S.ev.id === id ? S.ev.title : '');
   openDialog(fresh ? 'Your poll is ready' : 'Organizer link', `
-    ${fresh ? `<p class="lead">Send this link to your group:</p>${copyRow(pollUrl(id), 'Link for your group')}` : ''}
-    <div class="keep">
-      <h3>${fresh ? 'Save your organizer link' : 'Your organizer link'}</h3>
-      <p>This link lets you edit the poll, pick the final time and remove answers.${user ? ' The poll is also saved to your account, so you can get back to it from any device where you sign in.' : ' This browser remembers it, but if you switch devices or clear your browsing data, this link is the only way back in as the organizer.'} Keep it to yourself, or give it to a co-organizer.</p>
-      ${copyRow(admin, 'Organizer link')}
+    ${fresh ? `<div class="readyhero">
+      <img class="readylogo" src="assets/logo.svg" alt="" width="56" height="56">
+      <div><p class="readykicker">${ICON.check}Poll created</p><p class="readytitle">${esc(title || 'Your poll')}</p></div>
+    </div>
+    <div class="readystep">
+      <h3><span class="stepno" aria-hidden="true">1</span>Send this link to your group</h3>
+      <div class="biglink">${copyRow(url, 'Link for your group', true)}</div>
+      ${shareButtons(url, title)}
+    </div>` : ''}
+    <div class="readystep keep">
+      <h3>${fresh ? '<span class="stepno" aria-hidden="true">2</span>Save your organizer link' : 'Your organizer link'}</h3>
+      <p>It lets you edit the poll, pick the final time and remove answers.${user ? ' The poll is also saved to your account, so you can get back to it from any device where you sign in.' : ' This browser remembers it, but if you switch devices or clear your browsing data, this link is the only way back in as the organizer.'} Keep it to yourself, or give it to a co-organizer.</p>
+      ${secretRow(url + '#admin=', token, 'Organizer link')}
     </div>
     ${!user && googleOn ? '<p class="note">Or <button type="button" class="linkbtn" data-signin>sign in with Google</button> to keep your polls on every device.</p>' : ''}
     <div class="dlgactions"><button type="button" class="btn primary" data-done>${fresh ? 'I’ve saved it' : 'Done'}</button></div>`,
-  b => { b.querySelector('[data-done]').onclick = closeDialog; const s = b.querySelector('[data-signin]'); if (s) s.onclick = openAccount; });
+  b => { b.querySelector('[data-done]').onclick = closeDialog; const s = b.querySelector('[data-signin]'); if (s) s.onclick = openAccount; }, { cls: fresh ? 'ready' : '' });
 }
-
 function whenSummary(p) {
   if (!p.days || !p.days.length) return '';
   return C.daysSummary(p, LOC);
@@ -556,7 +713,7 @@ document.addEventListener('visibilitychange', () => {
 });
 window.addEventListener('beforeunload', e => { if (S.dirty || S.saving) { save(); e.preventDefault(); e.returnValue = ''; } });
 
-function layoutSig(ev) { return [ev.mode, ev.days.join(','), ev.start, ev.end, ev.step, ev.tz].join('|'); }
+function layoutSig(ev) { return [ev.mode, ev.days.join(','), ev.start, ev.end, ev.step, ev.tz, JSON.stringify(ev.hours || {})].join('|'); }
 
 function applyEvent(ev) {
   const first = !S.ev;
@@ -601,7 +758,7 @@ function applyEvent(ev) {
     S.labels = new Map();
     rebuild = true;
   }
-  document.title = ev.title + ' | When You Free?';
+  document.title = ev.title + ' | WhenUFree';
   show('event');
   $('#ev-gate').innerHTML = '';
   $('#ev-body').hidden = false;
@@ -656,7 +813,7 @@ function renderProblem(title, text, retry) {
   show('event');
   $('#ev-body').hidden = true;
   $('#ev-gate').innerHTML = `<div class="card problem"><h1>${esc(title)}</h1><p>${esc(text)}</p><div class="formactions">${retry ? '<button type="button" class="btn primary" data-act="retry">Try again</button>' : ''}<a class="btn ${retry ? 'ghost' : 'primary'}" href="./" data-act="home">Make a new poll</a></div></div>`;
-  document.title = title + ' | When You Free?';
+  document.title = title + ' | WhenUFree';
 }
 
 function renderGate(tried) {
@@ -670,7 +827,7 @@ function renderGate(tried) {
     <div class="formactions"><button type="submit" class="btn primary">Open poll</button></div></form>
     ${!user && googleOn ? '<p class="note">Organizer? <button type="button" class="linkbtn" data-act="signin">Sign in</button> or use your organizer link.</p>' : ''}</div>`;
   const i = $('#ev-gate input'); if (i) i.focus();
-  document.title = 'Password needed | When You Free?';
+  document.title = 'Password needed | WhenUFree';
 }
 
 function renderHead() {
@@ -680,11 +837,13 @@ function renderHead() {
     <p class="eyebrow">${esc(ev.mode === 'week' ? 'Weekly' : 'Poll')} · ${esc(C.daysSummary(ev, LOC))}</p>
     <h1>${esc(ev.title)}</h1>
     ${ev.details ? `<p class="details">${linkify(esc(ev.details)).replace(/\n/g, '<br>')}</p>` : ''}
-    <div class="sharebar${bare ? ' big' : ''}">
-      ${bare ? '<p class="sharelead">Send this link to your group so they can add their times:</p>' : ''}
+    ${bare ? `<div class="sendbanner">
+      <div class="sb-text"><p class="sb-title">Send this link to your group</p><p class="sb-sub">Everyone adds their own times. No sign-up, any phone, their own time zone.</p></div>
+      <div class="sb-link">${copyRow(pollUrl(ev.id), 'Link to this poll', true)}${shareButtons(pollUrl(ev.id), ev.title)}</div>
+    </div>` : `<div class="sharebar">
       ${copyRow(pollUrl(ev.id), 'Link to this poll')}
       ${navigator.share ? `<button type="button" class="btn sm" data-act="share">${ICON.share}Share</button>` : ''}
-    </div>`;
+    </div>`}`;
 }
 
 function finalRange() {
@@ -772,6 +931,7 @@ function renderTabs() {
 }
 function setTab(t, focus) {
   S.tab = t; renderTabs();
+  if (t === 'group') drawBlocks();
   if (focus) $('#tab-' + t).focus();
   if (matchMedia('(max-width: 979px)').matches) { const tabs = $('#ev-tabs'); if (tabs.getBoundingClientRect().top < 0) tabs.scrollIntoView({ block: 'start' }); }
 }
@@ -931,7 +1091,7 @@ function joinHTML() {
   const acctName = user ? ((user.user_metadata && (user.user_metadata.full_name || user.user_metadata.name)) || '') : '';
   return `<div class="panehead"><h2>Add your availability</h2></div>
   <form class="joinform" data-form="join" novalidate>
-    <label class="field"><span>Your name</span><input name="name" type="text" maxlength="60" autocomplete="name" enterkeyhint="go" required value="${esc(acctName)}" placeholder="So people know who's free"></label>
+    <label class="field"><span>Your name</span><input name="name" type="text" maxlength="60" autocomplete="name" enterkeyhint="go" required value="${esc(acctName)}" placeholder="Your name"></label>
     ${user ? `<p class="note">Signed in as ${esc(user.email || 'you')}. Your answers are saved to your account, so you can change them from any device.</p>` : `
     <details class="pwopt"><summary>Protect my answers with a password <i>(optional)</i></summary>
       <label class="field"><span>Password</span><input name="pw" type="password" maxlength="72" autocomplete="new-password"></label>
@@ -967,7 +1127,7 @@ function mineHTML() {
   <div class="gridwrap" id="mgrid"></div>
   <div class="minefoot">
     <label class="field"><span>Note <i>(optional)</i></span><input id="mynote" type="text" maxlength="200" placeholder="e.g. Can only do after 4" enterkeyhint="done"></label>
-    <div class="calrow"><button type="button" class="btn sm" data-act="cal">${ICON.cal}Check against my calendar</button><span class="calstate note" id="calstate"></span></div>
+    <div class="calrow">${googleOn ? `<button type="button" class="btn sm gbtn" data-act="gcal-import">${ICON.google}Import Google Calendar</button>` : ''}<button type="button" class="btn sm" data-act="cal">${ICON.cal}${googleOn ? 'Use a calendar file' : 'Check against my calendar'}</button><span class="calstate note" id="calstate" aria-live="polite"></span></div>
     <div class="minelinks"><button type="button" class="linkbtn" data-act="clearmine">Clear all my times</button><button type="button" class="linkbtn danger" data-act="delme">Delete my answers</button></div>
   </div>`;
 }
@@ -1081,6 +1241,7 @@ function renderGroup(rebuild) {
     sizeGrid(g);
     bindGroup(g);
     bindGridKeys(g, 'group');
+    if (blockWatch) { blockWatch.disconnect(); blockWatch.observe(g); }
   }
   paintGroup();
 }
@@ -1097,25 +1258,64 @@ function paintGroup() {
   const n = ps.length;
   const t = C.tally(ps);
   const best = C.bestTimes(S.ev, all, 3);
-  const top = new Set(best.length ? slotsBetween(best[0].start, best[0].end) : []);
-  const hl = S.hl ? new Set(slotsBetween(S.hl[0], S.hl[1])) : null;
+  S.best = best.length && !S.only.size ? [best[0].start, best[0].end] : null;
   for (const [k, el] of groupCells) {
     const c = t.get(k);
     const yes = c ? c.yes.length : 0, maybe = c ? c.maybe.length : 0;
     const r = n ? (yes + maybe / 2) / n : 0;
     el.style.setProperty('--r', r.toFixed(3));
-    el.className = 'c' + (r > 0.55 ? ' hi' : '') + (n && yes === n ? ' all' : '') + (maybe ? ' mb' : '') + (top.has(k) && !S.only.size ? ' top' : '') + (hl && hl.has(k) ? ' hl' : '') + (S.focusKey === k ? ' cur' : '');
-    el.textContent = yes ? String(yes) : '';
+    el.className = 'c' + (n && yes === n ? ' all' : '') + (maybe ? ' mb' : '') + (S.focusKey === k ? ' cur' : '');
     el.setAttribute('aria-label', `${slotText(k)}: ${yes} of ${n} free${maybe ? `, ${maybe} if needed` : ''}`);
   }
+  drawBlocks();
   $('#gcount').textContent = S.only.size ? `Showing ${S.only.size} of ${all.length}` : plural(all.length, 'response');
   $('#glegend').innerHTML = `<span class="ramp" aria-hidden="true"><i></i></span><span>0</span><span class="grow">→</span><span>${n} free</span>
     <span class="lg"><span class="sw mb" aria-hidden="true"></span>someone can if needed</span>
-    ${best.length && !S.only.size ? '<span class="lg"><span class="sw top" aria-hidden="true"></span>best time</span>' : ''}`;
+    ${best.length && !S.only.size ? '<span class="lg"><span class="sw best" aria-hidden="true"></span>best time</span>' : ''}`;
   renderBest(best, all);
   renderPeople(all);
   if (S.focusKey != null && !$('#gdetail').hidden) showDetail(S.focusKey);
 }
+
+// The best time, and a time picked from the list, each get one outline around the whole run of
+// slots (split per column if it crosses midnight), drawn over the grid rather than cell by cell.
+function drawBlocks() {
+  const g = $('#ggrid .grid');
+  if (!g || !S.lay) return;
+  let layer = $('.blocks', g);
+  if (!layer) { layer = document.createElement('div'); layer.className = 'blocks'; layer.setAttribute('aria-hidden', 'true'); g.appendChild(layer); }
+  layer.textContent = '';
+  const same = S.best && S.hl && S.best[0] === S.hl[0] && S.best[1] === S.hl[1];
+  const runs = [];
+  if (S.best) runs.push({ r: S.best, cls: 'best' + (same ? ' on' : ''), label: 'Best time' });
+  if (S.hl && !same) runs.push({ r: S.hl, cls: 'on', label: '' });
+  for (const run of runs) {
+    const byCol = new Map();
+    for (const k of slotsBetween(run.r[0], run.r[1])) {
+      const p = S.lay.pos.get(k);
+      if (!p) continue;
+      const c = byCol.get(p[0]) || { top: k, bottom: k };
+      if (k < c.top) c.top = k;
+      if (k > c.bottom) c.bottom = k;
+      byCol.set(p[0], c);
+    }
+    let first = true;
+    for (const c of byCol.values()) {
+      const a = groupCells.get(c.top), b = groupCells.get(c.bottom);
+      if (!a || !b || !a.offsetWidth) continue;
+      const box = document.createElement('div');
+      box.className = 'block ' + run.cls;
+      box.style.left = a.offsetLeft + 'px';
+      box.style.top = a.offsetTop + 'px';
+      box.style.width = a.offsetWidth + 'px';
+      box.style.height = (b.offsetTop + b.offsetHeight - a.offsetTop) + 'px';
+      if (first && run.label) { const t = document.createElement('span'); t.className = 'blocktag'; t.textContent = run.label; box.appendChild(t); }
+      first = false;
+      layer.appendChild(box);
+    }
+  }
+}
+const blockWatch = typeof ResizeObserver === 'function' ? new ResizeObserver(() => drawBlocks()) : null;
 
 function renderBest(best, all) {
   const box = $('#gbest');
@@ -1127,9 +1327,8 @@ function renderBest(best, all) {
     const lab = C.rangeLabel(b.start, b.end, S.tz, ev.mode, LOC);
     const who = `${b.yes.length} of ${all.length} free${b.maybe.length ? `, ${b.maybe.length} if needed` : ''}`;
     const miss = b.no.length ? `Missing ${nameList(b.no)}` : 'Everyone';
-    return `<li><button type="button" class="bt${S.hl && S.hl[0] === b.start && S.hl[1] === b.end ? ' on' : ''}" data-s="${b.start}" data-e="${b.end}" aria-pressed="${!!(S.hl && S.hl[0] === b.start)}">
-      <span class="rank" aria-hidden="true">${i + 1}</span>
-      <span class="bwhen"><b>${esc(lab.day)}</b><span>${esc(lab.time)}</span></span>
+    return `<li><button type="button" class="bt${i === 0 ? ' first' : ''}${S.hl && S.hl[0] === b.start && S.hl[1] === b.end ? ' on' : ''}" data-s="${b.start}" data-e="${b.end}" aria-pressed="${!!(S.hl && S.hl[0] === b.start)}">
+      <span class="bwhen"><b>${esc(lab.day)}</b><span>${esc(lab.time)}</span>${i === 0 ? '<span class="tag besttag">Best</span>' : ''}</span>
       <span class="bwho">${esc(who)} · ${esc(miss)}${b.missingReq ? ' <span class="tag warn">required person missing</span>' : ''}</span></button>
       ${canPick ? `<button type="button" class="btn sm" data-act="pick" data-s="${b.start}" data-e="${b.end}">Pick</button>` : ''}</li>`;
   }).join('')}</ol>`;
@@ -1254,6 +1453,7 @@ $('#view-event').addEventListener('click', async e => {
       break;
     }
     case 'cal': openCalendar(); break;
+    case 'gcal-import': importGoogle(t); break;
     case 'calclear': S.busy = new Set(); store.del('wyf.busy.' + S.id); paintMine(); renderCalState(); break;
     case 'closedetail': hideDetail(true); break;
     case 'everyone': S.only.clear(); paintGroup(); break;
@@ -1394,7 +1594,7 @@ function openEdit() {
     pollForm($('#editbox', b), ev, {
       submit: 'Save changes', cancel: true, onCancel: closeDialog,
       onSubmit: async v => {
-        const patch = { title: v.title, details: v.details, mode: v.mode, days: v.days, start: v.start, end: v.end, step: v.step, tz: v.tz };
+        const patch = { title: v.title, details: v.details, mode: v.mode, days: v.days, start: v.start, end: v.end, step: v.step, tz: v.tz, hours: v.hours };
         if (v.nopass) patch.password = null; else if (v.password) patch.password = v.password;
         const r = await rpc('wyf_update_event', { p_id: S.id, p_admin: S.admin, p: patch });
         if (r.error) throw new Error('Only the organizer can change this poll.');
@@ -1424,8 +1624,10 @@ function openDuplicate() {
       const title = f.elements.title.value.trim();
       if (!title) return;
       const days = ev.mode === 'dates' && f.elements.shift && f.elements.shift.checked ? ev.days.map(d => C.addDays(d, 7)) : ev.mode === 'week' ? C.weekDates(ev.days.map(C.weekdayOf), C.todayIn(ev.tz)) : ev.days;
+      const hours = {}, from = [...ev.days].sort(), to = [...days].sort(); // the same days keep their own times
+      from.forEach((d, i) => { const h = ev.hours && ev.hours[d]; if (h && to[i]) hours[to[i]] = h; });
       try {
-        const res = await rpc('wyf_create_event', { p: { title, details: ev.details, mode: ev.mode, days, start: ev.start, end: ev.end, step: ev.step, tz: ev.tz } });
+        const res = await rpc('wyf_create_event', { p: { title, details: ev.details, mode: ev.mode, days, start: ev.start, end: ev.end, step: ev.step, tz: ev.tz, hours } });
         remember(res.id, { title, admin: res.admin, organizer: true, mode: ev.mode, days, tz: ev.tz, created: Date.now(), seenIds: [] });
         closeDialog();
         go(pollUrl(res.id));
@@ -1493,8 +1695,99 @@ function renderCalState() {
   el.innerHTML = S.busy.size ? `${plural(n, 'busy time')} from your calendar shown as stripes. <button type="button" class="linkbtn" data-act="calclear">Hide</button>` : '';
 }
 
+// shows what came back from a calendar (Google or .ics files), with an offer to fill in the rest
+function busyResult(out, n, extra) {
+  out.innerHTML = esc(extra || '') +
+    (n ? `Found ${plural(n, 'busy time')} during this poll. They’re striped on your grid.` : 'Your calendar is clear for every time in this poll.') +
+    (canEdit() ? ` <button type="button" class="btn sm" data-fill>Mark my other times as available</button>` : '');
+  const fill = $('[data-fill]', out);
+  if (fill) fill.onclick = () => {
+    let c = 0;
+    for (const k of S.lay.keys) if (!S.busy.has(k) && valOf(k) === 0) { setVal(k, 2); c++; }
+    if (c) { markDirty(); paintGroup(); }
+    fill.replaceWith(document.createTextNode(c ? ` Marked ${plural(c, 'time')} as available. Check them over before you go.` : ' Nothing left to mark.'));
+  };
+}
+function useBusy(busy) {
+  busy.sort((a, c) => a[0] - c[0]);
+  S.busy = I.busySlots(S.lay.keys, S.ev.step, busy);
+  store.set('wyf.busy.' + S.id, [...S.busy]);
+  paintMine(); renderCalState();
+  return S.busy.size;
+}
+
+/* Google Calendar: asks Google for read-only access to free/busy times (never event names or details)
+   with a short-lived token that stays in this page's memory. The calendar is read straight from
+   Google in this browser; nothing about it is sent to this site's server. */
+const GCAL_SCOPES = 'https://www.googleapis.com/auth/calendar.calendarlist.readonly https://www.googleapis.com/auth/calendar.freebusy';
+let gcalToken = null; // { token, until }
+function googleToken() {
+  if (gcalToken && gcalToken.until > Date.now() + 60000) return Promise.resolve(gcalToken.token);
+  return loadGsi().then(() => new Promise((res, rej) => {
+    const client = google.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_CLIENT_ID, scope: GCAL_SCOPES, include_granted_scopes: false,
+      login_hint: (user && user.email) || undefined,
+      callback: r => {
+        if (r.error) return rej(new Error('Google didn’t give access to your calendar.'));
+        if (!google.accounts.oauth2.hasGrantedAnyScope(r, 'https://www.googleapis.com/auth/calendar.freebusy')) return rej(new Error('To import your calendar, allow access to when you’re busy.'));
+        gcalToken = { token: r.access_token, until: Date.now() + (+r.expires_in || 3000) * 1000 };
+        res(r.access_token);
+      },
+      error_callback: e => rej(new Error(e && e.type === 'popup_closed' ? 'The Google window was closed before it finished.' : e && e.type === 'popup_failed_to_open' ? 'Your browser blocked the Google window. Allow pop-ups for this site and try again.' : 'Google sign-in didn’t finish.'))
+    });
+    client.requestAccessToken();
+  }));
+}
+async function googleBusy(from, to) {
+  const token = await googleToken();
+  const auth = { Authorization: 'Bearer ' + token };
+  const api = 'https://www.googleapis.com/calendar/v3/';
+  let ids = ['primary'];
+  try {
+    const r = await fetch(api + 'users/me/calendarList?minAccessRole=freeBusyReader&maxResults=100', { headers: auth });
+    if (r.ok) {
+      const j = await r.json();
+      // calendars that are turned on, minus holidays and birthdays, which aren't "busy"
+      const on = (j.items || []).filter(c => c.selected !== false && !c.hidden && !/#(holiday|contacts)@group\.v\.calendar\.google\.com$/.test(c.id)).map(c => c.id);
+      if (on.length) ids = on.slice(0, 50);
+    }
+  } catch (e) { /* fall back to the main calendar */ }
+  const busy = [];
+  const SPAN = 60 * 86400000; // Google answers about up to two months at a time
+  for (let a = from; a < to; a += SPAN) {
+    const r = await fetch(api + 'freeBusy', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, auth),
+      body: JSON.stringify({ timeMin: new Date(a).toISOString(), timeMax: new Date(Math.min(to, a + SPAN)).toISOString(), items: ids.map(id => ({ id })) }) });
+    if (r.status === 401) { gcalToken = null; throw new Error('Google access ran out. Try again.'); }
+    if (!r.ok) throw new Error(r.status === 403 ? 'Google Calendar import isn’t switched on for this site yet.' : 'Couldn’t read your Google Calendar. Try again.');
+    const j = await r.json();
+    for (const c of Object.values(j.calendars || {})) for (const b of c.busy || []) busy.push([Date.parse(b.start), Date.parse(b.end)]);
+  }
+  return busy;
+}
+async function importGoogle(btn, out) {
+  const state = out || $('#calstate');
+  if (btn) btn.disabled = true;
+  if (state) state.textContent = 'Opening Google…';
+  try {
+    const keys = S.lay.keys;
+    const busy = await googleBusy(keys[0] * 60000, (keys[keys.length - 1] + S.ev.step) * 60000);
+    const n = useBusy(busy);
+    if (out) busyResult(out, n, 'Imported from Google Calendar. ');
+    else toast(n ? `Imported your Google Calendar: ${plural(n, 'busy time')} striped on your grid.` : 'Imported your Google Calendar: you’re free for every time in this poll.');
+  } catch (e) {
+    if (state) state.textContent = e.message;
+    else toast(e.message);
+  }
+  if (btn) btn.disabled = false;
+}
+
 function openCalendar() {
   openDialog('Check against your calendar', `
+    ${googleOn ? `<div class="gimport">
+      <button type="button" class="btn primary gbtn" data-gcal>${ICON.google}Import from Google Calendar</button>
+      <p class="note">Google asks you to allow read-only access to when you’re busy. Only busy and free times are read, never what your events are, and they go straight from Google to this browser. Nothing is saved on our server.</p>
+    </div>
+    <p class="ordiv"><span>or use a calendar file</span></p>` : ''}
     <p>Choose one or more <b>.ics</b> files exported from your calendar. They’re read right here on this device. Nothing is uploaded, and nobody else sees your calendar: busy times just show as stripes on your own grid.</p>
     <label class="filepick btn">${ICON.cal}Choose .ics files<input type="file" accept=".ics,text/calendar" multiple hidden></label>
     <p class="calresult" aria-live="polite"></p>
@@ -1508,6 +1801,8 @@ function openCalendar() {
     <div class="dlgactions"><button type="button" class="btn primary" data-done>Done</button></div>`, b => {
     const input = $('input[type=file]', b), out = $('.calresult', b);
     $('[data-done]', b).onclick = closeDialog;
+    const g = $('[data-gcal]', b);
+    if (g) g.onclick = () => importGoogle(g, out);
     input.onchange = async () => {
       const files = [...input.files];
       if (!files.length) return;
@@ -1523,25 +1818,11 @@ function openCalendar() {
           busy.push(...I.busyFromIcs(text, from, to, HOME_TZ));
         } catch (x) { bad++; }
       }
-      busy.sort((a, c) => a[0] - c[0]);
-      S.busy = I.busySlots(keys, step, busy);
-      store.set('wyf.busy.' + S.id, [...S.busy]);
-      paintMine(); renderCalState();
-      const n = S.busy.size;
-      out.innerHTML = (bad ? `${plural(bad, 'file')} couldn’t be read as a calendar. ` : '') +
-        (n ? `Found ${plural(n, 'busy time')} during this poll. They’re striped on your grid.` : 'Your calendar is clear for every time in this poll.') +
-        (canEdit() ? ` <button type="button" class="btn sm" data-fill>Mark my other times as available</button>` : '');
-      const fill = $('[data-fill]', out);
-      if (fill) fill.onclick = () => {
-        let c = 0;
-        for (const k of keys) if (!S.busy.has(k) && valOf(k) === 0) { setVal(k, 2); c++; }
-        if (c) { markDirty(); paintGroup(); }
-        fill.replaceWith(document.createTextNode(c ? ` Marked ${plural(c, 'time')} as available. Check them over before you go.` : ' Nothing left to mark.'));
-      };
+      const n = useBusy(busy);
+      busyResult(out, n, bad ? `${plural(bad, 'file')} couldn’t be read as a calendar. ` : '');
     };
   });
 }
-
 /* ---------- accounts (optional, shared with Signature Studio) ---------- */
 
 function renderAccount() {
@@ -1665,8 +1946,8 @@ async function mountGoogle() {
 /* ---------- about ---------- */
 
 $('#aboutbtn').addEventListener('click', () => {
-  openDialog('About When You Free?', `
-    <p>When You Free? is a free group scheduling poll made by <a href="/">Jack Jaillet</a>. Make a poll, send the link, and everyone marks when they’re free. It works on any phone, shows each person their own time zone, and never needs an account.</p>
+  openDialog('About WhenUFree', `
+    <p>WhenUFree is a free group scheduling poll made by <a href="/">Jack Jaillet</a>. Make a poll, send the link, and everyone marks when they’re free. It works on any phone, shows each person their own time zone, and never needs an account.</p>
     <h3>What’s stored</h3>
     <ul class="tips">
       <li>For each poll: its name, description, days and times, and the final time if one is picked.</li>
@@ -1676,7 +1957,8 @@ $('#aboutbtn').addEventListener('click', () => {
     </ul>
     <h3>What isn’t</h3>
     <ul class="tips">
-      <li>Your calendar. If you check against an .ics file, it’s read on your device and never sent anywhere.</li>
+      <li>Your calendar. If you check against an .ics file, it’s read on your device and never sent anywhere. If you import your Google Calendar, Google sends only your busy and free times, straight to your browser, and they’re never saved on our server.</li>
+
       <li>No ads, and nothing is sold or shared.</li>
     </ul>
     <h3>How long it’s kept</h3>
@@ -1701,6 +1983,7 @@ function start() {
         renderAccount();
         const nm = $('#pane-mine input[name=name]'); // add the Google button to the join form, unless someone is already typing in it
         if (googleOn && S.mineMode === 'join' && nm && !nm.value && document.activeElement !== nm) { S.mineMode = ''; renderMine(); }
+        if (googleOn && S.mineMode === 'edit' && S.ev) renderMine(true);
       })
       .catch(() => {});
   }

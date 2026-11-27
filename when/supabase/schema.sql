@@ -1,4 +1,4 @@
--- When You Free? (jackjaillet.com/when/): group availability polls.
+-- WhenUFree (jackjaillet.com/when/): group availability polls.
 -- Lives in the same Supabase project as Signature Studio and shares its Google sign-in,
 -- so one account (and Signature Studio's delete_my_account) covers both tools.
 --
@@ -27,6 +27,7 @@ create table public.wyf_events (
   end_min int not null check (end_min between 15 and 1440),
   step int not null check (step in (15, 30, 60)),
   tz text not null check (char_length(tz) between 1 and 64),
+  day_hours jsonb not null default '{}'::jsonb, -- days with their own window: {"YYYY-MM-DD": [start_min, end_min]}
   pass_hash text,
   required uuid[] not null default '{}',
   final_start int,
@@ -97,8 +98,9 @@ $$;
 -- checks a poll's settings and returns them cleaned up; raises a readable error otherwise
 create or replace function public.wyf__settings(p jsonb,
   out title text, out details text, out mode text, out days date[],
-  out start_min int, out end_min int, out step int, out tz text)
+  out start_min int, out end_min int, out step int, out tz text, out hours jsonb)
 language plpgsql stable set search_path = '' as $$
+declare hk text; hv jsonb; hd date; hs int; he int; total int;
 begin
   title := btrim(regexp_replace(coalesce(p ->> 'title', ''), '\s+', ' ', 'g'));
   details := btrim(coalesce(p ->> 'details', ''));
@@ -126,7 +128,30 @@ begin
      or start_min % step <> 0 or end_min % step <> 0 then
     raise exception 'wyf: The end time has to be after the start time.';
   end if;
-  if cardinality(days) * ((end_min - start_min) / step) > 2000 then
+  -- days with their own times; entries for days not in the poll, or the same as the general window, are dropped
+  hours := '{}'::jsonb;
+  total := cardinality(days) * ((end_min - start_min) / step);
+  if p ? 'hours' and jsonb_typeof(p -> 'hours') = 'object' then
+    for hk, hv in select * from jsonb_each(p -> 'hours') loop
+      begin
+        hd := hk::date;
+        hs := (hv ->> 0)::int;
+        he := (hv ->> 1)::int;
+      exception when others then
+        raise exception 'wyf: Some of the poll settings are not valid.';
+      end;
+      continue when not (hd = any(days));
+      if jsonb_typeof(hv) <> 'array' then raise exception 'wyf: Some of the poll settings are not valid.'; end if;
+      if jsonb_array_length(hv) <> 2 or hs is null or he is null
+         or hs < 0 or he > 1440 or he <= hs or hs % step <> 0 or he % step <> 0 then
+        raise exception 'wyf: Each day''s end time has to be after its start time.';
+      end if;
+      continue when hs = start_min and he = end_min;
+      hours := hours || jsonb_build_object(to_char(hd, 'YYYY-MM-DD'), jsonb_build_array(hs, he));
+      total := total + (he - hs) / step - (end_min - start_min) / step;
+    end loop;
+  end if;
+  if total > 2000 then
     raise exception 'wyf: That is too many time slots. Pick fewer days, a shorter window, or longer slots.';
   end if;
 end; $$;
@@ -135,7 +160,7 @@ end; $$;
 create or replace function public.wyf__view(e public.wyf_events, admin boolean) returns jsonb language sql stable set search_path = '' as $$
   select jsonb_build_object(
     'id', e.id, 'title', e.title, 'details', e.details, 'mode', e.mode, 'days', to_jsonb(e.days),
-    'start', e.start_min, 'end', e.end_min, 'step', e.step, 'tz', e.tz,
+    'start', e.start_min, 'end', e.end_min, 'step', e.step, 'tz', e.tz, 'hours', e.day_hours,
     'locked', e.pass_hash is not null, 'required', to_jsonb(e.required),
     'final', case when e.final_start is null then null else jsonb_build_array(e.final_start, e.final_end) end,
     'created', e.created_at, 'updated', e.updated_at, 'expires', e.expires_at,
@@ -166,8 +191,8 @@ begin
     new_id := public.wyf__rand(10);
     exit when not exists (select 1 from public.wyf_events where id = new_id);
   end loop;
-  insert into public.wyf_events (id, admin_hash, owner, title, details, mode, days, start_min, end_min, step, tz, pass_hash, expires_at)
-  values (new_id, public.wyf__hash(tok), auth.uid(), s.title, s.details, s.mode, s.days, s.start_min, s.end_min, s.step, s.tz,
+  insert into public.wyf_events (id, admin_hash, owner, title, details, mode, days, start_min, end_min, step, tz, day_hours, pass_hash, expires_at)
+  values (new_id, public.wyf__hash(tok), auth.uid(), s.title, s.details, s.mode, s.days, s.start_min, s.end_min, s.step, s.tz, s.hours,
           public.wyf__pw(p ->> 'password'), public.wyf__expiry(s.days));
   return jsonb_build_object('id', new_id, 'admin', tok);
 end; $$;
@@ -263,12 +288,12 @@ begin
   select * into e from public.wyf_events where id = p_id for update;
   if not found then return jsonb_build_object('error', 'not_found'); end if;
   if not public.wyf__is_admin(e, p_admin) then return jsonb_build_object('error', 'denied'); end if;
-  if p ?| array['title', 'details', 'mode', 'days', 'start', 'end', 'step', 'tz'] then
+  if p ?| array['title', 'details', 'mode', 'days', 'start', 'end', 'step', 'tz', 'hours'] then
     cur := jsonb_build_object('title', e.title, 'details', e.details, 'mode', e.mode, 'days', to_jsonb(e.days),
-                              'start', e.start_min, 'end', e.end_min, 'step', e.step, 'tz', e.tz);
+                              'start', e.start_min, 'end', e.end_min, 'step', e.step, 'tz', e.tz, 'hours', e.day_hours);
     select * into s from public.wyf__settings(cur || (p - 'password' - 'required' - 'final'));
     update public.wyf_events set title = s.title, details = s.details, mode = s.mode, days = s.days, start_min = s.start_min,
-      end_min = s.end_min, step = s.step, tz = s.tz, updated_at = now(), expires_at = greatest(expires_at, public.wyf__expiry(s.days))
+      end_min = s.end_min, step = s.step, tz = s.tz, day_hours = s.hours, updated_at = now(), expires_at = greatest(expires_at, public.wyf__expiry(s.days))
     where id = e.id;
   end if;
   if p ? 'password' then

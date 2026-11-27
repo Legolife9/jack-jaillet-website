@@ -30,6 +30,22 @@ test('slots and their order', () => {
   assert.ok(keys.every((k, i) => i === 0 || k > keys[i - 1]));
 });
 
+test('a day with its own times', () => {
+  const ev = { mode: 'dates', days: ['2026-11-24', '2026-11-25'], start: 540, end: 660, step: 30, tz: 'UTC', hours: { '2026-11-25': [780, 900] } };
+  assert.deepEqual(C.hoursFor(ev, '2026-11-24'), [540, 660]);
+  assert.deepEqual(C.hoursFor(ev, '2026-11-25'), [780, 900]);
+  assert.equal(C.slotCount(ev), 8);
+  const keys = C.slotKeys(ev);
+  assert.equal(iso(keys[4] * 60000), '2026-11-25T13:00');
+  const lay = C.layout(ev, 'UTC');
+  assert.deepEqual(lay.rows.map(r => r.min), [540, 570, 600, 630, 780, 810, 840, 870]);
+  assert.ok(lay.rows[4].gap);
+  assert.equal(lay.grid[0][4], null); // the 24th has nothing in the afternoon
+  assert.equal(lay.grid[1][0], null); // the 25th has nothing in the morning
+  // a bad entry falls back to the general window
+  assert.deepEqual(C.hoursFor({ ...ev, hours: { '2026-11-25': [900, 780] } }, '2026-11-25'), [540, 660]);
+});
+
 test('the same poll laid out in the organizer zone and in another zone', () => {
   const ev = { mode: 'dates', days: ['2026-11-24', '2026-11-25'], start: 18 * 60, end: 23 * 60, step: 60, tz: 'America/New_York' };
   const home = C.layout(ev, 'America/New_York');
