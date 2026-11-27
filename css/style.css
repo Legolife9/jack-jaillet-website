@@ -5,6 +5,16 @@
    light (remembered per visitor). Print is always light.
    ============================================================ */
 
+/* Fonts are served from this site (/fonts, SIL Open Font License), not Google
+   Fonts, so no visitor's IP address goes to a third party just to draw text,
+   and the CSP needs no outside font hosts. Same files Signature Studio uses. */
+@font-face { font-family: "Instrument Sans"; font-style: normal; font-weight: 400; font-display: swap; src: url(/fonts/instrument-sans-400.woff2) format("woff2"); }
+@font-face { font-family: "Instrument Sans"; font-style: normal; font-weight: 500; font-display: swap; src: url(/fonts/instrument-sans-500.woff2) format("woff2"); }
+@font-face { font-family: "Instrument Sans"; font-style: normal; font-weight: 600; font-display: swap; src: url(/fonts/instrument-sans-600.woff2) format("woff2"); }
+@font-face { font-family: "Playfair Display"; font-style: normal; font-weight: 600; font-display: swap; src: url(/fonts/playfair-600.woff2) format("woff2"); }
+@font-face { font-family: "Playfair Display"; font-style: normal; font-weight: 700; font-display: swap; src: url(/fonts/playfair-700.woff2) format("woff2"); }
+@font-face { font-family: "Playfair Display"; font-style: italic; font-weight: 600; font-display: swap; src: url(/fonts/playfair-600-italic.woff2) format("woff2"); }
+
 :root {
   color-scheme: dark;
   --paper: #10131a;
@@ -177,8 +187,10 @@ a:hover .ext-icon { opacity: 1; }
 /* the generic target=_blank arrow would double up next to .ext-icon */
 a[target="_blank"]:has(.ext-icon)::after { content: none; }
 
-/* links inside running text carry an underline, not color alone */
-.lede a, .prose a, .post p a {
+/* links inside running text carry an underline, not color alone (WCAG 1.4.1).
+   .consent is the cookie banner from js/footer.js; .blog-empty-note is the
+   empty blog list. Both failed this check before. */
+.lede a, .prose a, .post p a, .consent p a, .blog-empty-note a {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
@@ -881,6 +893,10 @@ a.org-item:hover { color: var(--ink); text-decoration: none; }
 .section-head p { margin-top: 12px; color: var(--ink-2); }
 
 /* ---------- highlights grid ---------- */
+
+/* The highlight and service cards are a list of related items, not
+   stand-alone articles, so they are <ul>/<li>. No bullets. */
+.card-list { list-style: none; }
 
 .highlights {
   display: grid;

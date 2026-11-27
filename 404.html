@@ -12,9 +12,7 @@
   <meta name="robots" content="noindex, follow">
   <link rel="icon" type="image/png" href="/assets/favicon.png">
   <link rel="apple-touch-icon" href="/assets/favicon.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+  <link rel="preload" href="/fonts/instrument-sans-400.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/css/style.css">
   <script>try{var t=localStorage.getItem("theme");if(t){document.documentElement.dataset.theme=t;var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content",t==="light"?"#f7f8fa":"#10131a")}}catch(e){}</script>
   <noscript><style>.reveal{opacity:1 !important;transform:none !important}</style></noscript>
@@ -29,7 +27,7 @@
         <img class="brand-img" src="/assets/favicon.png" alt="" width="40" height="40">
         <span class="brand-name">Jack Jaillet</span>
       </a>
-      <button class="nav-toggle" aria-expanded="false" aria-controls="nav-menu" aria-label="Open navigation menu">Menu</button>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-menu" aria-label="Open navigation menu">Menu</button>
       <ul class="nav-links" id="nav-menu">
         <li><a href="/">Home</a></li>
         <li><a href="/about">About</a></li>
@@ -51,7 +49,7 @@
 
   <main id="main">
 
-  <header class="about-head">
+  <div class="about-head">
     <div class="wrap">
       <h1>That page isn't<br><em>here anymore.</em></h1>
       <p class="lede mt-4">The link may be out of date, or I may have moved something. Nothing you did wrong.</p>
@@ -60,7 +58,7 @@
         <a class="btn btn-ghost" href="/about">More about me</a>
       </div>
     </div>
-  </header>
+  </div>
 
   <section class="section section-tight-top" aria-labelledby="elsewhere-heading">
     <div class="wrap">

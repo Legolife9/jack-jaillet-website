@@ -25,9 +25,7 @@
   <meta name="twitter:image" content="https://jackjaillet.com/assets/og-image.jpg">
   <link rel="icon" type="image/png" href="/assets/favicon.png">
   <link rel="apple-touch-icon" href="/assets/favicon.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+  <link rel="preload" href="/fonts/instrument-sans-400.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/css/style.css">
   <script>try{var t=localStorage.getItem("theme");if(t){document.documentElement.dataset.theme=t;var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content",t==="light"?"#f7f8fa":"#10131a")}}catch(e){}</script>
   <noscript><style>.reveal{opacity:1 !important;transform:none !important}</style></noscript>
@@ -42,7 +40,7 @@
         <img class="brand-img" src="/assets/favicon.png" alt="" width="40" height="40">
         <span class="brand-name">Jack Jaillet</span>
       </a>
-      <button class="nav-toggle" aria-expanded="false" aria-controls="nav-menu" aria-label="Open navigation menu">Menu</button>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-menu" aria-label="Open navigation menu">Menu</button>
       <ul class="nav-links" id="nav-menu">
         <li><a href="/">Home</a></li>
         <li><a href="/about">About</a></li>
@@ -64,32 +62,32 @@
 
   <main id="main">
 
-  <header class="about-head">
+  <div class="about-head">
     <div class="wrap">
       <h1>Services &amp; <em>tools.</em></h1>
       <p class="lede services-lede">Things I've built for people and organizations to use. The tools are free, open source, and run right in your browser.</p>
     </div>
-  </header>
+  </div>
 
   <section class="section section-alt" aria-labelledby="tools-heading">
     <div class="wrap">
       <div class="section-head reveal">
         <h2 id="tools-heading">Free tools</h2>
       </div>
-      <div class="services-grid">
-        <article class="hl hl-lead reveal" aria-labelledby="svc-signatures">
+      <ul class="services-grid card-list">
+        <li class="hl hl-lead reveal">
           <span class="hl-org">Free and open source</span>
           <h3 id="svc-signatures">Signature Studio</h3>
           <p>Build a professional email signature, fill it in for a whole team from a spreadsheet, and copy it into Gmail, Outlook, or Apple Mail. No account needed, and without one, nothing you type leaves your browser.</p>
           <p class="hl-cta"><a href="/signatures/">Open Signature Studio</a></p>
-        </article>
-        <article class="hl reveal" aria-labelledby="svc-when">
+        </li>
+        <li class="hl reveal">
           <span class="hl-org">Free group scheduling</span>
           <h3 id="svc-when">When You Free?</h3>
           <p>Find a time that works for everyone. Make a poll in under two minutes, send the link, and watch the overlap fill in. People answer with just their name, on any phone, in their own time zone. Then pick the time and send it to everyone's calendar.</p>
           <p class="hl-cta"><a href="/when/">Make a poll</a></p>
-        </article>
-      </div>
+        </li>
+      </ul>
     </div>
   </section>
 

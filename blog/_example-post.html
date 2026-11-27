@@ -37,9 +37,7 @@
   <meta name="twitter:image" content="https://jackjaillet.com/assets/og-image.jpg">
   <link rel="icon" type="image/png" href="/assets/favicon.png">
   <link rel="apple-touch-icon" href="/assets/favicon.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+  <link rel="preload" href="/fonts/instrument-sans-400.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/css/style.css">
   <script type="application/ld+json">
   {
@@ -67,7 +65,7 @@
         <img class="brand-img" src="/assets/favicon.png" alt="" width="40" height="40">
         <span class="brand-name">Jack Jaillet</span>
       </a>
-      <button class="nav-toggle" aria-expanded="false" aria-controls="nav-menu" aria-label="Open navigation menu">Menu</button>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-menu" aria-label="Open navigation menu">Menu</button>
       <ul class="nav-links" id="nav-menu">
         <li><a href="/">Home</a></li>
         <li><a href="/about">About</a></li>
@@ -89,7 +87,7 @@
 
   <main id="main">
 
-  <header class="post-head">
+  <div class="post-head">
     <div class="wrap wrap-article">
       <a class="back-link" href="/blog/">&larr; All posts</a>
       <h1 class="post-title">Why I'm starting a blog</h1>
@@ -105,7 +103,7 @@
       <img src="/assets/blog/placeholder.svg" alt="" width="1600" height="1000" fetchpriority="high" decoding="async">
       <figcaption>The header image sits up here, above the post.</figcaption>
     </figure>
-  </header>
+  </div>
 
   <div class="wrap wrap-article">
     <article class="post-body">

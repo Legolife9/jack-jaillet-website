@@ -22,9 +22,7 @@
   <meta name="twitter:image" content="https://jackjaillet.com/assets/og-image.jpg">
   <link rel="icon" type="image/png" href="/assets/favicon.png">
   <link rel="apple-touch-icon" href="/assets/favicon.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+  <link rel="preload" href="/fonts/instrument-sans-400.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/css/style.css">
   <script>try{var t=localStorage.getItem("theme");if(t){document.documentElement.dataset.theme=t;var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content",t==="light"?"#f7f8fa":"#10131a")}}catch(e){}</script>
   <noscript><style>.reveal{opacity:1 !important;transform:none !important}</style></noscript>
@@ -39,7 +37,7 @@
         <img class="brand-img" src="/assets/favicon.png" alt="" width="40" height="40">
         <span class="brand-name">Jack Jaillet</span>
       </a>
-      <button class="nav-toggle" aria-expanded="false" aria-controls="nav-menu" aria-label="Open navigation menu">Menu</button>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-menu" aria-label="Open navigation menu">Menu</button>
       <ul class="nav-links" id="nav-menu">
         <li><a href="/">Home</a></li>
         <li><a href="/about">About</a></li>
@@ -61,17 +59,17 @@
 
   <main id="main">
 
-  <header class="about-head">
+  <div class="about-head">
     <div class="wrap">
       <h1>Privacy Policy</h1>
       <p class="lede mt-4">What this site collects, why, and what you can do about it. The short version: very little, nothing is sold, and you can turn analytics off at any time.</p>
     </div>
-  </header>
+  </div>
 
   <section class="section section-tight-top" aria-label="Privacy policy">
     <div class="wrap">
       <div class="prose">
-        <p class="note">Effective November 22, 2026.</p>
+        <p class="note">Effective November 26, 2026.</p>
 
         <h2 id="who">Who I am</h2>
         <p>This website, jackjaillet.com, including <a href="/signatures/">Signature Studio</a> and <a href="/when/">When You Free?</a>, is run by me, Jack Jaillet, as an individual. I'm responsible for the personal information described here. For any question or request, email <a href="mailto:contact@jackjaillet.com">contact@jackjaillet.com</a>.</p>
@@ -79,7 +77,7 @@
         <h2 id="visits">When you visit any page</h2>
         <ul>
           <li><strong>Hosting.</strong> The site is served by Cloudflare. Like any web host, Cloudflare processes your IP address, browser details and the pages you request so it can deliver the site and protect it from abuse.</li>
-          <li><strong>Fonts.</strong> Most pages load their fonts from Google Fonts, so Google receives your IP address and browser details when the font files download. Signature Studio and When You Free? use fonts stored on this site instead.</li>
+          <li><strong>Fonts.</strong> Every page uses fonts stored on this site, so no outside font service sees your visit.</li>
           <li><strong>Settings saved in your browser.</strong> Your light or dark theme and your cookie choice are saved in your browser's local storage. They stay on your device and are never sent to me.</li>
         </ul>
 
@@ -122,7 +120,7 @@
         <h2 id="processors">Services that handle data for this site</h2>
         <ul>
           <li><strong>Cloudflare:</strong> hosting, security, email forwarding and cookie-free visit counts (Web Analytics).</li>
-          <li><strong>Google:</strong> Google Fonts; Google Analytics, unless you turn it off (or until you accept, in Europe); Google sign-in for Signature Studio and When You Free?.</li>
+          <li><strong>Google:</strong> Google Analytics, unless you turn it off (or until you accept, in Europe); Google sign-in for Signature Studio and When You Free?.</li>
           <li><strong>Supabase:</strong> Signature Studio accounts and saved data, and When You Free? polls and answers.</li>
           <li><strong>images.weserv.nl and Iconify:</strong> images and icons in signatures.</li>
         </ul>

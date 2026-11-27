@@ -25,9 +25,7 @@
   <meta name="twitter:image" content="https://jackjaillet.com/assets/og-image.jpg">
   <link rel="icon" type="image/png" href="/assets/favicon.png">
   <link rel="apple-touch-icon" href="/assets/favicon.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+  <link rel="preload" href="/fonts/instrument-sans-400.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/css/style.css">
   <script type="application/ld+json">
   {
@@ -83,7 +81,7 @@
         <img class="brand-img" src="/assets/favicon.png" alt="" width="40" height="40">
         <span class="brand-name">Jack Jaillet</span>
       </a>
-      <button class="nav-toggle" aria-expanded="false" aria-controls="nav-menu" aria-label="Open navigation menu">Menu</button>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-menu" aria-label="Open navigation menu">Menu</button>
       <ul class="nav-links" id="nav-menu">
         <li><a href="/" aria-current="page">Home</a></li>
         <li><a href="/about">About</a></li>
@@ -105,7 +103,7 @@
 
   <main id="main">
 
-  <header class="hero">
+  <div class="hero">
     <div class="wrap hero-grid">
       <div>
         <h1>Always learning,<br><em>always leading.</em></h1>
@@ -123,7 +121,7 @@
         </div>
       </figure>
     </div>
-  </header>
+  </div>
 
   <section class="orgs" aria-label="Organizations Jack has worked with" data-paused="false">
     <button class="orgs-pause" type="button" aria-label="Pause the scrolling organization list">
@@ -175,33 +173,33 @@
       <div class="section-head reveal">
         <h2 id="highlights-heading">A few highlights</h2>
       </div>
-      <div class="highlights">
-        <article class="hl hl-lead reveal" aria-labelledby="hl-myl">
+      <ul class="highlights card-list">
+        <li class="hl hl-lead reveal">
           <img class="hl-logo" src="/assets/logos/mylf.jpg" alt="" width="64" height="64" loading="lazy" decoding="async">
           <span class="hl-org"><a href="https://www.massyouthleadership.org/" target="_blank" rel="noopener">Massachusetts Youth Leadership Foundation<span class="sr-only"> (opens in new tab)</span><svg class="ext-icon" aria-hidden="true" focusable="false" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a></span>
           <h3 id="hl-myl">Conference Multimedia Director</h3>
           <p>Led video production for the MassSTAR conference in 2025 and 2026: filming the three-day weekend, editing on the fly, and delivering a 7+ minute recap before it ended. Delegate in 2024, and on the board through August 2026.</p>
           <p class="hl-cta"><a href="https://lnkd.in/girWviJ6" target="_blank" rel="noopener">Watch the 2026 recap video<span class="sr-only"> (opens in new tab)</span></a></p>
-        </article>
-        <article class="hl hl-a reveal" aria-labelledby="hl-photo">
+        </li>
+        <li class="hl hl-a reveal">
           <img class="hl-logo" src="/assets/logos/charming-memories.jpg" alt="" width="44" height="44" loading="lazy" decoding="async">
           <span class="hl-org"><a href="https://www.charmingphotography.com/" target="_blank" rel="noopener">Charming Memories Photography<span class="sr-only"> (opens in new tab)</span><svg class="ext-icon" aria-hidden="true" focusable="false" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a></span>
           <h3 id="hl-photo">Founder</h3>
           <p>Portrait, event, and corporate photography and video across Massachusetts.</p>
-        </article>
-        <article class="hl hl-b reveal" aria-labelledby="hl-bff">
+        </li>
+        <li class="hl hl-b reveal">
           <img class="hl-logo" src="/assets/logos/bright-future.jpg" alt="" width="44" height="44" loading="lazy" decoding="async">
           <span class="hl-org"><a href="https://www.brightfuturefinancialllc.com/" target="_blank" rel="noopener">Bright Future Financial LLC<span class="sr-only"> (opens in new tab)</span><svg class="ext-icon" aria-hidden="true" focusable="false" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a></span>
           <h3 id="hl-bff">Client Service Associate</h3>
           <p>Client records, CRM, and scheduling at a financial services firm in Leominster, after starting as an intern in 2025.</p>
-        </article>
-        <article class="hl hl-c reveal" aria-labelledby="hl-leo">
+        </li>
+        <li class="hl hl-c reveal">
           <img class="hl-logo" src="/assets/logos/lions.jpg" alt="" width="44" height="44" loading="lazy" decoding="async">
           <span class="hl-org"><a href="https://www.lionsclubs.org/en" target="_blank" rel="noopener">Lions Clubs International, District 33A<span class="sr-only"> (opens in new tab)</span><svg class="ext-icon" aria-hidden="true" focusable="false" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a></span>
           <h3 id="hl-leo">2024-25 Massachusetts Leo of the Year</h3>
           <p>Named Monty Tech&rsquo;s Outstanding Leo, then Massachusetts Leo of the Year. Now the Leo Advisor for District 33A.</p>
-        </article>
-      </div>
+        </li>
+      </ul>
     </div>
   </section>
 

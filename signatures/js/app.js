@@ -58,14 +58,15 @@ function ensureRaster(ref, color, size){
   img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
 }
 // mode: preview (inline svg data) | gmail (hosted PNG link) | embed (PNG data URI)
-function iconImg(ref, color, size, ctx){
+function iconImg(ref, color, size, ctx, alt){
   if (!ref) return '';
   color = color || '#000000';
+  alt = esc(alt || '');
   if (ref.set === 'custom'){
     let src = ref.data;
     if (ctx.mode !== 'preview' && ref.url) src = ref.url;
     else if (ctx.mode === 'gmail') ctx.embedded.add('icon "' + (ref.name || 'upload') + '"');
-    return `<img src="${esc(src)}" height="${size}" alt="" referrerpolicy="no-referrer" style="display:block;height:${size}px;width:auto;border:0">`;
+    return `<img src="${esc(src)}" height="${size}" alt="${alt}" referrerpolicy="no-referrer" style="display:block;height:${size}px;width:auto;border:0">`;
   }
   const w = Math.round(size * iconRatio(ref));
   let src;
@@ -77,7 +78,7 @@ function iconImg(ref, color, size, ctx){
     const r = rasterCache[rasterKey(ref, color, size)];
     src = ctx.mode === 'embed' && r && r !== 'pending' ? r : 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(iconSvg(ref, color));
   }
-  return `<img src="${esc(src)}" width="${w}" height="${size}" alt="" style="display:block;width:${w}px;height:${size}px;border:0;margin:0 auto">`;
+  return `<img src="${esc(src)}" width="${w}" height="${size}" alt="${alt}" style="display:block;width:${w}px;height:${size}px;border:0;margin:0 auto">`;
 }
 function iconChip(ref){
   if (!ref) return '<span class="note">None</span>';
@@ -456,6 +457,18 @@ function rich(s, linkColor){
     .replace(/\*(.+?)\*/g, '<em>$1</em>')
     .replace(/\n/g, '<br>');
 }
+// What an icon-only link is called for screen readers, in the editor and in the sent email:
+// the network's name when the icon is a known one, otherwise the site the link goes to.
+const LINK_NAMES = { linkedin:'LinkedIn', instagram:'Instagram', 'x-twitter':'X', twitter:'X (Twitter)', x:'X', facebook:'Facebook', youtube:'YouTube', tiktok:'TikTok', github:'GitHub', threads:'Threads', pinterest:'Pinterest', whatsapp:'WhatsApp', snapchat:'Snapchat', reddit:'Reddit', discord:'Discord', telegram:'Telegram', medium:'Medium', behance:'Behance', dribbble:'Dribbble', vimeo:'Vimeo', spotify:'Spotify', twitch:'Twitch', mastodon:'Mastodon', bluesky:'Bluesky', yelp:'Yelp', google:'Google', calendly:'Calendly', envelope:'Email', phone:'Phone', globe:'Website' };
+function linkName(ref, link){
+  const n = String((ref && ref.name) || '').toLowerCase().replace(/-(in|f|square|square-[\w-]+|alt|logo)$/, '');
+  if (LINK_NAMES[n]) return LINK_NAMES[n];
+  const h = href(M(link || ''));
+  if (/^mailto:/i.test(h)) return 'Email';
+  if (/^tel:/i.test(h)) return 'Phone';
+  try { return new URL(h).hostname.replace(/^www\./, ''); } catch (e) {}
+  return (ref && ref.name ? String(ref.name).replace(/-/g, ' ') : '') || 'Link';
+}
 function wrapLink(html, link, color){
   const h = href(M(link)); if (!h) return html;
   return `<a href="${esc(h)}" style="color:${color};text-decoration:none">${html}</a>`;
@@ -557,10 +570,10 @@ function renderBlock(b, ctx){
     case 'social': {
       const rad = b.shape === 'circle' ? '50%' : b.shape === 'rounded' ? '6px' : '0';
       const cells = b.items.filter(i => i.icon && !(usesField(i.link) && !M(i.link).trim())).map((it, n) => {
-        let img = iconImg(it.icon, b.color, b.size, ctx);
+        const t = M(it.text || '').trim(), tc = b.tcolor || S.color;
+        let img = iconImg(it.icon, b.color, b.size, ctx, t ? '' : linkName(it.icon, it.link));
         if (b.shape !== 'none') img = `<table ${T0}><tr><td bgcolor="${b.bg}" align="center" width="${b.size + 2 * b.pad}" style="background:${b.bg};border-radius:${rad};padding:${b.pad}px 0;width:${b.size + 2 * b.pad}px">${img}</td></tr></table>`;
         // an optional title beside the icon ("LinkedIn", "Follow us"), linked the same way
-        const t = M(it.text || '').trim(), tc = b.tcolor || S.color;
         if (t) return `<td style="padding-left:${n ? b.gap : 0}px"><table ${T0} style="border-collapse:collapse"><tr><td valign="middle">${wrapLink(img, it.link, b.color)}</td>` +
           `<td valign="middle" style="padding-left:6px;font-family:${S.font};font-size:${b.tsize || 12}px;line-height:1.3;color:${tc};white-space:nowrap">${wrapLink(esc(t), it.link, tc)}</td></tr></table></td>`;
         return `<td style="padding-left:${n ? b.gap : 0}px">${wrapLink(img, it.link, b.color)}</td>`;
@@ -579,7 +592,7 @@ function buttonCell(b, ctx){
   const S = ctx.S, t = M(b.text);
   if (!t.trim() && !b.icon) return '';
   if (usesField(b.link) && !M(b.link).trim()) return ''; // a person without a booking link gets no booking button
-  const ic = b.icon ? `<td valign="middle" style="${t ? (b.iconPos === 'left' ? 'padding-right:7px' : 'padding-left:7px') : ''}">${iconImg(b.icon, b.color, b.iconSize, ctx)}</td>` : '';
+  const ic = b.icon ? `<td valign="middle" style="${t ? (b.iconPos === 'left' ? 'padding-right:7px' : 'padding-left:7px') : ''}">${iconImg(b.icon, b.color, b.iconSize, ctx, t.trim() ? '' : linkName(b.icon, b.link))}</td>` : '';
   const tx = t ? `<td valign="middle" style="font-family:${S.font};font-size:${b.size}px;font-weight:${b.weight};color:${b.color};line-height:1.2;white-space:nowrap">${esc(t)}</td>` : '';
   const inner = `<table ${T0}><tr>${b.iconPos === 'left' ? ic + tx : tx + ic}</tr></table>`;
   const bord = b.borderW ? `border:${b.borderW}px solid ${b.borderColor};` : '';
@@ -1019,7 +1032,7 @@ function blockName(b){
   return b.label || DEF[b.type].label;
 }
 const ACTS = { ren:['fas:pen','Rename'], up:['fas:arrow-up','Move up'], down:['fas:arrow-down','Move down'], left:['fas:arrow-left','Move left'], right:['fas:arrow-right','Move right'], dup:['far:copy','Duplicate'], del:['far:trash-can','Delete'] };
-const acts = keys => `<span class="acts">${keys.map(k => { const [g, t] = ACTS[k], [s, n] = g.split(':'); return `<button class="iconbtn" data-act="${k}" title="${t}" aria-label="${t}">${G(s, n)}</button>`; }).join('')}</span>`;
+const acts = keys => `<span class="acts">${keys.map(k => { const [g, t] = ACTS[k], [s, n] = g.split(':'); return `<button type="button" class="iconbtn" data-act="${k}" title="${t}" aria-label="${t}">${G(s, n)}</button>`; }).join('')}</span>`;
 let dragId = null;
 function divItem(r, i){
   const id = `dv:${r.id}:${i}`;
@@ -2040,14 +2053,14 @@ function openPicker(cb){ pickCb = cb; $('#isearch').value = ''; drawIcons(); $('
 function drawIcons(){
   const q = $('#isearch').value.trim().toLowerCase(), Gd = $('#igrid');
   if (pickSet === 'custom'){
-    Gd.innerHTML = myIcons.map((m, i) => `<button data-my="${i}" title="${esc(m.name)}"><img src="${esc(m.data)}" alt=""><span>${esc(m.name)}</span></button>`).join('');
+    Gd.innerHTML = myIcons.map((m, i) => `<button type="button" data-my="${i}" title="${esc(m.name)}"><img src="${esc(m.data)}" alt=""><span>${esc(m.name)}</span></button>`).join('');
     $('#inote').textContent = myIcons.length ? 'Icon links you added are remembered in this browser.' : 'No icons of your own yet. Paste an icon link above.';
     return;
   }
   if (!iconIndex().length){ Gd.innerHTML = ''; $('#inote').textContent = 'The icon library did not load. Reload the page, or add your own icon by link.'; return; }
   const list = iconIndex().filter(x => (pickSet === 'all' || x.set === pickSet) && (!q || x.terms.includes(q)));
   const shown = list.slice(0, 300);
-  Gd.innerHTML = shown.map((x, i) => `<button data-i="${i}" title="${x.name}">${iconSvg(x)}<span>${x.name}</span></button>`).join('');
+  Gd.innerHTML = shown.map((x, i) => `<button type="button" data-i="${i}" title="${x.name}">${iconSvg(x)}<span>${x.name}</span></button>`).join('');
   Gd._list = shown;
   $('#inote').textContent = list.length > 300 ? `Showing 300 of ${list.length}. Type to narrow it down.` : list.length ? '' : 'No icons match. Try a simpler word, or add your own by link.';
 }
@@ -2414,7 +2427,7 @@ function renderHome(){
   const cards = list.map(t => {
     const ppl = (t.state.team && t.state.team.people.length) || 0, tc = coById(t.companyId);
     return `<div class="scard" data-tid="${t.id}">
-      <button type="button" class="thumb2" data-a="open" aria-label="Open ${esc(t.name)}"><div>${thumbOf(t)}</div></button>
+      <button type="button" class="thumb2" data-a="open" aria-label="Open ${esc(t.name)}"><div inert aria-hidden="true">${thumbOf(t)}</div></button>
       <div class="meta"><div class="t" title="${esc(t.name)}">${esc(t.name)}</div>
         <div class="m">${tc && libCo === 'all' ? esc(tc.name) + '. ' : ''}${ppl ? `${ppl} ${ppl > 1 ? 'people' : 'person'}. ` : ''}Edited ${ago(t.updatedAt)}</div>
         ${t.sh ? `<div class="m"><span class="badge ok">Shared</span> by ${esc(t.sh.ownerEmail)}. ${permWords(t.sh.perms)}.</div>
@@ -2442,11 +2455,11 @@ function renderHome(){
 
   let body;
   if (!libReady) body = `<div class="empty">Loading your library…</div>`;
-  else if (!templates.length) body = `<div class="sharecard"><h3>${G('fas','pen-nib')}Start your first signature</h3><p class="note">Pick a layout below. You can change everything about it, and it saves as you go.</p></div>${templateGallery('home', co)}`;
+  else if (!templates.length) body = `<div class="sharecard"><h2>${G('fas','pen-nib')}Start your first signature</h2><p class="note">Pick a layout below. You can change everything about it, and it saves as you go.</p></div>${templateGallery('home', co)}`;
   else body = `<div class="sgrid">${q || (co && co.sh) ? '' : newCard}${cards}</div>${list.length ? '' : `<div class="empty">${q ? 'No signatures match that search.' : co ? `No signatures for ${esc(co.name)} yet.` : 'Nothing here yet.'}</div>`}`;
-  const offer = user && offerMove ? `<div class="sharecard"><h3>${G('fas','cloud-arrow-up')}Move this browser's signatures into your account?</h3><p class="note">${offerMove} signature${offerMove === 1 ? ' is' : 's are'} saved in this browser from before you signed in. Moving them puts them in your account, on every device.</p><div class="row"><button class="btn primary sm" type="button" data-a="move-local">Move them</button><button class="btn sm" type="button" data-a="move-later">Not now</button></div></div>` : '';
+  const offer = user && offerMove ? `<div class="sharecard"><h2>${G('fas','cloud-arrow-up')}Move this browser's signatures into your account?</h2><p class="note">${offerMove} signature${offerMove === 1 ? ' is' : 's are'} saved in this browser from before you signed in. Moving them puts them in your account, on every device.</p><div class="row"><button class="btn primary sm" type="button" data-a="move-local">Move them</button><button class="btn sm" type="button" data-a="move-later">Not now</button></div></div>` : '';
   // a shared company stays out of the library until its invite is accepted here
-  const inv = user ? invites.map(i => `<div class="sharecard"><h3>${G('fas','user-plus')}${esc(i.owner_email)} shared ${esc(i.name || 'a company')} with you</h3><p class="note">Accept to see its signatures here. Only accept if you know them.</p><div class="row"><button class="btn primary sm" type="button" data-a="inv-accept" data-owner="${esc(i.owner)}" data-id="${esc(i.id)}">Accept</button><button class="btn sm" type="button" data-a="inv-decline" data-owner="${esc(i.owner)}" data-id="${esc(i.id)}">Decline</button></div></div>`).join('') : '';
+  const inv = user ? invites.map(i => `<div class="sharecard"><h2>${G('fas','user-plus')}${esc(i.owner_email)} shared ${esc(i.name || 'a company')} with you</h2><p class="note">Accept to see its signatures here. Only accept if you know them.</p><div class="row"><button class="btn primary sm" type="button" data-a="inv-accept" data-owner="${esc(i.owner)}" data-id="${esc(i.id)}">Accept</button><button class="btn sm" type="button" data-a="inv-decline" data-owner="${esc(i.owner)}" data-id="${esc(i.id)}">Decline</button></div></div>`).join('') : '';
   $('#homemain').innerHTML = inv + offer + head + body;
   wireRemoteImages($('#homemain'));
   fitThumbs($('#homemain'));
@@ -2502,7 +2515,7 @@ function templateGallery(where, co){
   const me = myDetails(), mine = co && !co.sh, personal = ME_FIELDS.some(([k]) => (me[k] || '').trim());
   const brand = mine || personal ? p => { const st = migrate(p.state); if (mine) applyBrandIn(st, co); return thumbOf(withMe(st, me)); } : p => p.thumb;
   const cats = `<div class="seg" role="group" aria-label="Template category">${PRESET_CATS.map(c => `<button type="button" data-cat="${c}" aria-pressed="${c === tplCat}">${c}</button>`).join('')}</div>`;
-  const grid = `<div class="tgrid">${shown.map(p => `<button type="button" class="pcard" data-preset="${p.key}" title="Start from ${esc(p.name)}"><div class="pv"><div>${brand(p)}</div></div><div class="pn">${esc(p.name)}</div></button>`).join('')}</div>`;
+  const grid = `<div class="tgrid">${shown.map(p => `<button type="button" class="pcard" data-preset="${p.key}" title="Start from ${esc(p.name)}"><div class="pv" inert aria-hidden="true"><div>${brand(p)}</div></div><div class="pn">${esc(p.name)}</div></button>`).join('')}</div>`;
   return where === 'home' ? `${cats}${grid}<div><button class="btn sm" data-a="blank" type="button">Start blank</button></div>` : grid;
 }
 function openNew(){
@@ -2650,7 +2663,7 @@ function sharePanel(co){
   const list = members[co.id];
   const rows = (list || []).map(m => `<div class="memrow" data-email="${esc(m.email)}"><div class="grow"><b>${esc(m.email)}</b>${m.accepted === false ? ' <span class="note">Hasn\'t accepted yet</span>' : ''}<div class="memperms">${PERMS.map(([k, l]) => `<label class="chk"><input type="checkbox" data-perm="${k}"${m[k] ? ' checked' : ''}>${l}</label>`).join('')}</div></div>
     <div class="row"><button class="btn sm" type="button" data-a="mem-invite" data-email="${esc(m.email)}">Copy invite</button><a class="btn sm ghost" href="mailto:${encodeURIComponent(m.email)}?subject=${encodeURIComponent('Email signatures for ' + co.name)}&body=${encodeURIComponent(inviteText(co, m.email))}">Email invite</a><button class="btn sm ghost danger" type="button" data-a="mem-remove" data-email="${esc(m.email)}">Remove</button></div></div>`).join('');
-  return `<div class="sharecard sharepanel"><h3>${G('fas','user-plus')}Share ${esc(co.name)}</h3>
+  return `<div class="sharecard sharepanel"><h2>${G('fas','user-plus')}Share ${esc(co.name)}</h2>
     <p class="note">People you add see this company and its signatures after they sign in with that email and accept your invite. They can't share it, delete it, or add new signatures. Change what each person can do below; it takes effect the next time they open the page.</p>
     <form id="shareform" class="row" style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
       <div class="field" style="flex:1 1 220px"><span>Email</span><input id="share-email" type="email" required placeholder="name@company.com" autocomplete="off"></div>

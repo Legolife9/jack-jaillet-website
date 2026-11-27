@@ -1,0 +1,7 @@
+# Security contact for jackjaillet.com (RFC 9116).
+# Found a vulnerability on this site, Signature Studio or When You Free?
+# Please email the details. Reports are read by a person, not a bot.
+Contact: mailto:contact@jackjaillet.com
+Expires: 2027-11-26T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://jackjaillet.com/.well-known/security.txt

@@ -1,5 +1,4 @@
 User-agent: *
 Allow: /
-Disallow: /blog/_template
 
 Sitemap: https://jackjaillet.com/sitemap.xml
