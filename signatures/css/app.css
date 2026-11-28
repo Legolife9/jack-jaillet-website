@@ -639,3 +639,16 @@ button.brand:hover{background:var(--panel2)}
 .cropside{flex:1 1 200px;min-width:180px;display:flex;flex-direction:column;gap:8px}
 .croppv{background:#fff;border:1px solid var(--line);background-repeat:no-repeat;max-width:100%}
 .cropbtns{display:flex;gap:6px;flex-wrap:wrap}
+/* how to get a picture link */
+#dlg-links{width:min(640px,calc(100vw - 32px))}
+.linkhelp{display:flex;flex-direction:column;gap:14px;line-height:1.5;font-size:13.5px}
+.linkhelp .why{margin:0;padding:10px 12px;border-radius:8px;background:var(--accent-soft)}
+.linkhelp .opt{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--panel2)}
+.linkhelp h3{display:flex;align-items:center;gap:8px;margin:0 0 4px;font-size:14px}
+.linkhelp .num{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--sel);color:#fff;font-size:12px;flex:none}
+.linkhelp ol,.linkhelp ul{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:5px}
+.linkhelp code{font-family:var(--mono);font-size:12px;padding:1px 4px;border-radius:4px;background:var(--panel)}
+.linkhelp .tips p{margin:0}
+.linkhelp a{color:var(--sel)}
+.linkq{display:inline-flex;align-items:center;gap:5px}
+.linkq svg{width:11px;height:11px;fill:currentColor}

@@ -1196,6 +1196,8 @@ function colPick(r){
   return `<span class="colpick" role="group" aria-label="Items side by side in ${esc(rowName(r))}">${opts.map(k => `<button type="button" data-cols="${k}" data-row="${r.id}" aria-pressed="${k === n}" title="${k === 1 ? 'One column: items stacked' : `${k} columns side by side`}" aria-label="${k === 1 ? '1 column' : k + ' columns side by side'}">${k > 3 ? `<b>${k}</b>` : colsIcon(k)}</button>`).join('')}</span>`;
 }
 const HINT_KEY = 'sigstudio.hintBeside';
+// the button that opens the "How to get a picture link" guide
+const linkHelp = (t = 'How do I get a picture link?') => `<button type="button" class="linkbtn linkq" data-linkhelp>${G('fas', 'circle-question')}${esc(t)}</button>`;
 // a column's first block always starts its own line
 function normLines(st = state){ st.rows.forEach(r => r.cols.forEach(c => { if (c.blocks[0]) c.blocks[0].inline = false; })); }
 function divItem(r, i){
@@ -1713,7 +1715,7 @@ function imageEditor(b){
   }
   if (b.source === 'field'){
     const imgFields = state.team.fields.filter(f => f.type === 'image');
-    out.push(sel_(b, 'field', 'Person field', imgFields.map(f => [f.key, f.label])), note('Each person\'s photo link goes in the People step. The crop and shape below apply to everyone.'));
+    out.push(sel_(b, 'field', 'Person field', imgFields.map(f => [f.key, f.label])), note(`Each person's photo link goes in the People step. The crop and shape below apply to everyone. ${linkHelp()}`));
   } else {
     const u = txt(b, 'url', 'Image link', { ph:'https://yoursite.com/photo.jpg' });
     u.querySelector('input').addEventListener('change', () => {
@@ -1723,7 +1725,7 @@ function imageEditor(b){
     });
     out.push(u, cropButton(b), chips(),
       note(b.url ? '<span class="badge ok">Linked</span> Works in every email app, as long as the link stays online.' : b.sample ? '<span class="badge">Sample picture</span> Paste a link to your own image. Email apps can\'t show the sample.' : 'Paste a link to an image that\'s online.'),
-      note('To get a link: right-click an image on your website or LinkedIn and choose <b>Copy image address</b>. Images aren\'t uploaded or stored here.'));
+      note(`Pictures are used by link, never uploaded, which keeps Signature Studio free. ${linkHelp()}`));
   }
   return out;
 }
@@ -2490,7 +2492,7 @@ function renderPeople(){
     return `<div class="pers${on ? ' on' : ''}" data-pid="${p.id}">
       <div class="phead"><button type="button" class="pick" data-a="pick" aria-expanded="${on}" aria-label="Edit and preview ${esc(personLabel(p, i))}"><span class="pav">${photoOf(p)}</span><span class="pnm"><b>${esc(one(personLabel(p, i)))}</b><span class="note">${esc(sub)}</span></span></button>
         <div class="acts2"><button type="button" class="btn sm" data-a="copy" title="Copy this person's signature for Gmail">Copy</button><button type="button" class="iconbtn" data-a="pdup" title="Duplicate" aria-label="Duplicate ${esc(personLabel(p, i))}">${G('far','copy')}</button><button type="button" class="${delPerson === p.id ? 'btn sm danger' : 'iconbtn'}" data-a="pdel" title="Remove" aria-label="Remove ${esc(personLabel(p, i))}">${delPerson === p.id ? 'Confirm' : G('far','trash-can')}</button></div></div>
-      ${on ? `<div class="pform">${cols.map(f => `<label class="pf"><span>${esc(f.label)}</span>${box(p, f, i)}</label>`).join('')}</div><p class="note" style="margin:6px 0 0">Press Enter in a box to put the rest on a new line.</p>` : ''}
+      ${on ? `<div class="pform">${cols.map(f => `<label class="pf"><span>${esc(f.label)}</span>${box(p, f, i)}</label>`).join('')}</div><p class="note" style="margin:6px 0 0">Press Enter in a box to put the rest on a new line.${cols.some(f => f.type === 'image') ? ' ' + linkHelp() : ''}</p>` : ''}
     </div>`;
   }).join('');
   Pn.innerHTML = `<div class="pwrap">
@@ -3008,7 +3010,7 @@ function renderHome(){
 
   const brandKit = co && brandOpen ? `<div class="brandkit">
       <div class="field"><span>Company name</span><input id="bk-name" type="text" value="${esc(co.name)}"></div>
-      <div class="field"><span>Logo link</span><input id="bk-logourl" type="text" placeholder="https://…/logo.png" value="${esc(co.logoUrl || '')}"><div class="row" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:4px">${co.logoUrl ? `<img src="${esc(co.logoUrl)}" alt="" referrerpolicy="no-referrer" style="max-width:110px;max-height:34px;object-fit:contain">` : ''}<button class="btn sm" type="button" data-a="co-match"${co.logoUrl ? '' : ' disabled'}>Match colors to logo</button></div></div>
+      <div class="field"><span>Logo link ${linkHelp('How do I get a logo link?')}</span><input id="bk-logourl" type="text" placeholder="https://…/logo.png" value="${esc(co.logoUrl || '')}"><div class="row" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:4px">${co.logoUrl ? `<img src="${esc(co.logoUrl)}" alt="" referrerpolicy="no-referrer" style="max-width:110px;max-height:34px;object-fit:contain">` : ''}<button class="btn sm" type="button" data-a="co-match"${co.logoUrl ? '' : ' disabled'}>Match colors to logo</button></div></div>
       <div class="field"><span>Brand colors</span><div style="display:flex;gap:6px;flex-wrap:wrap">${(co.palette || STYLE0.palette).map((c, i) => `<input type="color" data-bkc="${i}" value="${esc(c)}" aria-label="${PAL_ROLES[i]} color" title="${PAL_ROLES[i]}" style="width:36px;height:30px;padding:0;border:1px solid var(--line);border-radius:6px;background:none">`).join('')}</div><p class="note">In order: ${PAL_ROLES.join(', ')}.</p></div>
       <div class="field"><span>Paste color codes</span><div class="hexrow"><input id="bk-hex" type="text" placeholder="#1f4e79, #222222, #6b7280" aria-label="Color codes, in order"><button class="btn sm" type="button" id="bk-hexgo">Use</button></div></div>
       <div class="field"><span>Font</span><select id="bk-font"><option value="">Keep each signature's font</option>${FONTS.map(f => `<option value="${esc(f[0])}"${fontStyle(f[0])}${f[0] === co.font ? ' selected' : ''}>${esc(f[1])}</option>`).join('')}</select></div>
@@ -3492,7 +3494,7 @@ function drawPerson(){
     <div class="sharecard"><h3>${G('fas','envelope-open-text')}Outlook and Apple Mail</h3><ol class="steps note">${STEPS.outlook.map(x => `<li>${x}</li>`).join('')}</ol>
       <div class="row"><button class="btn" type="button" data-a="p-embed">Copy for Outlook / Apple Mail</button></div></div>
     ${personData.can_edit ? `<form class="sharecard" id="pform"><h3>${G('fas','user-pen')}Your details</h3><p class="note">Fix anything that's out of date. Saving updates your signature for everyone who manages it.</p>
-      ${fields.map(f => `<div class="field"><span>${esc(f.label)}</span><input type="text" name="${esc(f.key)}" value="${esc(p.values[f.key] || '')}"${f.type === 'image' ? ' placeholder="https://… link to your photo"' : ''}></div>`).join('')}
+      ${fields.map(f => `<div class="field"><span>${esc(f.label)}</span><input type="text" name="${esc(f.key)}" value="${esc(p.values[f.key] || '')}"${f.type === 'image' ? ' placeholder="https://… link to your photo"' : ''}>${f.type === 'image' ? linkHelp() : ''}</div>`).join('')}
       <div class="row"><button class="btn primary" type="submit">Save my details</button></div></form>` : ''}
     <p class="note" style="margin-top:8px">Made with <a href="./">Signature Studio</a>, a free email signature builder.</p>`;
   wireRemoteImages($('#psig'));
@@ -3537,4 +3539,7 @@ else { showView('home'); initLib(); }
 $('#exportlib').onclick = exportLibrary;
 $('#importlib').onchange = e => { const f = e.target.files[0]; if (f) importLibrary(f); e.target.value = ''; };
 $('#aboutbtn').onclick = () => $('#dlg-about').showModal();
+// "How do I get a picture link?" anywhere opens the same short guide
+document.addEventListener('click', e => { const b = e.target.closest('[data-linkhelp]'); if (!b) return; e.preventDefault(); e.stopPropagation(); $('#dlg-links').showModal(); }, true);
+$('#linksclose').onclick = () => $('#dlg-links').close();
 $('#aboutclose').onclick = () => $('#dlg-about').close();
