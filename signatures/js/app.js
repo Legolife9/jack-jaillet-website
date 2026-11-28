@@ -507,13 +507,56 @@ function cropUrl(url, b){
   }
   return 'https://images.weserv.nl/?url=' + encodeURIComponent(url) + `&w=${W}&h=${H}&fit=cover&a=focal-${Math.round(b.crop.x)}-${Math.round(b.crop.y)}`;
 }
+// Some hosts (Imgur, for one) turn the cropping service away while the same link opens fine in a browser.
+// Each cropped link is tried once in the background; when the service can't fetch it but the link itself loads,
+// emails use the picture uncropped (never a broken box) and the checks under the preview say why.
+const cropState = {}; // cropping-service link -> 'pending' | 'ok' | 'fail'
+const hostOf = u => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch (e){ return 'that site'; } };
+function probeCrop(cu, url){
+  if (cropState[cu]) return;
+  cropState[cu] = 'pending';
+  const a = new Image(); a.referrerPolicy = 'no-referrer';
+  a.onload = () => { cropState[cu] = 'ok'; };
+  a.onerror = () => {
+    // only blame the service when the link itself works; a dead link has its own warning
+    const o = new Image(); o.referrerPolicy = 'no-referrer';
+    o.onload = () => { cropState[cu] = 'fail'; queuePreview(); };
+    o.onerror = () => { cropState[cu] = 'ok'; };
+    o.src = url;
+  };
+  a.src = cu;
+}
+// the part of the picture a crop keeps, as fractions, when it can be known without loading the picture
+function cropFrac(b, url){
+  const c = b.crop;
+  if (c.rect) return c.rect;
+  const d = c.dim;
+  if (c.zoom > 1 && d && d.url === url){ const r = cropRect(d.w, d.h, ratioOf(c.aspect), c); return { x:r.sx / d.w, y:r.sy / d.h, w:r.sw / d.w, h:r.sh / d.h }; }
+  return null;
+}
+// share links that point at a web page instead of the picture, turned into the picture's own link
+function directLink(u){
+  u = String(u || '').trim();
+  let m;
+  if ((m = /^https?:\/\/(?:www\.)?dropbox\.com\/[^#]+/i.exec(u))) return /[?&]dl=[01]/.test(u) ? u.replace(/([?&])dl=[01]/, '$1raw=1') : /[?&]raw=1/.test(u) ? u : u + (u.includes('?') ? '&' : '?') + 'raw=1';
+  if ((m = /^https?:\/\/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:[^#]*&)?id=)([\w-]{10,})/i.exec(u))) return 'https://lh3.googleusercontent.com/d/' + m[1];
+  if ((m = /^https?:\/\/(?:www\.)?imgur\.com\/([a-z0-9]{5,8})$/i.exec(u))) return `https://i.imgur.com/${m[1]}.png`;
+  return u;
+}
 function imageSrc(b, ctx){
   // the link can hold {{fields}}, e.g. https://site.com/team/{{photo_id}}.jpg; an unfilled field means no link
   let url = M(b.url || '').trim();
   const blank = [...(b.url || '').matchAll(/\{\{\s*([\w-]+)\s*\}\}/g)].some(m => !P || !String(P[m[1]] || '').trim());
   if (blank || !/^https?:\/\//i.test(url)) url = '';
   if (b.source === 'field' && P){ const v = String(P[b.field] || '').trim(); url = /^https?:\/\//i.test(v) ? v : ''; }
-  if (url) return { src:cropUrl(url, b), remote:true };
+  if (url){
+    url = directLink(url);
+    const cu = cropUrl(url, b);
+    if (cu === url) return { src:url, remote:true };
+    if (ctx.mode === 'preview') probeCrop(cu, url);
+    if (cropState[cu] === 'fail'){ if (ctx.cropFailed) ctx.cropFailed.add(hostOf(url)); return { src:url, remote:true, orig:url, uncropped:true }; }
+    return { src:cu, remote:true, orig:url };
+  }
   const art = b.source !== 'field' && b.sample ? sampleArt(b.sample) : '';
   if (!art) return { src:'' };
   if (ctx.mode === 'gmail') ctx.embedded.add((b.label || 'image') + ' (sample picture)');
@@ -533,22 +576,29 @@ function renderBlock(b, ctx){
       return `<div style="font-size:${b.size}px;line-height:${b.lh}">${wrapLink(tagH && main ? (b.tagPos === 'after' ? main + '&nbsp;&nbsp;' + tagH : tagH + '&nbsp;&nbsp;' + main) : main || tagH, b.link, color)}</div>`;
     }
     case 'image': {
-      const { src, remote } = imageSrc(b, ctx);
-      const ar = b.crop.aspect !== 'orig' ? ratioOf(b.crop.aspect) : 0;
+      const { src, remote, orig, uncropped } = imageSrc(b, ctx);
+      const ar = b.crop.aspect !== 'orig' && !(uncropped && mode !== 'preview') ? ratioOf(b.crop.aspect) : 0;
       const hgt = ar ? Math.round(b.width / ar) : 0;
-      const r = b.shape === 'circle' ? '50%' : b.shape === 'pill' ? '9999px' : b.shape === 'rounded' ? b.radius + 'px' : '0';
+      // an uncropped stand-in for a crop keeps soft corners instead of turning a circle into an oval
+      const r = uncropped && mode !== 'preview' && (b.shape === 'circle' || b.shape === 'pill') ? '8px' : b.shape === 'circle' ? '50%' : b.shape === 'pill' ? '9999px' : b.shape === 'rounded' ? b.radius + 'px' : '0';
       if (!src || (remote && mode === 'preview')){
         if (mode !== 'preview') return '';
         // if the link can't load, a stand-in with the real size, shape and border takes its place
-        const viaCrop = /^https:\/\/images\.weserv\.nl\//.test(src);
-        const msg = remote ? (viaCrop && /imgur\.com/i.test(src) ? 'Imgur blocks cropped copies. Set Crop to Original, or host it elsewhere' : viaCrop ? "The cropped copy didn't load" : "This image link didn't load") : b.source === 'field' ? `No ${b.field} link for this person` : 'Add an image link';
+        const msg = remote ? "This image link didn't load" : b.source === 'field' ? `No ${b.field} link for this person` : 'Add an image link';
         const ph = hgt || (b.shape === 'circle' ? b.width : Math.round(b.width * .62));
         const bd = b.borderW ? `${b.borderW}px solid ${b.borderColor}` : '1px dashed #b0b7c3';
-        const box = `<span title="${esc(remote ? src : msg)}" style="display:inline-flex;width:${b.width}px;height:${ph}px;box-sizing:border-box;border:${bd};border-radius:${r === '0' ? '0' : r};background:#f2f4f7;color:#8a93a3;font:${b.width < 80 ? 9 : 11}px/1.25 Arial;text-align:center;align-items:center;justify-content:center;padding:6px;overflow:hidden;vertical-align:middle">${esc(msg)}</span>`;
+        const box = `<span title="${esc(remote ? orig || src : msg)}" style="display:inline-flex;width:${b.width}px;height:${ph}px;box-sizing:border-box;border:${bd};border-radius:${r === '0' ? '0' : r};background:#f2f4f7;color:#8a93a3;font:${b.width < 80 ? 9 : 11}px/1.25 Arial;text-align:center;align-items:center;justify-content:center;padding:6px;overflow:hidden;vertical-align:middle">${esc(msg)}</span>`;
         if (!remote) return box;
-        // show the real image; if the link fails, the stand-in takes its place (see wireRemoteImages)
-        const ist = `display:inline-block;width:${b.width}px;${hgt ? `height:${hgt}px;` : 'height:auto;'}border-radius:${r};border:${b.borderW ? `${b.borderW}px solid ${b.borderColor}` : '0'};vertical-align:middle`;
-        return `<span class="rimg" data-ph="${esc(box)}"><img src="${esc(src)}" width="${b.width}" alt="${esc(M(b.alt))}" style="${ist}"></span>`;
+        const bdr = b.borderW ? `${b.borderW}px solid ${b.borderColor}` : '0';
+        // a crop is drawn here in the browser from the link itself, so the editor never depends on the cropping service;
+        // if the link fails, the stand-in takes its place (see wireRemoteImages)
+        if (orig){
+          const f = cropFrac(b, orig);
+          if (f) return `<span class="rimg" data-ph="${esc(box)}" style="display:inline-block;position:relative;overflow:hidden;width:${b.width}px;height:${hgt}px;border-radius:${r};border:${bdr};vertical-align:middle"><img src="${esc(orig)}" referrerpolicy="no-referrer" alt="${esc(M(b.alt))}" style="position:absolute;max-width:none;width:${+(b.width / f.w).toFixed(2)}px;height:${+(hgt / f.h).toFixed(2)}px;left:${-(f.x * b.width / f.w).toFixed(2)}px;top:${-(f.y * hgt / f.h).toFixed(2)}px"></span>`;
+          return `<span class="rimg" data-ph="${esc(box)}"><img src="${esc(orig)}" referrerpolicy="no-referrer" width="${b.width}" alt="${esc(M(b.alt))}" style="display:inline-block;width:${b.width}px;height:${hgt}px;object-fit:cover;object-position:${Math.round(b.crop.x)}% ${Math.round(b.crop.y)}%;border-radius:${r};border:${bdr};vertical-align:middle"></span>`;
+        }
+        const ist = `display:inline-block;width:${b.width}px;${hgt ? `height:${hgt}px;` : 'height:auto;'}border-radius:${r};border:${bdr};vertical-align:middle`;
+        return `<span class="rimg" data-ph="${esc(box)}"><img src="${esc(src)}" referrerpolicy="no-referrer" width="${b.width}" alt="${esc(M(b.alt))}" style="${ist}"></span>`;
       }
       const st = `display:inline-block;width:${b.width}px;${hgt ? `height:${hgt}px;` : 'height:auto;'}border-radius:${r};border:${b.borderW ? `${b.borderW}px solid ${b.borderColor}` : '0'};vertical-align:middle`;
       return wrapLink(`<img src="${esc(src)}" width="${b.width}"${hgt ? ` height="${hgt}"` : ''} alt="${esc(M(b.alt))}" style="${st}">`, b.link, S.link);
@@ -706,7 +756,7 @@ function render(st, mode, pid){
   st = resolveColors(st);
   const S = st.style, person = personFor(st, pid);
   P = person ? person.values : null;
-  const ctx = { embedded:new Set(), S, mode };
+  const ctx = { embedded:new Set(), cropFailed:new Set(), S, mode };
   let rows = '';
   for (const r of st.rows){
     const cells = [];
@@ -739,7 +789,7 @@ function render(st, mode, pid){
     (S.bgOn ? `background:${S.bg};` : '') + bd + (S.br ? `border-radius:${S.br}px;` : '') + (S.width ? `width:${S.width}px;` : '');
   const html = `<table ${T0}${S.bgOn ? ` bgcolor="${S.bg}"` : ''}${S.width ? ` width="${S.width}"` : ''} style="${sst}"><tr><td style="padding:${S.pad}px"><table ${T0} style="border-collapse:collapse">${rows}</table></td></tr></table>`;
   P = null;
-  return { html, embedded:[...ctx.embedded], person };
+  return { html, embedded:[...ctx.embedded], cropFailed:[...ctx.cropFailed], person };
 }
 function plainText(st, pid){
   const person = personFor(st, pid); P = person ? person.values : null;
@@ -910,7 +960,8 @@ function checks(st, pid){
   const out = [], g = render(st, 'gmail', pid), n = gmailLen(g.html);
   if (g.embedded.length) out.push(['warn', `Replace the sample pictures with links to your own images (${g.embedded.join(', ')}). Email apps can't show the samples.`]);
   // Imgur turns away the image service that crops pictures, so a cropped Imgur picture shows up broken
-  if (/images\.weserv\.nl\/\?url=[^"]*imgur\.com/i.test(g.html)) out.push(['warn', 'A cropped picture is hosted on Imgur, which blocks the cropping service, so it shows up broken. Set its Crop to Original, or host it on your own site.']);
+  // a host that turns the cropping service away: the email shows that picture uncropped rather than broken
+  if (g.cropFailed.length) out.push(['warn', `The cropping service can't get pictures from ${g.cropFailed.join(' or ')}, so ${g.cropFailed.length > 1 ? 'those pictures' : 'that picture'} will show uncropped in the email (the preview shows your crop). To keep the crop, put the picture somewhere else, like your own website, then paste its new link. Or set Crop to Original.`]);
   const person = personFor(st, pid), V = person ? person.values : null;
   let noLink = 0, noAlt = 0; const missing = new Set();
   for (const r of st.rows) for (const c of r.cols) for (const b of c.blocks){
@@ -1665,7 +1716,11 @@ function imageEditor(b){
     out.push(sel_(b, 'field', 'Person field', imgFields.map(f => [f.key, f.label])), note('Each person\'s photo link goes in the People step. The crop and shape below apply to everyone.'));
   } else {
     const u = txt(b, 'url', 'Image link', { ph:'https://yoursite.com/photo.jpg' });
-    u.querySelector('input').addEventListener('change', () => renderInspector());
+    u.querySelector('input').addEventListener('change', () => {
+      const d = directLink(b.url);
+      if (d !== String(b.url || '').trim()){ b.url = d; changed(); toast('Changed that share link to a direct link to the picture.'); }
+      renderInspector();
+    });
     out.push(u, cropButton(b), chips(),
       note(b.url ? '<span class="badge ok">Linked</span> Works in every email app, as long as the link stays online.' : b.sample ? '<span class="badge">Sample picture</span> Paste a link to your own image. Email apps can\'t show the sample.' : 'Paste a link to an image that\'s online.'),
       note('To get a link: right-click an image on your website or LinkedIn and choose <b>Copy image address</b>. Images aren\'t uploaded or stored here.'));
@@ -1833,8 +1888,10 @@ $('#croptrim').onclick = () => {
     if (r.w > .985 && r.h > .985){ toast('No empty edges to trim.'); return; }
     crop.r = r; crop.shape = 'free'; crop.lock = 0; drawCropShapes(); paintCrop(); toast('Trimmed the empty edges.');
   };
-  im.onerror = () => toast("This picture couldn't be read for trimming. Drag the frame instead.");
-  im.src = /^data:/.test(crop.src) ? crop.src : 'https://images.weserv.nl/?url=' + encodeURIComponent(crop.src) + '&w=400&output=png';
+  // read through the image service first; a host that turns it away may still allow reading the link directly
+  let direct = /^data:/.test(crop.src);
+  im.onerror = () => { if (!direct && crop){ direct = true; im.src = crop.src; return; } toast("This picture's host doesn't allow reading it, so trim it by dragging the frame."); };
+  im.src = direct ? crop.src : 'https://images.weserv.nl/?url=' + encodeURIComponent(crop.src) + '&w=400&output=png';
 };
 $('#cropreset').onclick = () => { if (!crop || !crop.nw) return; crop.r = { x:0, y:0, w:1, h:1 }; crop.shape = 'free'; crop.lock = 0; drawCropShapes(); paintCrop(); };
 $('#cropclose').onclick = () => $('#dlg-crop').close();
@@ -1858,9 +1915,9 @@ $('#cropapply').onclick = () => {
 // the picture this block shows right now (the current person's photo for a person field)
 function framedSrc(b){
   const p = personFor(state), V = p ? p.values : {};
-  if (b.source === 'field'){ const v = String(V[b.field] || '').trim(); return /^https?:\/\//i.test(v) ? v : ''; }
+  if (b.source === 'field'){ const v = String(V[b.field] || '').trim(); return /^https?:\/\//i.test(v) ? directLink(v) : ''; }
   const u = String(b.url || '').replace(/\{\{\s*([\w-]+)\s*\}\}/g, (_, k) => V[k] || '').trim();
-  if (/^https?:\/\//i.test(u)) return u;
+  if (/^https?:\/\//i.test(u)) return directLink(u);
   return b.sample ? sampleArt(b.sample) : '';
 }
 function reframer(b){
@@ -1979,7 +2036,8 @@ function paletteFromImage(src, cb){
     const ink = darkest ? darkest.h : mix(accent, '#0b0d10', .78);
     cb([accent, ink, mix(ink, '#ffffff', .42), mix(accent, '#ffffff', .86), mix(accent, '#ffffff', .95)]);
   };
-  img.onerror = () => toast("That image couldn't be read for colors. Check the link.");
+  let direct = readable(src) === src;
+  img.onerror = () => { if (!direct){ direct = true; img.src = src; return; } toast("That image couldn't be read for colors. Its host may not allow it; try a file from your computer instead."); };
   img.src = readable(src);
 }
 function applyPaletteIn(st, next){
