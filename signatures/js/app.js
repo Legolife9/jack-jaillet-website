@@ -167,7 +167,7 @@ const DEF = {
   spacer: { label:'Space', height:12 },
   contact:{ label:'Contact details', items:[], layout:'stack', sep:'|', iconColor:'#2453e6', iconSize:13, iconBg:'#e8eefc', iconShape:'none', iconPad:4, size:13, color:'', gap:5, labels:false },
   social: { label:'Icon links', items:[], size:14, color:'#ffffff', bg:'#2453e6', shape:'circle', pad:7, gap:6, tsize:12, tcolor:'' },
-  button: { label:'Button', text:'Book a call', link:'', bg:'#2453e6', color:'#ffffff', borderW:0, borderColor:'#2453e6', radius:6, padX:16, padY:9, size:13, weight:600, icon:null, iconPos:'left', iconSize:13, iconAuto:true, iconGap:7, inline:false },
+  button: { label:'Button', text:'Book a call', link:'', bg:'#2453e6', color:'#ffffff', borderW:0, borderColor:'#2453e6', radius:6, padX:16, padY:9, size:13, weight:600, icon:null, iconColor:'', iconPos:'left', iconSize:13, iconAuto:true, iconGap:7, inline:false },
   html:   { label:'Custom HTML', html:'<span style="font-size:12px;color:#667085">Custom HTML goes here</span>' }
 };
 function mk(type, props){ return Object.assign({ id:uid(), type, align:'left', pt:0, pb:6 }, clone(DEF[type]), props || {}); }
@@ -666,7 +666,7 @@ function buttonCell(b, ctx){
   if (usesField(b.link) && !M(b.link).trim()) return ''; // a person without a booking link gets no booking button
   // every icon sits in the same square box, centered on the text line, with one fixed gap before the label
   const isz = btnIcon(b), lh = Math.max(Math.round(b.size * 1.2), isz), gap = Math.max(0, N0(b.iconGap ?? 7));
-  const ic = b.icon ? `<td valign="middle" width="${isz}" style="width:${isz}px;line-height:0;font-size:0;vertical-align:middle">${iconBox(b.icon, b.color, isz, ctx, t.trim() ? '' : linkName(b.icon, b.link))}</td>` : '';
+  const ic = b.icon ? `<td valign="middle" width="${isz}" style="width:${isz}px;line-height:0;font-size:0;vertical-align:middle">${iconBox(b.icon, b.iconColor || b.color, isz, ctx, t.trim() ? '' : linkName(b.icon, b.link))}</td>` : '';
   const gp = b.icon && t && gap ? `<td width="${gap}" style="width:${gap}px;font-size:0;line-height:0">&nbsp;</td>` : '';
   const tx = t ? `<td valign="middle" height="${lh}" style="font-family:${S.font};font-size:${b.size}px;font-weight:${b.weight};color:${b.color};line-height:${lh}px;white-space:nowrap;vertical-align:middle">${esc(t)}</td>` : '';
   const inner = `<table ${T0} style="border-collapse:collapse"><tr>${b.iconPos === 'left' ? ic + gp + tx : tx + gp + ic}</tr></table>`;
@@ -1514,7 +1514,7 @@ const HELP = {
   'Text color':'Color of the text. Tick the box to use the signature\'s text color.',
   'Icon':'Pick from 2,000+ icons, or add your own PNG. Gmail can\'t show SVG icons, so they\'re turned into pictures.',
   'Icon size':'Size of the icons, in pixels.',
-  'Icon color':'Color of the icons.',
+  'Icon color':'Color of the icons. On a button, tick "Same as the text" to match the button text.',
   'Icon background':'An optional shape behind each icon, like a circle.',
   'Background shape':'An optional shape behind each icon, like a circle.',
   'Background':'Color of the shape behind each icon.',
@@ -2425,9 +2425,12 @@ function renderInspector(){
         grp('Titles beside the icons', row(num(b, 'tsize', 'Title size', 8, 24), color(b, 'tcolor', 'Title color', 'Same as signature')))];
       break;
     case 'button':
-      content = [grp('Button', txt(b, 'text', 'Button text', { list:true }), txt(b, 'link', 'Link', { ph:'https://… or name@site.com' }), chips(),
+      // the colors sit right under the words too, where people look for them first (the same settings as on the Style tab)
+      content = [grp('Button', txt(b, 'text', 'Button text', { list:true }), row(color(b, 'color', 'Text color'), color(b, 'bg', 'Button color')),
+          txt(b, 'link', 'Link', { ph:'https://… or name@site.com' }), chips(),
           chk(b, 'inline', 'Sit beside the previous button', { insp:true }))];
-      style = [grp('Colors', row(color(b, 'bg', 'Button color'), color(b, 'color', 'Text & icon color'))),
+      style = [grp('Colors', row(color(b, 'bg', 'Button color'), color(b, 'color', 'Text color')),
+          b.icon ? color(b, 'iconColor', 'Icon color', 'Same as the text') : null),
         grp('Icon', iconField(b, 'icon', 'Icon', true), b.icon ? [
           row(sel_(b, 'iconPos', 'Position', [['left','Before text'],['right','After text']]), num(b, 'iconGap', 'Space before text', 0, 24)),
           chk(b, 'iconAuto', 'Size the icon to match the text', { insp:true }),
