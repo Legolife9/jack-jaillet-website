@@ -137,15 +137,64 @@
   <header><h2>Choose an icon</h2>
     <input id="isearch" class="search" type="search" placeholder="Search 2,000+ icons: phone, linkedin, calendar…">
     <button class="btn sm" id="iclose" type="button">Close</button></header>
-  <header style="padding-top:0">
+  <header class="ibar2">
     <div class="seg" id="isets" role="group" aria-label="Icon set">
       <button data-set="all" aria-pressed="true" type="button">All</button><button data-set="fab" aria-pressed="false" type="button">Brands</button><button data-set="fas" aria-pressed="false" type="button">Solid</button><button data-set="far" aria-pressed="false" type="button">Outline</button><button data-set="custom" aria-pressed="false" type="button">My icons</button>
     </div>
-    <span class="spacer"></span>
-    <form id="iaddform" style="display:flex;gap:6px;flex-wrap:wrap"><input id="iaddurl" type="url" class="search" placeholder="Icon link (PNG), e.g. from Flaticon" aria-label="Icon image link" style="flex:1 1 220px"><button class="btn sm" type="submit">Add icon</button></form>
+    <form id="iaddform" hidden><input id="iaddurl" type="url" class="search" placeholder="Icon link (PNG), e.g. from Flaticon" aria-label="Icon image link"><button class="btn sm" type="submit">Add icon</button></form>
   </header>
+  <p class="note iaddhelp" id="iaddhelp" hidden>Copy the image address of a PNG (from Flaticon or your site) and add it here. Use PNG, since Gmail doesn't show SVG.</p>
   <div class="body"><div class="igrid" id="igrid"></div><p class="note" id="inote"></p></div>
-  <footer><span class="note">Your own icon: copy the image address of a PNG (from Flaticon or your site) and add it above. Use PNG, since Gmail doesn't show SVG. Built-in icons are Font Awesome Free (CC BY 4.0).</span></footer>
+  <footer><span class="note">Built-in icons are Font Awesome Free (CC BY 4.0).</span></footer>
+</div></dialog>
+
+<dialog id="dlg-links"><div class="dlg">
+  <header><h2>How to get a picture link</h2><button class="btn sm" id="linksclose" type="button">Close</button></header>
+  <div class="body linkhelp">
+    <p class="why"><b>Why a link?</b> Signature Studio is free for anyone to use. Instead of storing your pictures, it uses a link to a picture that's already online. That keeps it free (there's no storage to pay for), and it's how email signatures work anyway: when someone opens your email, their mail app loads the picture from the link.</p>
+    <div class="opt">
+      <h3><span class="num">1</span>Use a picture that's already on your website</h3>
+      <p class="note">Fastest, if your photo or logo is on your website, your company's site, or a team page.</p>
+      <ol>
+        <li>Open the web page that shows the picture.</li>
+        <li>Right-click the picture (on a Mac, hold Control and click) and choose <b>Copy image address</b>. In Safari it's <b>Copy Image Address</b>; in Firefox, <b>Copy Image Link</b>.</li>
+        <li>Paste it into <b>Image link</b> here. It usually starts with <code>https://</code> and often ends in <code>.png</code> or <code>.jpg</code>.</li>
+      </ol>
+    </div>
+    <div class="opt">
+      <h3><span class="num">2</span>Put it on Cloudinary, a free image host</h3>
+      <p class="note">For a picture that's only on your computer. Cloudinary's free plan is built for hosting pictures, and its links work in email and with cropping.</p>
+      <ol>
+        <li>Go to <a href="https://cloudinary.com/users/register_free" target="_blank" rel="noopener">cloudinary.com<span class="sr-only"> (opens in new tab)</span></a> and sign up for a free account.</li>
+        <li>Open <b>Assets</b> (the Media Library) and click <b>Upload</b>, then choose your picture.</li>
+        <li>Point at the uploaded picture and click the link icon (<b>Copy URL</b>). The link starts with <code>https://res.cloudinary.com/</code>.</li>
+        <li>Paste it into <b>Image link</b> here.</li>
+      </ol>
+    </div>
+    <div class="tips">
+      <p><b>Good to know</b></p>
+      <ul>
+        <li>The link has to work for anyone, without signing in. Paste it into a private browser window to check.</li>
+        <li>Avoid Imgur, LinkedIn, Facebook and Instagram picture links. They often stop working later or block cropping.</li>
+        <li>A Dropbox share link works too: it's turned into a direct picture link when you paste it.</li>
+      </ul>
+    </div>
+  </div>
+</div></dialog>
+
+<dialog id="dlg-crop"><div class="dlg">
+  <header><h2>Crop picture</h2><button class="btn sm" id="cropclose" type="button">Cancel</button></header>
+  <header class="cropbar">
+    <div class="seg" id="cropshapes" role="group" aria-label="Crop shape"></div>
+    <label class="chk"><input type="checkbox" id="croplock">Lock the shape</label>
+    <span class="spacer"></span>
+    <button class="btn sm" id="croptrim" type="button" title="Cut away empty, white or see-through edges">Trim empty space</button>
+  </header>
+  <div class="body cropbody">
+    <div class="cropstage" id="cropstage"><img id="cropimg" alt="" referrerpolicy="no-referrer"><div class="cropbox" id="cropbox" tabindex="0" role="application" aria-label="Crop area. Drag it to move it, or drag a corner or edge to resize it. Arrow keys move it; Shift and the arrow keys resize it."><i data-h="nw"></i><i data-h="n"></i><i data-h="ne"></i><i data-h="e"></i><i data-h="se"></i><i data-h="s"></i><i data-h="sw"></i><i data-h="w"></i></div></div>
+    <div class="cropside"><p class="label">In the signature</p><div class="croppv" id="croppv"></div><p class="note" id="cropinfo"></p><p class="note">The original picture isn't changed. Open Crop again any time to adjust it or go back to the full picture.</p></div>
+  </div>
+  <footer><button class="btn sm ghost" id="cropreset" type="button">Use the full picture</button><span class="spacer"></span><button class="btn sm primary" id="cropapply" type="button">Apply crop</button></footer>
 </div></dialog>
 
 <dialog id="dlg-new" style="width:min(980px,calc(100vw - 32px))"><div class="dlg">
