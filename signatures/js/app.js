@@ -1601,7 +1601,7 @@ function txt(obj, key, label, opts = {}){
   n.value = obj[key] ?? '';
   n.oninput = () => { obj[key] = n.value; changed(opts.list ? { list:true } : opts.ch); };
   n.addEventListener('focus', () => lastText = n);
-  return field(label, n);
+  return rk(field(label, n), obj, key);
 }
 function num(obj, key, label, min, max, step = 1, opts){
   const id = 'f' + (++fid);
@@ -1610,7 +1610,7 @@ function num(obj, key, label, min, max, step = 1, opts){
   // the typed box isn't rewritten while typing, so "1." can become "1.2"
   const set = (v, typed) => { if (v === '') return; v = Number(v); if (Number.isNaN(v)) return; obj[key] = v; r.value = v; if (!typed) n.value = v; changed(opts); };
   r.oninput = () => set(r.value); n.oninput = () => set(n.value, true); n.onblur = () => { n.value = obj[key]; };
-  return field(label, w);
+  return rk(field(label, w), obj, key);
 }
 function color(obj, key, label, auto){
   const id = 'f' + (++fid);
@@ -1630,7 +1630,7 @@ function color(obj, key, label, auto){
   // picking a swatch links to that brand color, so it follows later brand changes
   state.style.palette.forEach((p, i) => { const b = el(`<button type="button" title="Brand color ${i + 1} (stays in sync with the brand)" aria-label="Brand color ${i + 1}" style="background:${p}"></button>`); b.onclick = () => { obj[key] = '@' + i; sync(); changed(); }; sw.appendChild(b); });
   sync();
-  return field(label, w);
+  return rk(field(label, w), obj, key);
 }
 // font choices preview in their own face (Chrome and Edge draw this; Safari ignores it)
 const fontStyle = v => FONTS.some(f => f[0] === v) ? ` style="font-family:${esc(v)}"` : '';
@@ -1639,18 +1639,18 @@ function sel_(obj, key, label, options, opts = {}){
   const n = el(`<select id="${id}">${options.map(([v, l]) => `<option value="${esc(v)}"${fontStyle(v)}>${esc(l)}</option>`).join('')}</select>`);
   n.value = String(obj[key]);
   n.onchange = () => { const v = n.value; obj[key] = typeof obj[key] === 'number' ? Number(v) : v; changed(opts); };
-  return field(label, n);
+  return rk(field(label, n), obj, key);
 }
 function chk(obj, key, label, opts = {}){
   const w = el(`<label class="chk"><input id="f${++fid}" type="checkbox">${esc(label)}${helpBtn(label)}</label>`);
   const c = w.querySelector('input'); c.checked = !!obj[key];
   c.onchange = () => { obj[key] = c.checked; changed(opts); };
-  return w;
+  return rk(w, obj, key);
 }
 function segs(obj, key, label, options, opts){
   const w = el(`<div class="seg" role="group" aria-label="${esc(label)}">${options.map(([v, l]) => `<button type="button" data-v="${v}" aria-pressed="${String(obj[key]) === String(v)}">${l}</button>`).join('')}</div>`);
   w.onclick = e => { const b = e.target.closest('[data-v]'); if (!b) return; obj[key] = typeof obj[key] === 'number' ? Number(b.dataset.v) : b.dataset.v; w.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b)); changed(opts); };
-  return field(label, w);
+  return rk(field(label, w), obj, key);
 }
 function chips(){
   const fs = state.team.fields.filter(f => f.type !== 'image');
@@ -1675,6 +1675,79 @@ function iconField(obj, key, label, allowNone, onPick){
   if (obj[key] && obj[key].set === 'custom') f.appendChild(txt(obj[key], 'url', 'Public URL of this icon (needed for Gmail)', { ph:'https://…/icon.png' }));
   return f;
 }
+/* ---------- reset to defaults ---------- */
+// each field records the setting it edits, so a section (or a whole panel) can put its settings back
+let resetLog = [];
+function rk(n, obj, key){ n.dataset.rk = resetLog.push({ obj, key }) - 1; return n; }
+// what a reset never touches: the words, links, pictures and icons people put in, and how blocks are arranged
+const KEEP = new Set(['text', 'link', 'url', 'tag', 'alt', 'label', 'html', 'items', 'source', 'field', 'sample', 'orig', 'inline', 'icon', 'id', 'type', 'dim', 'rect', 'custom', 'cols', 'blocks', 'divHide', 'team', 'name', 'companyId']);
+const SEP0 = { ch:'none', custom:'', space:'normal', color:'', size:0 };
+// a block's defaults: the "Add a block" version of it when it has one (Name, Photo, Logo...), at the size new blocks start at
+function blockDefault(b){
+  const d = ADD.map(a => a[2]()).find(x => x.type === b.type && x.label === b.label) || mk(b.type);
+  shrinkBlock(d, SCALE);
+  return d;
+}
+function styleDefault(){ const s = clone(STYLE0); sc(s, SHRINK.style, SCALE); return s; }
+// a row keeps its lines between columns (a reset only restores their look)
+function rowDefault(r){ const d = mkRow([]); sc(d, SHRINK.row, SCALE); delete d.cols; delete d.id; return Object.assign(d, { divH:0, divW:r.divW > 0 ? 1 : 0 }); }
+function colDefault(){ const d = mkCol([]); sc(d, SHRINK.col, SCALE); delete d.blocks; delete d.id; return d; }
+function defaultsFor(obj){
+  if (!state || !obj || typeof obj !== 'object') return null;
+  if (obj === state.style) return styleDefault();
+  if (obj === state.style.sides) return clone(STYLE0.sides);
+  for (const r of state.rows){
+    if (obj === r) return rowDefault(r);
+    for (const c of r.cols){
+      if (obj === c) return colDefault();
+      for (const b of c.blocks){
+        if (obj === b) return blockDefault(b);
+        if (obj === b.crop) return blockDefault(b).crop;
+        if (obj === b.gsep || obj === b.sepOwn) return clone(SEP0);
+        if (obj === b.cs) return legacySep(DEF.contact.sep);
+      }
+    }
+  }
+  return null;
+}
+const resettable = pairs => pairs.filter(p => p && !KEEP.has(p.key) && (d => !!d && p.key in d)(defaultsFor(p.obj)));
+// a default color that is one of the starter brand colors becomes a link to that brand color, as in a new signature
+function linkDefault(key, v){
+  if (typeof v !== 'string' || key === 'palette' || !/^#[0-9a-f]{6}$/i.test(v)) return v;
+  const i = STYLE0.palette.indexOf(v.toLowerCase());
+  return i >= 0 ? '@' + i : v;
+}
+function resetPairs(pairs, what){
+  let n = 0;
+  pairs.forEach(({ obj, key }) => {
+    const d = defaultsFor(obj); if (!d || KEEP.has(key) || !(key in d)) return;
+    const before = JSON.stringify(obj[key]);
+    if (obj === state.style && key === 'palette') applyPaletteIn(state, d.palette);
+    else obj[key] = clone(linkDefault(key, d[key]));
+    if (obj.aspect !== undefined && key === 'aspect' && obj.rect){ delete obj.rect; n++; }
+    if (JSON.stringify(obj[key]) !== before) n++;
+  });
+  if (!n){ toast(`${what} already uses the default settings.`); return; }
+  normLines(); changed({ insp:true, list:true });
+  toast(`${what} reset to the defaults.`, UNDO);
+}
+// "Reset all settings" at the end of a panel: the selected block, column, row or the whole signature's style
+function resetAllEl(){
+  if (!state || !permsOf(curSig()).edit_design) return null;
+  const f = sel === 'style' ? null : find(sel);
+  let objs = [], what = '', keepNote = '';
+  if (sel === 'style'){ objs = [state.style, state.style.sides]; what = 'the signature style'; keepNote = ' Your brand colors and brand kit stay; reset them in Brand.'; }
+  else if (f && f.kind === 'row'){ objs = [f.r]; what = 'this row'; keepNote = ' Its columns and blocks stay.'; }
+  else if (f && f.kind === 'col'){ objs = [f.c]; what = 'this column'; }
+  else if (f && f.kind === 'block'){ const b = f.b; objs = [b, b.crop, b.gsep, b.sepOwn, b.cs].filter(Boolean); what = 'this block'; }
+  else return null;
+  const pairs = objs.flatMap(o => Object.keys(defaultsFor(o) || {}).filter(k => !(o === state.style && k === 'palette')).map(key => ({ obj:o, key })));
+  if (!resettable(pairs).length) return null;
+  const w = el(`<div class="iresetall"><button type="button" class="btn sm">${G('fas', 'rotate-left')}Reset all settings</button><p class="note">Puts the look and spacing of ${what} back to the defaults. Words, links and pictures stay.${keepNote} You can undo it.</p></div>`);
+  w.querySelector('button').onclick = () => resetPairs(resettable(pairs), what.charAt(0).toUpperCase() + what.slice(1));
+  return w;
+}
+
 // a section of settings; its header folds it away, and the app remembers which sections you folded
 const CLOSED_KEY = 'sigstudio.closedGroups';
 function grp(title, ...nodes){
@@ -1685,6 +1758,12 @@ function grp(title, ...nodes){
     const list = (store.get(CLOSED_KEY) || []).filter(t => t !== title); if (!now) list.push(title); store.set(CLOSED_KEY, list);
   };
   nodes.flat(9).filter(Boolean).forEach(n => g.appendChild(n));
+  const pairs = resettable([...g.querySelectorAll('[data-rk]')].map(n => resetLog[+n.dataset.rk]));
+  if (pairs.length){
+    const rb = el(`<button type="button" class="greset" title="Put the settings in ${esc(title)} back to the defaults" aria-label="Reset ${esc(title)} to the defaults">${G('fas', 'rotate-left')}Reset</button>`);
+    rb.onclick = () => resetPairs(pairs, title);
+    g.insertBefore(rb, g.firstChild.nextSibling);
+  }
   return g;
 }
 function row(...nodes){ const r = el('<div class="row2"></div>'); nodes.forEach(n => r.appendChild(n)); return r; }
@@ -2101,6 +2180,7 @@ function paletteEditor(){
     w.lastChild.appendChild(c);
   });
   w.appendChild(el(`<p class="note">In order: ${PAL_ROLES.join(', ')}.</p>`));
+  rk(w, S, 'palette');
   const paste = hexPaste(S.palette, next => { applyPalette(next); toast('Brand colors set.', UNDO); });
   // match colors to a logo or photo: one in the design, or a file on this computer (read here, never stored)
   // one button per picture (the same logo used twice is one button), with a thumbnail; repeated names get numbered
@@ -2234,8 +2314,8 @@ function tabbed(head, tabs){
   return [head, body];
 }
 function renderInspector(){
-  const Pn = $('#insp'); Pn.innerHTML = ''; fid = 0; lastText = null;
-  const put = parts => parts.forEach(x => Pn.appendChild(x));
+  const Pn = $('#insp'); Pn.innerHTML = ''; fid = 0; lastText = null; resetLog = [];
+  const put = parts => { parts.forEach(x => Pn.appendChild(x)); const r = resetAllEl(); if (r) Pn.appendChild(r); };
   const top = [['Signature', 'style']];
   if (sel === 'style'){
     const S = state.style;
