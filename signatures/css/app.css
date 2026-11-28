@@ -130,6 +130,37 @@ button.brand{display:inline-flex;align-items:center;gap:8px}
 .emptycol{margin-left:36px;padding:6px 8px;border:1px dashed var(--line);border-radius:8px;font-size:12px;color:var(--muted)}
 .bitem .nm small{display:block;font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis}
 .colsel{flex:none;max-width:104px;padding:3px 6px;border:1px solid var(--line);border-radius:6px;background:var(--panel);font-size:12px;cursor:pointer}
+/* rows: how many columns sit side by side, as small pictures */
+.colpick{display:inline-flex;gap:1px;padding:2px;border:1px solid var(--line);border-radius:6px;background:var(--panel);flex:none}
+.colpick button{width:24px;height:20px;display:grid;place-items:center;border:0;border-radius:4px;background:none;color:var(--muted);padding:0;cursor:pointer;font-size:11px}
+.colpick button svg{width:16px;height:11px;fill:currentColor;opacity:.75}
+.colpick button:hover{color:var(--ink);background:var(--panel2)}
+.colpick button[aria-pressed="true"]{background:var(--accent-soft);color:var(--sel)}
+.colpick button[aria-pressed="true"] svg{opacity:1}
+/* drag handle: in the space left of each block and row, shown on hover */
+.bitem{position:relative}
+.bitem.rowh{padding-left:22px}
+.grip{position:absolute;left:3px;top:50%;transform:translateY(-50%);width:16px;height:24px;display:grid;place-items:center;border:0;border-radius:4px;background:none;color:var(--muted);padding:0;cursor:grab;touch-action:none;opacity:0}
+.bitem.blk.in .grip{left:17px}
+.grip svg{width:9px;height:13px;fill:currentColor}
+.grip:hover{background:var(--line);color:var(--ink)}
+.bitem:hover .grip,.bitem.sel .grip,.grip:focus-visible{opacity:1}
+@media (hover:none){.grip{opacity:.65}}
+body.dragging,body.dragging *{cursor:grabbing!important;user-select:none}
+.bitem.ghost{position:fixed;z-index:60;pointer-events:none;opacity:.92;box-shadow:0 8px 24px rgba(0,0,0,.28);border-color:var(--sel);background:var(--panel)}
+.bitem.ghost .acts,.bitem.ghost .colpick{display:none}
+/* where a dragged block will land: a line above or below, a bar on the side it will sit beside, or the column it goes into */
+.dt-before{box-shadow:inset 0 3px 0 var(--sel)}
+.dt-after{box-shadow:inset 0 -3px 0 var(--sel)}
+.dt-left{box-shadow:inset 4px 0 0 var(--sel);background:var(--accent-soft)}
+.dt-right{box-shadow:inset -4px 0 0 var(--sel);background:var(--accent-soft)}
+.dt-in{outline:2px dashed var(--sel);outline-offset:-2px;background:var(--accent-soft)}
+.bitem .lnk{display:inline-block;min-width:14px;margin-right:5px;color:var(--sel);font-weight:700;text-align:center}
+.bitem.besiding{border-color:var(--sel);border-style:dashed}
+.hint{display:flex;gap:6px;align-items:flex-start;margin:2px 0 6px;padding:8px 6px 8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--accent-soft);font-size:12px;line-height:1.45;color:var(--ink)}
+.hint svg{width:11px;height:11px;fill:currentColor;vertical-align:-1px}
+.hint span{flex:1}
+.linkbtn{border:0;background:none;padding:0;color:var(--sel);font:inherit;font-weight:600;text-decoration:underline;cursor:pointer}
 .bitem.colh .ic,.bitem.divh .ic{width:18px;height:18px;background:none}
 .bitem.divh{padding-left:22px;font-size:12px;color:var(--muted);min-height:28px}
 .divadd{padding:1px 0 1px 22px}
@@ -179,7 +210,12 @@ button.brand{display:inline-flex;align-items:center;gap:8px}
 .sigwrap [data-bid]:hover{outline:1px dashed rgba(36,83,230,.55);outline-offset:1px}
 .sigwrap [data-bid].on,.sigwrap [data-cid].on{outline:2px solid var(--sel);outline-offset:1px}
 .sigwrap [data-rid].on{outline:2px dashed var(--sel);outline-offset:2px}
-.sigwrap [data-did],.sigwrap [data-dhit]{cursor:pointer}
+.sigwrap [data-did],.sigwrap [data-dhit],.sigwrap [data-sep]{cursor:pointer}
+.sigwrap [data-sep]:hover{background:rgba(36,83,230,.12)}
+/* the selected row's columns, and the items sharing the selected block's line, get a faint outline so the grouping shows */
+.sigwrap [data-cid].ingrp,.sigwrap [data-rid].ingrp{outline:1px dashed rgba(36,83,230,.6);outline-offset:1px}
+.sigwrap [data-bid].ingrp{outline:1px dashed rgba(36,83,230,.45);outline-offset:1px}
+.stage.still .sigwrap .ingrp{outline:none}
 .sigwrap [data-did].on{outline:2px solid var(--sel);outline-offset:2px}
 .meter{font-family:var(--mono);font-size:12px;color:var(--muted)}
 .checks{width:100%;max-width:760px;display:flex;flex-direction:column;gap:6px}
@@ -335,6 +371,20 @@ dialog::backdrop{background:rgba(10,14,12,.45)}
 .igrid button:hover{border-color:var(--sel);color:var(--ink)}
 .igrid svg,.igrid img{width:20px;height:20px;fill:var(--ink)}
 .igrid span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* the icon window keeps one size whatever it shows; only the grid scrolls */
+#dlg-icons{width:min(760px,calc(100vw - 32px));height:min(640px,calc(100vh - 48px))}
+#dlg-icons .dlg{height:100%;max-height:none}
+#dlg-icons .body{flex:1;min-height:0;display:flex;flex-direction:column}
+#dlg-icons .body.none{justify-content:center;align-items:center;text-align:center}
+#dlg-icons .body.none #inote{font-size:13px;max-width:320px}
+#dlg-icons .ibar2{padding-top:0;align-items:center}
+#iaddform{display:flex;gap:6px;align-items:center;flex:1 1 280px;min-width:0;margin:0}
+#iaddform[hidden],.iaddhelp[hidden]{display:none}
+#iaddform .search{flex:1 1 auto;height:34px;box-sizing:border-box}
+#iaddform .btn{height:34px;box-sizing:border-box}
+#isearch{height:34px;box-sizing:border-box}
+#dlg-icons .ibar2:has(+ .iaddhelp:not([hidden])){border-bottom:0}
+.iaddhelp{margin:-4px 0 0;padding:0 14px 10px;border-bottom:1px solid var(--line)}
 .steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
 .code{width:100%;min-height:150px;font-family:var(--mono);font-size:11.5px;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--panel2)}
 
@@ -559,3 +609,33 @@ button.brand:hover{background:var(--panel2)}
 /* the selected column shows a grab bar on its right edge: drag it to change the width */
 .sigwrap [data-cid].on{box-shadow:inset -3px 0 0 var(--sel)}
 .stage.still .sigwrap [data-cid].on{box-shadow:none}
+
+/* brand kits in Signature style */
+.kits{display:flex;flex-direction:column;gap:6px}
+.kit{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel2)}
+.kit.cur{border-color:var(--sel)}
+.kit .kn{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.kit .kn b{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kit .kn span{display:flex;gap:3px}
+.kit .kn small{font-size:11px;color:var(--muted)}
+.hexrow{display:flex;gap:6px;align-items:center}
+.hexrow input{flex:1;min-width:0}
+/* crop window: the picture with a movable, resizable frame; outside the frame is dimmed */
+#dlg-crop{width:min(820px,calc(100vw - 32px))}
+.cropbar{padding-top:0!important;align-items:center}
+.cropbody{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+.cropstage{position:relative;overflow:hidden;line-height:0;user-select:none;touch-action:none;border-radius:6px;padding:10px;background:var(--panel2);flex:none;max-width:100%;box-sizing:border-box}
+.cropstage img{background:repeating-conic-gradient(#d9dde3 0 25%,#f4f5f7 0 50%) 0 0/16px 16px}
+.cropstage img{display:block;max-width:min(520px,calc(100vw - 80px));max-height:min(420px,calc(100vh - 300px));pointer-events:none}
+.cropbox{position:absolute;box-shadow:0 0 0 9999px rgba(10,14,20,.55);outline:1px solid #fff;cursor:move;touch-action:none}
+.cropbox.round{border-radius:50%}
+.cropbox:focus-visible{outline:2px solid var(--sel)}
+.cropbox i{position:absolute;width:12px;height:12px;background:#fff;border:1px solid #2453e6;border-radius:2px;box-sizing:border-box}
+.cropbox i[data-h=nw]{left:-6px;top:-6px;cursor:nwse-resize}.cropbox i[data-h=ne]{right:-6px;top:-6px;cursor:nesw-resize}
+.cropbox i[data-h=se]{right:-6px;bottom:-6px;cursor:nwse-resize}.cropbox i[data-h=sw]{left:-6px;bottom:-6px;cursor:nesw-resize}
+.cropbox i[data-h=n]{left:calc(50% - 6px);top:-6px;cursor:ns-resize}.cropbox i[data-h=s]{left:calc(50% - 6px);bottom:-6px;cursor:ns-resize}
+.cropbox i[data-h=e]{right:-6px;top:calc(50% - 6px);cursor:ew-resize}.cropbox i[data-h=w]{left:-6px;top:calc(50% - 6px);cursor:ew-resize}
+@media (hover:none){.cropbox i{width:18px;height:18px}}
+.cropside{flex:1 1 200px;min-width:180px;display:flex;flex-direction:column;gap:8px}
+.croppv{background:#fff;border:1px solid var(--line);background-repeat:no-repeat;max-width:100%}
+.cropbtns{display:flex;gap:6px;flex-wrap:wrap}

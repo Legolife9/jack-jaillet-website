@@ -80,6 +80,19 @@ function iconImg(ref, color, size, ctx, alt){
   }
   return `<img src="${esc(src)}" width="${w}" height="${size}" alt="${alt}" style="display:block;width:${w}px;height:${size}px;border:0;margin:0 auto">`;
 }
+// an icon in a square box of the given size, centered both ways, so narrow and wide icons take the same room
+// and sit at the same height next to text (a wide icon is scaled down to fit the box's width)
+function iconBox(ref, color, size, ctx, alt){
+  if (!ref) return '';
+  const ar = iconRatio(ref), h = ref.set !== 'custom' && ar > 1 ? Math.max(1, Math.round(size / ar)) : size;
+  // kept short: a signature can hold a dozen icons and Gmail counts every character
+  return `<table ${T0} width="${size}" align="center" style="margin:0 auto"><tr><td height="${size}" align="center" style="height:${size}px;line-height:0">${iconImg(ref, color, h, ctx, alt)}</td></tr></table>`;
+}
+// an icon scaled to fit a size×size square (a wide icon gets shorter rather than wider), with no extra markup
+function iconFit(ref, color, size, ctx, alt){
+  const ar = ref && ref.set !== 'custom' ? iconRatio(ref) : 1;
+  return iconImg(ref, color, ar > 1 ? Math.max(1, Math.round(size / ar)) : size, ctx, alt);
+}
 function iconChip(ref){
   if (!ref) return '<span class="note">None</span>';
   if (ref.set === 'custom') return `<img src="${esc(ref.data)}" alt="">`;
@@ -94,6 +107,8 @@ let previewQueued = false;
 function queuePreview(){ if (previewQueued) return; previewQueued = true; requestAnimationFrame(() => { previewQueued = false; renderPreview(); }); }
 // the part of a w×h picture a frame shows: cover the frame, zoom in, then slide to the focus point
 function cropRect(w, h, ar, c){
+  // a crop drawn by hand in the crop window (fractions of the picture) is used as it is
+  if (c.rect) return { sx:Math.round(c.rect.x * w), sy:Math.round(c.rect.y * h), sw:Math.max(1, Math.round(c.rect.w * w)), sh:Math.max(1, Math.round(c.rect.h * h)) };
   let sw = w, sh = w / ar;
   if (sh > h){ sh = h; sw = h * ar; }
   sw /= c.zoom || 1; sh /= c.zoom || 1;
@@ -108,11 +123,13 @@ function cropped(src, crop, outW){
   cropCache[k] = 'pending';
   const img = new Image();
   img.onload = () => {
-    const ar = crop.aspect === 'orig' ? img.width / img.height : ratioOf(crop.aspect);
+    const R = crop.rect ? cropRect(img.width, img.height, 1, crop) : null;
+    const ar = R ? R.sw / R.sh : crop.aspect === 'orig' ? img.width / img.height : ratioOf(crop.aspect);
     let sw = img.width, sh = sw / ar;
     if (sh > img.height){ sh = img.height; sw = sh * ar; }
     sw /= crop.zoom; sh /= crop.zoom;
-    const sx = (img.width - sw) * crop.x / 100, sy = (img.height - sh) * crop.y / 100;
+    let sx = (img.width - sw) * crop.x / 100, sy = (img.height - sh) * crop.y / 100;
+    if (R){ sx = R.sx; sy = R.sy; sw = R.sw; sh = R.sh; }
     const W = Math.max(1, Math.round(Math.min(outW, sw))), H = Math.max(1, Math.round(W / ar));
     const c = document.createElement('canvas'); c.width = W; c.height = H;
     c.getContext('2d').drawImage(img, sx, sy, sw, sh, 0, 0, W, H);
@@ -150,7 +167,7 @@ const DEF = {
   spacer: { label:'Space', height:12 },
   contact:{ label:'Contact details', items:[], layout:'stack', sep:'|', iconColor:'#2453e6', iconSize:13, iconBg:'#e8eefc', iconShape:'none', iconPad:4, size:13, color:'', gap:5, labels:false },
   social: { label:'Icon links', items:[], size:14, color:'#ffffff', bg:'#2453e6', shape:'circle', pad:7, gap:6, tsize:12, tcolor:'' },
-  button: { label:'Button', text:'Book a call', link:'', bg:'#2453e6', color:'#ffffff', borderW:0, borderColor:'#2453e6', radius:6, padX:16, padY:9, size:13, weight:600, icon:null, iconPos:'left', iconSize:13, inline:false },
+  button: { label:'Button', text:'Book a call', link:'', bg:'#2453e6', color:'#ffffff', borderW:0, borderColor:'#2453e6', radius:6, padX:16, padY:9, size:13, weight:600, icon:null, iconPos:'left', iconSize:13, iconAuto:true, iconGap:7, inline:false },
   html:   { label:'Custom HTML', html:'<span style="font-size:12px;color:#667085">Custom HTML goes here</span>' }
 };
 function mk(type, props){ return Object.assign({ id:uid(), type, align:'left', pt:0, pb:6 }, clone(DEF[type]), props || {}); }
@@ -484,7 +501,7 @@ function cropUrl(url, b){
   const c = b.crop;
   if (c.aspect === 'orig') return url;
   const ar = ratioOf(c.aspect), W = Math.min(800, b.width * 2), H = Math.round(W / ar), d = c.dim;
-  if (c.zoom > 1 && d && d.url === url){
+  if ((c.rect || c.zoom > 1) && d && d.url === url){
     const r = cropRect(d.w, d.h, ar, c);
     return 'https://images.weserv.nl/?url=' + encodeURIComponent(url) + `&precrop&cx=${r.sx}&cy=${r.sy}&cw=${r.sw}&ch=${r.sh}&w=${W}&h=${H}&fit=cover`;
   }
@@ -545,25 +562,28 @@ function renderBlock(b, ctx){
     case 'contact': {
       const ic = ref => {
         if (!ref) return '';
-        const img = iconImg(ref, b.iconColor, b.iconSize, ctx);
+        const img = iconFit(ref, b.iconColor, b.iconSize, ctx);
         if (b.iconShape === 'none') return img;
         const rad = b.iconShape === 'circle' ? '50%' : b.iconShape === 'rounded' ? '4px' : '0';
         return `<table ${T0}><tr><td bgcolor="${b.iconBg}" align="center" width="${b.iconSize + 2 * b.iconPad}" style="background:${b.iconBg};border-radius:${rad};padding:${b.iconPad}px 0;width:${b.iconSize + 2 * b.iconPad}px">${img}</td></tr></table>`;
       };
-      const ts = `font-family:${S.font};font-size:${b.size}px;color:${color};line-height:1.35`;
+      const ts = `font-family:${S.font};font-size:${b.size}px;color:${color};line-height:1.35`, icw = b.iconShape === 'none' ? b.iconSize : b.iconSize + 2 * b.iconPad;
       // a line whose {{fields}} are all blank for this person ("F: {{fax}}" with no fax) is left out
       const filled = s => !usesField(s) || (s.match(/\{\{\s*[\w-]+\s*\}\}/g) || []).map(M).join('').trim();
       const items = b.items.map(i => Object.assign({}, i, { t:M(i.text) })).filter(i => i.t.trim() && filled(i.text));
       if (!items.length) return '';
       if (b.layout === 'inline'){
+        const cs = contactSep(b), ch = cs ? sepChar(cs) : '', csp = cs ? SEP_SPACE[cs.space] ?? b.gap + 2 : 0;
+        const sepTd = !ch ? (b.gap ? `<td style="width:${b.gap * 2}px;font-size:0;line-height:0">&nbsp;</td>` : '')
+          : `<td style="${ts};font-size:${N0(cs.size) || b.size}px;padding:0 ${csp}px 0 ${cs.ch === 'comma' ? 0 : csp}px;color:${cs.color || '#b0b7c3'}">${esc(ch)}</td>`;
         const cells = items.map((it, n) =>
-          (n ? `<td style="${ts};padding:0 ${b.gap + 2}px;color:#b0b7c3">${esc(b.sep)}</td>` : '') +
-          (it.icon ? `<td valign="middle" style="padding-right:${b.gap}px">${ic(it.icon)}</td>` : '') +
+          (n ? sepTd : '') +
+          (it.icon ? `<td valign="middle" align="center" width="${icw}" style="width:${icw}px;padding-right:${b.gap}px">${ic(it.icon)}</td>` : '') +
           `<td valign="middle" style="${ts};white-space:nowrap">${wrapLink(esc(it.t), it.link, color)}</td>`).join('');
         return `<table ${T0} style="border-collapse:collapse;display:inline-table"><tr>${cells}</tr></table>`;
       }
       const rows = items.map((it, n) => `<tr>` +
-        (items.some(i => i.icon) ? `<td valign="middle" style="padding:${n ? b.gap : 0}px ${b.gap + 3}px 0 0;width:1%">${ic(it.icon)}</td>` : '') +
+        (items.some(i => i.icon) ? `<td valign="middle" align="center" width="${icw}" style="padding:${n ? b.gap : 0}px ${b.gap + 3}px 0 0;width:${icw}px">${ic(it.icon)}</td>` : '') +
         `<td valign="middle" style="${ts};padding-top:${n ? b.gap : 0}px">${wrapLink(esc(it.t), it.link, color)}</td></tr>`).join('');
       return `<table ${T0} style="border-collapse:collapse;display:inline-table">${rows}</table>`;
     }
@@ -571,7 +591,7 @@ function renderBlock(b, ctx){
       const rad = b.shape === 'circle' ? '50%' : b.shape === 'rounded' ? '6px' : '0';
       const cells = b.items.filter(i => i.icon && !(usesField(i.link) && !M(i.link).trim())).map((it, n) => {
         const t = M(it.text || '').trim(), tc = b.tcolor || S.color;
-        let img = iconImg(it.icon, b.color, b.size, ctx, t ? '' : linkName(it.icon, it.link));
+        let img = iconFit(it.icon, b.color, b.size, ctx, t ? '' : linkName(it.icon, it.link));
         if (b.shape !== 'none') img = `<table ${T0}><tr><td bgcolor="${b.bg}" align="center" width="${b.size + 2 * b.pad}" style="background:${b.bg};border-radius:${rad};padding:${b.pad}px 0;width:${b.size + 2 * b.pad}px">${img}</td></tr></table>`;
         // an optional title beside the icon ("LinkedIn", "Follow us"), linked the same way
         if (t) return `<td style="padding-left:${n ? b.gap : 0}px"><table ${T0} style="border-collapse:collapse"><tr><td valign="middle">${wrapLink(img, it.link, b.color)}</td>` +
@@ -588,13 +608,18 @@ function renderBlock(b, ctx){
   }
   return '';
 }
+// a button's icon size: its own setting, or (by default for new buttons) sized from the text so the two scale together
+const btnIcon = b => b.iconAuto ? Math.max(8, Math.round(b.size * 1.15)) : N0(b.iconSize) || 13;
 function buttonCell(b, ctx){
   const S = ctx.S, t = M(b.text);
   if (!t.trim() && !b.icon) return '';
   if (usesField(b.link) && !M(b.link).trim()) return ''; // a person without a booking link gets no booking button
-  const ic = b.icon ? `<td valign="middle" style="${t ? (b.iconPos === 'left' ? 'padding-right:7px' : 'padding-left:7px') : ''}">${iconImg(b.icon, b.color, b.iconSize, ctx, t.trim() ? '' : linkName(b.icon, b.link))}</td>` : '';
-  const tx = t ? `<td valign="middle" style="font-family:${S.font};font-size:${b.size}px;font-weight:${b.weight};color:${b.color};line-height:1.2;white-space:nowrap">${esc(t)}</td>` : '';
-  const inner = `<table ${T0}><tr>${b.iconPos === 'left' ? ic + tx : tx + ic}</tr></table>`;
+  // every icon sits in the same square box, centered on the text line, with one fixed gap before the label
+  const isz = btnIcon(b), lh = Math.max(Math.round(b.size * 1.2), isz), gap = Math.max(0, N0(b.iconGap ?? 7));
+  const ic = b.icon ? `<td valign="middle" width="${isz}" style="width:${isz}px;line-height:0;font-size:0;vertical-align:middle">${iconBox(b.icon, b.color, isz, ctx, t.trim() ? '' : linkName(b.icon, b.link))}</td>` : '';
+  const gp = b.icon && t && gap ? `<td width="${gap}" style="width:${gap}px;font-size:0;line-height:0">&nbsp;</td>` : '';
+  const tx = t ? `<td valign="middle" height="${lh}" style="font-family:${S.font};font-size:${b.size}px;font-weight:${b.weight};color:${b.color};line-height:${lh}px;white-space:nowrap;vertical-align:middle">${esc(t)}</td>` : '';
+  const inner = `<table ${T0} style="border-collapse:collapse"><tr>${b.iconPos === 'left' ? ic + gp + tx : tx + gp + ic}</tr></table>`;
   const bord = b.borderW ? `border:${b.borderW}px solid ${b.borderColor};` : '';
   const h = href(M(b.link));
   const a = h ? `<a href="${esc(h)}" style="display:block;text-decoration:none;color:${b.color};padding:${b.padY}px ${b.padX}px">${inner}</a>` : `<div style="padding:${b.padY}px ${b.padX}px">${inner}</div>`;
@@ -606,6 +631,37 @@ const N0 = v => Math.round(+v || 0);
 const LSTYLE_OK = new Set(['solid', 'dashed', 'dotted', 'double']);
 // a row's lines share one look; each gap (before column i) can have its line switched off
 const lineOn = (r, i) => r.divW > 0 && !(r.divHide && r.divHide[i]);
+/* blocks on one line ("next to the block above"): how they line up, and what goes between them */
+// a line of words lines up on the text baseline unless set otherwise; a line with a picture or a stacked block centers instead
+const TALL = new Set(['image', 'contact', 'html', 'divider', 'spacer']);
+function groupAlign(group){
+  const a = group[0].rowAlign;
+  if (a) return a;
+  return group.length > 1 && group.some(g => g.type === 'text') && !group.some(g => TALL.has(g.type)) ? 'baseline' : 'middle';
+}
+const SEPS = [['none','None'],['dot','·'],['bullet','•'],['dash','–'],['bar','|'],['slash','/'],['comma',','],['space','Space'],['custom','Your own']];
+const SEP_CH = { dot:'·', bullet:'•', dash:'–', bar:'|', slash:'/', comma:',', space:' ' };
+const SEP_SPACE = { tight:3, normal:7, wide:12 };
+const sepChar = s => s.ch === 'custom' ? String(s.custom || '').slice(0, 6) : SEP_CH[s.ch] || '';
+// the separator before item g: its own, if it has one, otherwise the one set for its whole line (on the line's first block)
+function sepOf(lead, g){
+  const s = g.sepOwn || lead.gsep;
+  return s && s.ch && s.ch !== 'none' && sepChar(s) ? s : null;
+}
+function sepCell(s, lead, g, ctx, va, lineH){
+  const S = ctx.S, txt = [lead, g].find(x => x.type === 'text');
+  const size = N0(s.size) || (txt ? txt.size : S.size), sp = SEP_SPACE[s.space] ?? 7;
+  const color = s.color || (txt && txt.color) || S.color, font = (txt && txt.font) || S.font;
+  // a comma hugs the word before it
+  const L = s.ch === 'comma' ? 0 : sp, R = sp, cva = va === 'baseline' ? 'baseline' : va;
+  return `<td${pv(ctx, 'sep', g.id)} valign="${cva}" style="vertical-align:${cva};padding:0 ${R}px 0 ${L}px;font-family:${font};font-size:${size}px;line-height:${lineH ? +lineH.toFixed(1) + 'px' : 1.3};color:${color};white-space:nowrap">${esc(sepChar(s))}</td>`;
+}
+// a contact block on one line: its separator settings, read from the older single "sep" text when it has none yet
+function contactSep(b){
+  if (b.cs) return b.cs.ch && b.cs.ch !== 'none' && sepChar(b.cs) ? b.cs : null;
+  const s = String(b.sep ?? '|').trim();
+  return s ? { ch:'custom', custom:s, space:'', color:'', size:0 } : null;
+}
 function renderColumn(blocks, ctx){
   const rows = [];
   for (let i = 0; i < blocks.length; i++){
@@ -614,11 +670,18 @@ function renderColumn(blocks, ctx){
     const group = [b];
     while (blocks[i + 1] && blocks[i + 1].inline) group.push(blocks[++i]);
     if (group.length > 1 || b.type === 'button'){
-      const va = b.rowAlign || 'middle';
-      const cells = group.map(g => [g, g.type === 'button' ? buttonCell(g, ctx) : renderBlock(g, ctx)]).filter(x => x[1])
-        // the gap is its own cell, so a block's cell (and its highlight) hugs the block; icon-only cells drop the text line's extra height
+      const va = groupAlign(group);
+      // text on one line shares a baseline and one line height, so a big word and a small word read as one line;
+      // icons, buttons and pictures are centered on that line instead
+      const texts = group.filter(g => g.type === 'text'), lineH = va === 'baseline' && texts.length ? Math.max(...texts.map(g => g.size * g.lh)) : 0;
+      const one = g => g.type === 'button' ? buttonCell(g, ctx) : renderBlock(lineH && g.type === 'text' ? Object.assign({}, g, { lh:`${+lineH.toFixed(1)}px` }) : g, ctx);
+      const cells = group.map(g => [g, one(g)]).filter(x => x[1])
+        // the gap is its own cell, so a block's cell (and its highlight) hugs the block; icon-only cells drop the text line's extra height.
+        // A separator (a dot, bar, dash...) between two items is its own cell too, so it's skipped when either side is empty
         .map(([g, h], n) => { const gap = n ? g.gapL ?? 8 : 0, tight = g.type === 'social' || g.type === 'button' ? 'line-height:0;font-size:0;' : '';
-          return (gap > 0 ? `<td width="${gap}" style="width:${gap}px;font-size:0;line-height:0">&nbsp;</td>` : '') + `<td${pv(ctx, 'bid', g.id)} valign="${va}" style="vertical-align:${va};${tight}text-align:${g.align}">${h}</td>`; }).join('');
+          const cva = va === 'baseline' && g.type !== 'text' ? 'middle' : va, sp = n ? sepOf(b, g) : null;
+          const pre = sp ? sepCell(sp, b, g, ctx, va, lineH) : gap > 0 ? `<td${pv(ctx, 'sep', g.id)} width="${gap}" style="width:${gap}px;font-size:0;line-height:0">&nbsp;</td>` : '';
+          return pre + `<td${pv(ctx, 'bid', g.id)} valign="${cva}" style="vertical-align:${cva};${tight}text-align:${g.align}">${h}</td>`; }).join('');
       if (cells) rows.push({ pt:b.pt, pb:Math.max(...group.map(g => g.pb)), html:(t, bt) => `<tr><td align="${b.align}" style="padding:${t}px 0 ${bt}px 0;text-align:${b.align}"><table ${T0} style="display:inline-table;border-collapse:collapse"><tr>${cells}</tr></table></td></tr>` });
       continue;
     }
@@ -681,9 +744,20 @@ function render(st, mode, pid){
 function plainText(st, pid){
   const person = personFor(st, pid); P = person ? person.values : null;
   const lines = [];
+  let lead = null, lastFrom = null;
   for (const r of st.rows) for (const c of r.cols) for (const b of c.blocks){
-    if (b.type === 'text'){ const t = M(b.text).replace(/\*\*|\*/g, '').replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1 ($2)'); if (t.trim()) lines.push(t); }
-    if (b.type === 'contact') lines.push(b.items.map(i => M(i.text)).filter(x => x.trim()).join(b.layout === 'inline' ? ` ${b.sep} ` : '\n'));
+    if (!b.inline) lead = b;
+    if (b.type === 'text'){
+      const t = M(b.text).replace(/\*\*|\*/g, '').replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1 ($2)');
+      if (!t.trim()) continue;
+      // words that share a line stay on one line, with their separator
+      const prev = b.inline && lastFrom === lead ? lines.pop() : null, s = prev != null ? sepOf(lead, b) : null;
+      lines.push(prev != null ? prev + (s && s.ch !== 'space' ? (s.ch === 'comma' ? '' : ' ') + sepChar(s) + ' ' : ' ') + t : t);
+      lastFrom = lead;
+      continue;
+    }
+    lastFrom = null;
+    if (b.type === 'contact') lines.push(b.items.map(i => M(i.text)).filter(x => x.trim()).join(b.layout === 'inline' ? (s => s && s.ch !== 'space' ? ` ${sepChar(s)} ` : '   ')(contactSep(b)) : '\n'));
     if (b.type === 'button' && M(b.text)) lines.push(M(b.text) + (b.link ? ': ' + href(M(b.link)) : ''));
   }
   P = null;
@@ -898,7 +972,16 @@ function noteBroken(src){
   box.insertAdjacentHTML('afterbegin', `<div class="chkline warn" data-broken="${esc(src)}"><span class="dot"></span><span>An image link didn't load: <code>${esc(short)}</code>. Check the address, and that the image is public (not behind a login).</span></div>`);
   box.querySelectorAll('.chkline.ok').forEach(x => x.remove());
 }
-function markSel(){ document.querySelectorAll('#sig [data-bid],#sig [data-cid],#sig [data-rid],#sig [data-did]').forEach(el => el.classList.toggle('on', (el.dataset.bid || el.dataset.cid || el.dataset.rid || el.dataset.did) === sel)); }
+function markSel(){
+  document.querySelectorAll('#sig [data-bid],#sig [data-cid],#sig [data-rid],#sig [data-did]').forEach(el => el.classList.toggle('on', (el.dataset.bid || el.dataset.cid || el.dataset.rid || el.dataset.did) === sel));
+  // show how things are grouped: a picked row outlines its columns; a picked column or block outlines its row and columns,
+  // and a block on a shared line outlines the other items on that line
+  const f = state && find(sel), ids = new Set();
+  if (f && f.r && f.r.cols.length > 1){ f.r.cols.forEach(c => ids.add(c.id)); if (f.kind !== 'row') ids.add(f.r.id); }
+  if (f && f.kind === 'block'){ const g = lineOf(f.c.blocks, f.i); if (g.length > 1) g.forEach(x => ids.add(x.id)); }
+  ids.delete(sel);
+  document.querySelectorAll('#sig [data-bid],#sig [data-cid],#sig [data-rid]').forEach(el => el.classList.toggle('ingrp', ids.has(el.dataset.bid || el.dataset.cid || el.dataset.rid)));
+}
 // double-click text in the preview to jump straight to editing it
 $('#sig').addEventListener('dblclick', e => {
   const el = e.target.closest('[data-bid]'); if (!el) return;
@@ -911,6 +994,9 @@ $('#sig').addEventListener('click', e => {
   e.preventDefault();
   if (step !== 'design') return;
   if (colDragged){ colDragged = false; return; } // the end of a column drag isn't a click
+  // the space or separator between two items on a line opens the line's settings for the item after it
+  const sp = e.target.closest('[data-sep]');
+  if (sp){ inspTab = 'Layout'; select(sp.dataset.sep); toInspector(); return; }
   const el = e.target.closest('[data-bid],[data-cid],[data-did],[data-dhit]');
   select(el ? (el.dataset.bid || el.dataset.cid || el.dataset.did || el.dataset.dhit) : 'style');
   toInspector();
@@ -995,8 +1081,16 @@ function addTarget(){
   const r = state.rows[state.rows.length - 1];
   return r ? { r, c:r.cols[0] } : null;
 }
+let besideId = null; // a block waiting for a new block to be placed beside it
 function renderAddTo(){
   const t = addTarget(), n = $('#addto'); if (!n) return;
+  const nb = besideId && find(besideId);
+  if (nb && nb.kind === 'block'){
+    n.innerHTML = `Pick a block above to put it <b>beside ${esc(blockName(Object.assign({}, nb.b, { inline:false })).slice(0, 40))}</b>, on the same line. <button type="button" class="linkbtn" id="beside-cancel">Cancel</button>`;
+    $('#beside-cancel').onclick = () => { besideId = null; renderList(); };
+    return;
+  }
+  besideId = null;
   n.innerHTML = t ? `Goes into <b>${esc(colName(t.r, t.c))}</b>${t.after ? `, below <b>${esc(blockName(t.after).slice(0, 40))}</b>` : ', at the bottom'}. Select a row, column or block to change where.` : 'Goes into a new row.';
 }
 $('#addgrid').onclick = e => {
@@ -1010,13 +1104,22 @@ $('#addgrid').onclick = e => {
     if (b.text) b.text = fix(b.text);
     (b.items || []).forEach(it => { it.text = fix(it.text); it.link = fix(it.link); });
   }
+  // "Place beside": the new block goes on the same line, right after the block that asked for it
+  const nb = besideId && find(besideId);
+  if (nb && nb.kind === 'block'){
+    nb.c.blocks.splice(nb.i + 1, 0, Object.assign(b, { inline:true, gapL:b.gapL ?? 8 }));
+    besideId = null; sel = b.id; inspTab = 'Content'; changed({ list:true, insp:true });
+    toast(`Placed beside ${blockName(Object.assign({}, nb.b, { inline:false })).slice(0, 30)}.`, UNDO);
+    return;
+  }
+  besideId = null;
   let t = addTarget();
   if (!t){ state.rows.push(mkRow([[]])); t = addTarget(); }
   if (t.after) t.c.blocks.splice(t.c.blocks.indexOf(t.after) + 1, 0, b); else t.c.blocks.push(b);
   sel = b.id; changed({ list:true, insp:true });
 };
-const COLOPTS = [1, 2, 3, 4, 5].map(n => [n, n === 1 ? '1 column' : `${n} columns`]);
-$('#addrow').innerHTML = `<label for="newcols">New row</label><select id="newcols">${COLOPTS.map(([v, l]) => `<option value="${v}">${l}</option>`).join('')}</select><button type="button" class="btn sm" id="addrowbtn">${G('fas', 'plus')}Add row</button>`;
+const COLOPTS = [1, 2, 3, 4, 5].map(n => [n, n === 1 ? '1 column (stacked)' : `${n} columns side by side`]);
+$('#addrow').innerHTML = `<label for="newcols">New row</label><select id="newcols">${COLOPTS.map(([v]) => `<option value="${v}">${v === 1 ? '1 column' : v + ' columns'}</option>`).join('')}</select><button type="button" class="btn sm" id="addrowbtn">${G('fas', 'plus')}Add row</button>`;
 $('#addrowbtn').onclick = () => {
   const n = +$('#newcols').value, r = mkRow(Array.from({ length:n }, () => []));
   sc(r, SHRINK.row, SCALE);
@@ -1031,9 +1134,19 @@ function blockName(b){
   if (b.type === 'button') return 'Button: ' + b.text;
   return b.label || DEF[b.type].label;
 }
-const ACTS = { ren:['fas:pen','Rename'], up:['fas:arrow-up','Move up'], down:['fas:arrow-down','Move down'], left:['fas:arrow-left','Move left'], right:['fas:arrow-right','Move right'], dup:['far:copy','Duplicate'], del:['far:trash-can','Delete'] };
+const ACTS = { ren:['fas:pen','Rename'], beside:['fas:table-columns','Place a new block beside this'], up:['fas:arrow-up','Move up'], down:['fas:arrow-down','Move down'], left:['fas:arrow-left','Move left'], right:['fas:arrow-right','Move right'], dup:['far:copy','Duplicate'], del:['far:trash-can','Delete'] };
 const acts = keys => `<span class="acts">${keys.map(k => { const [g, t] = ACTS[k], [s, n] = g.split(':'); return `<button type="button" class="iconbtn" data-act="${k}" title="${t}" aria-label="${t}">${G(s, n)}</button>`; }).join('')}</span>`;
-let dragId = null;
+// the handle a block or row is dragged by; it shows on hover, and the arrow keys move it too
+const grip = what => `<button type="button" class="grip" data-act="grip" title="Drag to move" aria-label="Move ${esc(what)}: drag, or press the up and down arrow keys">${G('fas', 'grip-vertical')}</button>`;
+// a small picture of 1, 2 or 3 columns, for the "side by side" buttons on each row
+const colsIcon = n => `<svg viewBox="0 0 18 12" aria-hidden="true">${Array.from({ length:n }, (_, i) => { const w = (18 - (n - 1) * 2) / n; return `<rect x="${(i * (w + 2)).toFixed(2)}" y="0" width="${w.toFixed(2)}" height="12" rx="1.5"/>`; }).join('')}</svg>`;
+function colPick(r){
+  const n = r.cols.length, opts = [1, 2, 3].concat(n > 3 ? [n] : []);
+  return `<span class="colpick" role="group" aria-label="Items side by side in ${esc(rowName(r))}">${opts.map(k => `<button type="button" data-cols="${k}" data-row="${r.id}" aria-pressed="${k === n}" title="${k === 1 ? 'One column: items stacked' : `${k} columns side by side`}" aria-label="${k === 1 ? '1 column' : k + ' columns side by side'}">${k > 3 ? `<b>${k}</b>` : colsIcon(k)}</button>`).join('')}</span>`;
+}
+const HINT_KEY = 'sigstudio.hintBeside';
+// a column's first block always starts its own line
+function normLines(st = state){ st.rows.forEach(r => r.cols.forEach(c => { if (c.blocks[0]) c.blocks[0].inline = false; })); }
 function divItem(r, i){
   const id = `dv:${r.id}:${i}`;
   if (lineOn(r, i)) return `<li class="bitem divh${sel === id ? ' sel' : ''}" data-id="${id}"><span class="ic">${glyph('vline')}</span><span class="nm">Line between columns</span>${acts(['del'])}</li>`;
@@ -1042,18 +1155,23 @@ function divItem(r, i){
 function renderList(){
   renderAddTo();
   let h = `<li class="bitem${sel === 'style' ? ' sel' : ''}" data-id="style"><span class="ic">${glyph('style')}</span><span class="nm"><b>Signature style</b><small>Colors, font, background and border</small></span></li>`;
+  // shown until dismissed: the two quick ways to put things on one line
+  if (!store.get(HINT_KEY) && state.rows.length) h += `<li class="hint"><span>Want two things on one line? Hover a block and press ${G('fas', 'table-columns')} to add one beside it, or drag a block by its handle onto the left or right side of another.</span><button type="button" class="iconbtn" data-hint-close aria-label="Dismiss this tip" title="Dismiss">${G('fas', 'xmark')}</button></li>`;
   state.rows.forEach((r, ri) => {
     const n = r.cols.length;
-    h += `<li class="bitem rowh${sel === r.id ? ' sel' : ''}" data-id="${r.id}"><span class="ic">${glyph('row')}</span><span class="nm"><b>${esc(rowName(r))}</b></span>` +
-      `<select class="colsel" data-row="${r.id}" aria-label="Columns in ${esc(rowName(r))}" title="How many columns sit side by side in this row">${COLOPTS.map(([v, l]) => `<option value="${v}"${v === n ? ' selected' : ''}>${l}</option>`).join('')}</select>${acts(['up','down','dup','del'])}</li>`;
+    h += `<li class="bitem rowh${sel === r.id ? ' sel' : ''}" data-id="${r.id}" data-r="${r.id}">${grip(rowName(r))}<span class="ic">${glyph('row')}</span><span class="nm"><b>${esc(rowName(r))}</b></span>` +
+      `${colPick(r)}${acts(['up','down','dup','del'])}</li>`;
     const multi = n > 1;
     r.cols.forEach((c, ci) => {
-      if (ci) h += divItem(r, ci);
-      if (multi) h += `<li class="bitem colh${sel === c.id ? ' sel' : ''}" data-id="${c.id}" data-drop="${c.id}"><span class="ic">${glyph('col')}</span><span class="nm">${esc(colLabel(r, c))}${c.width ? ` · ${c.width}px` : ''}</span>${acts(['ren','left','right','del'])}</li>`;
-      c.blocks.forEach(b => {
-        h += `<li class="bitem blk${multi ? ' in' : ''}${sel === b.id ? ' sel' : ''}" data-id="${b.id}" draggable="true"><span class="ic">${glyph(b.type)}</span><span class="nm">${esc(blockName(b))}</span>${acts(['up','down','dup','del'])}</li>`;
+      if (ci) h += divItem(r, ci).replace('<li ', `<li data-r="${r.id}" `);
+      if (multi) h += `<li class="bitem colh${sel === c.id ? ' sel' : ''}" data-id="${c.id}" data-drop="${c.id}" data-r="${r.id}"><span class="ic">${glyph('col')}</span><span class="nm">${esc(colLabel(r, c))}${c.width ? ` · ${c.width}px` : ''}</span>${acts(['ren','left','right','del'])}</li>`;
+      c.blocks.forEach((b, bi) => {
+        // blocks sharing a line are marked, with the separator between them when there is one
+        const lead = lineOf(c.blocks, bi)[0], sp = b.inline ? sepOf(lead, b) : null;
+        const mark = b.inline ? `<span class="lnk" title="On the same line as the block above">${sp && sp.ch !== 'space' ? esc(sepChar(sp)) : '↔'}</span>` : '';
+        h += `<li class="bitem blk${multi ? ' in' : ''}${b.inline ? ' inl' : ''}${sel === b.id ? ' sel' : ''}${besideId === b.id ? ' besiding' : ''}" data-id="${b.id}" data-r="${r.id}">${grip(blockName(Object.assign({}, b, { inline:false })))}<span class="ic">${glyph(b.type)}</span><span class="nm">${mark}${esc(blockName(Object.assign({}, b, { inline:false })))}</span>${acts(['beside','up','down','dup','del'])}</li>`;
       });
-      if (!c.blocks.length) h += `<li class="emptycol" data-drop="${c.id}" style="${multi ? '' : 'margin-left:22px'}">Empty. Click here, then pick a block above, or drag one here.</li>`;
+      if (!c.blocks.length) h += `<li class="emptycol" data-drop="${c.id}" data-r="${r.id}" style="${multi ? '' : 'margin-left:22px'}">Empty. Click here, then pick a block above, or drag one here.</li>`;
     });
   });
   if (!state.rows.length) h += `<li class="empty" style="margin:6px">No rows yet. Add one with the button at the bottom.</li>`;
@@ -1062,7 +1180,18 @@ function renderList(){
 function moveBlock(f, dir){
   const cols = allCols(), ci = cols.findIndex(x => x.c === f.c);
   const j = f.i + dir;
-  if (j >= 0 && j < f.c.blocks.length){ [f.c.blocks[f.i], f.c.blocks[j]] = [f.c.blocks[j], f.c.blocks[f.i]]; return; }
+  if (j >= 0 && j < f.c.blocks.length){
+    const A = f.c.blocks[f.i], B = f.c.blocks[j];
+    // two items on the same line trade places on that line, so the line itself stays together
+    if ((j > f.i ? B : A).inline){
+      [A.inline, B.inline] = [B.inline, A.inline];
+      ['gsep', 'rowAlign'].forEach(k => { const a = A[k], b = B[k]; delete A[k]; delete B[k]; if (b !== undefined) A[k] = b; if (a !== undefined) B[k] = a; });
+      if (A.inline && A.gapL == null) A.gapL = 8;
+      if (B.inline && B.gapL == null) B.gapL = 8;
+    }
+    [f.c.blocks[f.i], f.c.blocks[j]] = [B, A];
+    return;
+  }
   const to = cols[ci + dir]; if (!to) return;
   f.c.blocks.splice(f.i, 1);
   if (dir < 0) to.c.blocks.push(f.b); else to.c.blocks.unshift(f.b);
@@ -1080,13 +1209,12 @@ function removeCol(r, c){
   r.cols.splice(i, 1);
 }
 function freshIds(o){ o.id = uid(); (o.cols || []).forEach(freshIds); (o.blocks || []).forEach(freshIds); return o; }
-$('#blist').addEventListener('change', e => {
-  const s = e.target.closest('.colsel'); if (!s) return;
-  const f = find(s.dataset.row); if (!f) return;
-  setCols(f.r, +s.value); changed({ list:true, insp:true });
-});
 $('#blist').addEventListener('click', e => {
-  if (e.target.closest('.colsel')) return; // the columns menu works on its own and doesn't change the selection
+  // the side-by-side buttons work on their own and don't change the selection
+  const cp = e.target.closest('[data-cols]');
+  if (cp){ const f = find(cp.dataset.row); if (f && +cp.dataset.cols !== f.r.cols.length){ setCols(f.r, +cp.dataset.cols); changed({ list:true, insp:true }); } return; }
+  if (e.target.closest('[data-hint-close]')){ store.set(HINT_KEY, 1); renderList(); return; }
+  if (e.target.closest('.grip')) return; // the handle drags; a click on it does nothing
   const add = e.target.closest('[data-addline]');
   if (add){ const d = findDiv(add.dataset.addline); if (d){ setLine(d.r, d.i, true); sel = add.dataset.addline; changed({ list:true, insp:true }); markSel(); toInspector(); } return; }
   const li = e.target.closest('[data-id]');
@@ -1109,34 +1237,156 @@ $('#blist').addEventListener('click', e => {
     if (k === 'right' && i < f.r.cols.length - 1) [f.r.cols[i + 1], f.r.cols[i]] = [f.r.cols[i], f.r.cols[i + 1]];
     if (k === 'del'){ removeCol(f.r, f.c); sel = 'style'; toast('Column removed; its blocks moved next door.', UNDO); }
   } else {
-    if (k === 'del'){ f.c.blocks.splice(f.i, 1); if (sel === f.b.id) sel = 'style'; toast('Block deleted.', UNDO); }
+    if (k === 'del'){ takeBlock(f.c, f.i); if (sel === f.b.id) sel = 'style'; toast('Block deleted.', UNDO); }
     if (k === 'dup'){ const c = clone(f.b); c.id = uid(); f.c.blocks.splice(f.i + 1, 0, c); sel = c.id; }
     if (k === 'up' || k === 'down') moveBlock(f, k === 'up' ? -1 : 1);
+    if (k === 'beside'){ besideId = f.b.id; sel = f.b.id; renderList(); renderInspector(); markSel(); const t = $('#addgrid button'); if (t) t.focus(); return; }
   }
-  changed({ list:true, insp:true });
+  normLines(); changed({ list:true, insp:true });
 });
 function renameLayer(id){ select(id); toInspector(); const n = $('#layername'); if (n){ n.focus(); n.select(); } }
-$('#blist').addEventListener('dblclick', e => { const li = e.target.closest('.rowh,.colh'); if (li && !e.target.closest('[data-act],.colsel')) renameLayer(li.dataset.id); });
+$('#blist').addEventListener('dblclick', e => { const li = e.target.closest('.rowh,.colh'); if (li && !e.target.closest('[data-act],.colpick')) renameLayer(li.dataset.id); });
+
+/* ---------- drag to reorder: blocks within and between columns (or onto the side of another block), and whole rows ---------- */
 const BL = $('#blist');
-BL.addEventListener('dragstart', e => { const li = e.target.closest('.blk'); if (!li) return; dragId = li.dataset.id; li.classList.add('drag'); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', dragId); });
-BL.addEventListener('dragover', e => {
-  if (!dragId) return; e.preventDefault();
-  BL.querySelectorAll('.over').forEach(x => x.classList.remove('over'));
-  const t = e.target.closest('.blk,[data-drop]'); if (t) t.classList.add('over');
-});
-BL.addEventListener('drop', e => {
-  e.preventDefault();
-  const t = e.target.closest('.blk,[data-drop]'), f = dragId && find(dragId);
-  if (f && t && t.dataset.id !== dragId){
-    f.c.blocks.splice(f.i, 1);
-    if (t.classList.contains('blk')){ const g = find(t.dataset.id); g.c.blocks.splice(g.i, 0, f.b); }
-    else find(t.dataset.drop).c.blocks.push(f.b);
-    changed({ insp:true });
+// find a block or column in any state (the live one, or a copy used to preview a drop)
+function findIn(st, id){
+  for (const r of st.rows) for (const c of r.cols){
+    if (c.id === id) return { r, c, col:true };
+    const i = c.blocks.findIndex(b => b.id === id); if (i >= 0) return { r, c, i, b:c.blocks[i] };
   }
-  dragId = null; renderList();
+  return null;
+}
+// take a block out of its column without breaking the line it was on: if it led a line, the next block leads it now
+function takeBlock(c, i){
+  const b = c.blocks[i], nx = c.blocks[i + 1];
+  if (!b.inline && nx && nx.inline){
+    nx.inline = false;
+    if (b.gsep){ nx.gsep = b.gsep; delete b.gsep; }
+    if (b.rowAlign){ nx.rowAlign = b.rowAlign; delete b.rowAlign; }
+  }
+  c.blocks.splice(i, 1);
+  return b;
+}
+// where: before / after (its own line, or inside a line when dropped between two of its items), left / right (beside), in (end of a column)
+function moveBlockTo(st, id, t){
+  const s = findIn(st, id); if (!s || s.col || t.id === id) return false;
+  const b = takeBlock(s.c, s.i), d = findIn(st, t.id); if (!d){ s.c.blocks.splice(s.i, 0, b); return false; }
+  const beside = () => { if (b.gapL == null) b.gapL = 8; };
+  if (d.col || t.kind === 'in'){ b.inline = false; d.c.blocks.push(b); }
+  else {
+    const bl = d.c.blocks, T = d.b;
+    if (t.kind === 'right'){ b.inline = true; beside(); bl.splice(d.i + 1, 0, b); }
+    else if (t.kind === 'left'){
+      b.inline = !!T.inline; if (b.inline) beside();
+      if (!T.inline){ if (T.gsep){ b.gsep = T.gsep; delete T.gsep; } if (T.rowAlign){ b.rowAlign = T.rowAlign; delete T.rowAlign; } }
+      T.inline = true; if (T.gapL == null) T.gapL = 8;
+      bl.splice(d.i, 0, b);
+    }
+    else if (t.kind === 'before'){ b.inline = !!T.inline; if (b.inline) beside(); bl.splice(d.i, 0, b); }
+    else { const nx = bl[d.i + 1]; b.inline = !!(nx && nx.inline); if (b.inline) beside(); bl.splice(d.i + 1, 0, b); }
+  }
+  normLines(st);
+  return true;
+}
+function moveRowTo(st, id, t){
+  const from = st.rows.findIndex(r => r.id === id); if (from < 0 || t.id === id) return false;
+  const [r] = st.rows.splice(from, 1), to = st.rows.findIndex(x => x.id === t.id);
+  if (to < 0){ st.rows.splice(from, 0, r); return false; }
+  st.rows.splice(t.kind === 'before' ? to : to + 1, 0, r);
+  return true;
+}
+let dg = null; // the drag in progress
+const DT = ['dt-before', 'dt-after', 'dt-left', 'dt-right', 'dt-in'];
+function dropTarget(x, y){
+  const hit = document.elementFromPoint(x, y), li = hit && hit.closest('#blist li'); if (!li) return null;
+  if (dg.kind === 'row'){
+    const rid = li.dataset.r; if (!rid || rid === dg.id) return null;
+    const lis = [...BL.querySelectorAll(`li[data-r="${rid}"]`)], top = lis[0].getBoundingClientRect().top, bot = lis[lis.length - 1].getBoundingClientRect().bottom;
+    const before = y < (top + bot) / 2;
+    return { kind:before ? 'before' : 'after', id:rid, li:before ? lis[0] : lis[lis.length - 1] };
+  }
+  if (li.classList.contains('blk')){
+    if (li.dataset.id === dg.id) return null;
+    const r = li.getBoundingClientRect(), rx = (x - r.left) / r.width;
+    // the outer edges of a block put the dragged one beside it; the middle puts it above or below
+    const kind = rx > .78 ? 'right' : rx < .2 ? 'left' : y < r.top + r.height / 2 ? 'before' : 'after';
+    return { kind, id:li.dataset.id, li };
+  }
+  if (li.dataset.drop) return { kind:'in', id:li.dataset.drop, li };
+  if (li.classList.contains('rowh')){ const f = find(li.dataset.id); return f && f.r.cols[0] ? { kind:'in', id:f.r.cols[0].id, li } : null; }
+  return null;
+}
+// the preview shows the result while dragging, from a copy; the real design changes only on drop
+function previewDrop(t){
+  const real = state;
+  if (t){ const tmp = clone(state); if ((dg.kind === 'row' ? moveRowTo : moveBlockTo)(tmp, dg.id, t)) state = tmp; }
+  try { renderPreview(); } finally { state = real; }
+}
+function endDrag(commit){
+  if (!dg) return;
+  const d = dg; dg = null;
+  removeEventListener('pointermove', onDragMove); removeEventListener('pointerup', onDragUp); removeEventListener('pointercancel', onDragCancel); removeEventListener('keydown', onDragKey, true);
+  document.body.classList.remove('dragging');
+  if (d.ghost) d.ghost.remove();
+  clearInterval(d.scrollT);
+  if (!d.started) return;
+  if (commit && d.target && (d.kind === 'row' ? moveRowTo : moveBlockTo)(state, d.id, d.target)){
+    sel = d.id; changed({ list:true, insp:true }); toast('Moved.', UNDO);
+  } else { renderList(); renderPreview(); }
+}
+function onDragMove(e){
+  if (!dg) return;
+  if (!dg.started){
+    if (Math.hypot(e.clientX - dg.x, e.clientY - dg.y) < 5) return;
+    dg.started = true;
+    const li = BL.querySelector(`li[data-id="${dg.id}"]`), r = li.getBoundingClientRect();
+    li.classList.add('drag');
+    if (dg.kind === 'row') BL.querySelectorAll(`li[data-r="${dg.id}"]`).forEach(x => x.classList.add('drag'));
+    dg.ghost = Object.assign(li.cloneNode(true), { className:li.className.replace(/\b(sel|drag)\b/g, '') + ' ghost' });
+    dg.dy = dg.y - r.top;
+    dg.ghost.style.cssText = `width:${r.width}px;left:${r.left}px;top:${r.top}px`;
+    document.body.appendChild(dg.ghost); document.body.classList.add('dragging');
+    // near the top or bottom of the list, keep scrolling while the pointer waits there
+    const pane = BL.closest('.pane');
+    dg.scrollT = setInterval(() => { if (!dg || !pane) return; const pr = pane.getBoundingClientRect(); const v = dg.cy < pr.top + 40 ? -8 : dg.cy > pr.bottom - 40 ? 8 : 0; if (v){ pane.scrollTop += v; } }, 16);
+  }
+  e.preventDefault();
+  dg.cy = e.clientY;
+  dg.ghost.style.top = (e.clientY - dg.dy) + 'px';
+  const t = dropTarget(e.clientX, e.clientY), key = t ? t.kind + t.id : '';
+  BL.querySelectorAll('.' + DT.join(',.')).forEach(x => x.classList.remove(...DT));
+  if (t) t.li.classList.add('dt-' + t.kind);
+  if (key !== dg.key){ dg.key = key; dg.target = t; previewDrop(t); }
+}
+const onDragUp = () => endDrag(true), onDragCancel = () => endDrag(false);
+function onDragKey(e){ if (e.key === 'Escape' && dg){ e.preventDefault(); e.stopPropagation(); endDrag(false); toast('Move cancelled.'); } }
+BL.addEventListener('pointerdown', e => {
+  const g = e.target.closest('.grip'); if (!g || e.button > 0 || !permsOf(curSig()).edit_design) return;
+  const li = g.closest('li[data-id]'); if (!li) return;
+  e.preventDefault();
+  dg = { id:li.dataset.id, kind:li.classList.contains('rowh') ? 'row' : 'block', x:e.clientX, y:e.clientY, started:false, key:'' };
+  addEventListener('pointermove', onDragMove, { passive:false }); addEventListener('pointerup', onDragUp); addEventListener('pointercancel', onDragCancel); addEventListener('keydown', onDragKey, true);
 });
-BL.addEventListener('dragend', () => { dragId = null; renderList(); });
+// with the keyboard: the arrow keys on a handle move that block or row, and the handle keeps focus
+BL.addEventListener('keydown', e => {
+  const g = e.target.closest('.grip'); if (!g || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return;
+  e.preventDefault();
+  const id = g.closest('li[data-id]').dataset.id;
+  if (nudge(id, e.key === 'ArrowUp' ? -1 : 1)){ const n = BL.querySelector(`li[data-id="${id}"] .grip`); if (n) n.focus(); }
+});
+function nudge(id, dir){
+  const f = find(id); if (!f) return false;
+  if (f.kind === 'row'){
+    const i = state.rows.indexOf(f.r), j = i + dir; if (j < 0 || j >= state.rows.length) return false;
+    [state.rows[i], state.rows[j]] = [state.rows[j], state.rows[i]];
+  } else if (f.kind === 'block') moveBlock(f, dir);
+  else return false;
+  normLines(); sel = id; changed({ list:true, insp:true });
+  return true;
+}
 function select(id){
+  if (id !== besideId) besideId = null;
   sel = id; renderList(); renderInspector(); markSel();
   // stacked phone layout: bring the inspector to the person who just tapped something
   if (id !== 'style' && matchMedia('(max-width:880px)').matches) $('#insp').scrollIntoView({ behavior:matchMedia('(prefers-reduced-motion:reduce)').matches ? 'auto' : 'smooth', block:'start' });
@@ -1171,6 +1421,16 @@ const HELP = {
   'Space below':'Empty space below it, in pixels. On a block, a negative number pulls the next block closer.',
   'Columns in this row':'How many columns sit side by side in this row. Removing a column moves its blocks into the one next to it.',
   'Number of columns':'How many columns sit side by side in this row. Removing a column moves its blocks into the one next to it.',
+  'Items side by side':'How many columns sit side by side in this row. Removing a column moves its blocks into the one next to it. To put two blocks on one line inside a column, use "Next to the block above" on the second one.',
+  'Columns side by side':'How many columns sit side by side in this row. Removing a column moves its blocks into the one next to it.',
+  'Line up the items':'How items on the same line line up. "Text baseline" sets words of different sizes on one line, like printed text; icons and buttons are centered on that line. Top, middle and bottom line up the edges instead.',
+  'Space around it':'How much room is on each side of the separator.',
+  'Separator color':'Color of the separator. Tick "Same as the text" to match the words beside it.',
+  'Size (0 = match text)':'Size of the separator in pixels. 0 makes it the same size as the text beside it.',
+  'A different separator before this item':'Every gap on this line uses the separator above. Tick this to use another one just before this item.',
+  'Space before text':'Pixels between the icon and the button text.',
+  'Size the icon to match the text':'Sizes the icon from the button text, so making the text bigger makes the icon bigger too. Untick it to set the icon size yourself.',
+  'Paste color codes':'Paste up to five color codes from a brand guide, like #1f4e79, in this order: primary, text, secondary text, light accent, background tint. Codes you leave out stay as they are.',
   'Line up side-by-side blocks':'When blocks next to each other are different heights, this lines them up at the top, middle or bottom.',
   'Insert a field':'Puts a person\'s detail, like their name, where your cursor is. It shows as {{name}} here, and each person\'s signature fills in their own from the People step.',
   'Layer name':'A name just for you, so you can tell parts apart in the list on the left. It never shows in the signature.',
@@ -1195,7 +1455,7 @@ const HELP = {
   'Height':'How much empty space, in pixels.',
   // contact & icons
   'Layout':'"Stacked" puts each item on its own line. "One line" puts them side by side with a separator between.',
-  'Separator':'The character between items when they\'re on one line, like | or •.',
+  'Separator':'What goes between items on the same line: a dot, a bar, a dash, your own character, or nothing. It is left out automatically when the item on either side is empty.',
   'Text size':'Size of the text, in pixels.',
   'Space between lines':'Pixels between one line and the next (or between items, when they\'re on one line).',
   'Text color':'Color of the text. Tick the box to use the signature\'s text color.',
@@ -1406,7 +1666,7 @@ function imageEditor(b){
   } else {
     const u = txt(b, 'url', 'Image link', { ph:'https://yoursite.com/photo.jpg' });
     u.querySelector('input').addEventListener('change', () => renderInspector());
-    out.push(u, chips(),
+    out.push(u, cropButton(b), chips(),
       note(b.url ? '<span class="badge ok">Linked</span> Works in every email app, as long as the link stays online.' : b.sample ? '<span class="badge">Sample picture</span> Paste a link to your own image. Email apps can\'t show the sample.' : 'Paste a link to an image that\'s online.'),
       note('To get a link: right-click an image on your website or LinkedIn and choose <b>Copy image address</b>. Images aren\'t uploaded or stored here.'));
   }
@@ -1417,23 +1677,184 @@ function shapeEditor(b){
   sh.onclick = e => {
     const x = e.target.closest('[data-v]'); if (!x) return;
     b.shape = x.dataset.v;
-    if (b.shape === 'circle' && b.crop.aspect !== '1:1') b.crop.aspect = '1:1';
-    if (b.shape === 'pill' && (b.crop.aspect === '1:1' || b.crop.aspect === 'orig')) b.crop.aspect = '16:9';
+    if (b.shape === 'circle' && b.crop.aspect !== '1:1' && !(b.crop.rect && Math.abs(ratioOf(b.crop.aspect) - 1) < .03)){ b.crop.aspect = '1:1'; delete b.crop.rect; }
+    if (b.shape === 'pill' && (b.crop.aspect === '1:1' || b.crop.aspect === 'orig')){ b.crop.aspect = '16:9'; delete b.crop.rect; }
     changed({ insp:true });
   };
   const sz = el(`<div class="seg" role="group" aria-label="Size presets">${SIZES.map(([l, v]) => `<button type="button" data-v="${v}" aria-pressed="${b.width === v}">${l} · ${v}</button>`).join('')}</div>`);
   sz.onclick = e => { const x = e.target.closest('[data-v]'); if (!x) return; b.width = +x.dataset.v; changed({ insp:true }); };
   return [field('Shape', sh), b.shape === 'rounded' ? num(b, 'radius', 'Corner radius', 1, 60) : null, field('Size', sz), num(b, 'width', 'Width (px)', 16, 600)];
 }
+// the Crop… button (opens the crop window) for pictures that are the same for everyone
+function cropButton(b){
+  if (b.source === 'field') return note('Each person\'s photo uses the frame below. Hand cropping works on pictures that are the same for everyone.');
+  const w = el(`<div class="cropbtns"><button type="button" class="btn sm">${G('fas', 'crop-simple')} Crop…</button>${b.crop.rect ? '<button type="button" class="btn sm ghost">Undo crop</button>' : ''}</div>`);
+  const [o, u] = w.querySelectorAll('button');
+  o.onclick = () => openCrop(b);
+  if (u) u.onclick = () => { delete b.crop.rect; b.crop.aspect = 'orig'; b.crop.zoom = 1; changed({ insp:true }); toast('Showing the full picture.', UNDO); };
+  return w;
+}
 function cropEditor(b){
-  const c = b.crop;
+  const c = b.crop, custom = c.rect ? c.aspect : null;
+  // picking a preset frame replaces a hand-drawn crop
+  const ap = { get aspect(){ return c.aspect; }, set aspect(v){ c.aspect = v; if (v !== custom){ delete c.rect; c.zoom = 1; } } };
   return [
-    sel_(c, 'aspect', 'Crop to', ASPECTS, { insp:true }),
+    cropButton(b),
+    sel_(ap, 'aspect', 'Crop to', custom ? [[custom, 'Custom crop'], ...ASPECTS] : ASPECTS, { insp:true }),
     c.aspect !== 'orig' ? note('Cropping a linked image uses images.weserv.nl, a free image service, so recipients load it from there.') : null,
-    c.aspect !== 'orig' ? reframer(b) : null,
-    b.shape === 'circle' && c.aspect !== '1:1' ? note('Circles look best with a 1:1 crop.') : null
+    c.aspect !== 'orig' && !c.rect ? reframer(b) : null,
+    c.rect ? note('Cropped by hand. Use Crop… to change it.') : null,
+    b.shape === 'circle' && c.aspect !== '1:1' && !(c.rect && Math.abs(ratioOf(c.aspect) - 1) < .03) ? note('Circles look best with a 1:1 crop.') : null
   ];
 }
+
+/* ---------- crop window: drag a frame over the picture, pick a shape, or trim empty edges ---------- */
+let crop = null;
+const CROP_SHAPES = [['free','Free'],['orig','Whole'],['1:1','Square'],['4:3','4:3'],['16:9','Wide'],['3:1','Banner'],['circle','Circle']];
+const clamp = (v, a, z) => Math.min(z, Math.max(a, v));
+function openCrop(b){
+  const src = framedSrc(b);
+  if (!src){ toast('Add a picture link first.'); return; }
+  crop = { b, src, nw:0, nh:0, r:b.crop.rect ? Object.assign({}, b.crop.rect) : null, shape:b.crop.rect && b.shape === 'circle' ? 'circle' : 'free', lock:0 };
+  const img = $('#cropimg');
+  img.onload = () => {
+    if (!crop) return;
+    crop.nw = img.naturalWidth; crop.nh = img.naturalHeight;
+    // start from the frame in use now, so opening the window changes nothing
+    if (!crop.r){
+      const c = b.crop;
+      if (c.aspect === 'orig' && (c.zoom || 1) <= 1) crop.r = { x:0, y:0, w:1, h:1 };
+      else { const q = cropRect(crop.nw, crop.nh, c.aspect === 'orig' ? crop.nw / crop.nh : ratioOf(c.aspect), c); crop.r = { x:q.sx / crop.nw, y:q.sy / crop.nh, w:q.sw / crop.nw, h:q.sh / crop.nh }; }
+    }
+    if (crop.shape === 'circle') crop.lock = 1;
+    drawCropShapes(); paintCrop();
+  };
+  img.onerror = () => { toast("That picture didn't load, so it can't be cropped here. Check the link."); };
+  img.src = src;
+  drawCropShapes();
+  $('#dlg-crop').showModal();
+  $('#cropbox').focus();
+}
+// the frame's shape as width ÷ height in picture pixels
+const cropAr = () => crop.r.w * crop.nw / (crop.r.h * crop.nh);
+function drawCropShapes(){
+  $('#cropshapes').innerHTML = CROP_SHAPES.map(([v, l]) => `<button type="button" data-v="${v}" aria-pressed="${crop.shape === v}">${l}</button>`).join('');
+  $('#croplock').checked = !!crop.lock;
+}
+function paintCrop(){
+  if (!crop || !crop.nw) return;
+  const img = $('#cropimg'), W = img.clientWidth, H = img.clientHeight, r = crop.r, bx = $('#cropbox');
+  // the picture sits in a little padding, so the handles stay grabbable when the frame reaches its edges
+  bx.style.cssText = `left:${img.offsetLeft + r.x * W}px;top:${img.offsetTop + r.y * H}px;width:${r.w * W}px;height:${r.h * H}px`;
+  bx.classList.toggle('round', crop.shape === 'circle');
+  // the result at the size it will have in the signature (up to the side panel's width)
+  const b = crop.b, pw = Math.min(b.width, 260), ph = Math.max(1, Math.round(pw / cropAr())), pv = $('#croppv');
+  const rad = crop.shape === 'circle' || b.shape === 'circle' ? '50%' : b.shape === 'rounded' ? b.radius + 'px' : b.shape === 'pill' ? '9999px' : '0';
+  pv.style.cssText = `width:${pw}px;height:${ph}px;border-radius:${rad};background-image:url("${crop.src.replace(/"/g, '%22')}");background-size:${pw / r.w}px ${ph / r.h}px;background-position:${-r.x * pw / r.w}px ${-r.y * ph / r.h}px`;
+  $('#cropinfo').textContent = `${Math.round(r.w * crop.nw)} × ${Math.round(r.h * crop.nh)} px of the ${crop.nw} × ${crop.nh} px picture.`;
+}
+// fit a frame of shape ar (picture pixels) inside the picture, as large as it can be around the current frame's center
+function cropToShape(ar){
+  const r = crop.r, cx = r.x + r.w / 2, cy = r.y + r.h / 2, f = ar * crop.nh / crop.nw;
+  let w = Math.max(r.w, r.h * f), h = w / f;
+  if (w > 1){ w = 1; h = w / f; }
+  if (h > 1){ h = 1; w = h * f; }
+  crop.r = { x:clamp(cx - w / 2, 0, 1 - w), y:clamp(cy - h / 2, 0, 1 - h), w, h };
+}
+$('#cropshapes').onclick = e => {
+  const x = e.target.closest('[data-v]'); if (!x || !crop || !crop.nw) return;
+  const v = x.dataset.v; crop.shape = v;
+  if (v === 'free') crop.lock = 0;
+  else if (v === 'orig'){ crop.r = { x:0, y:0, w:1, h:1 }; crop.lock = 0; crop.shape = 'free'; }
+  else { crop.lock = v === 'circle' ? 1 : ratioOf(v); cropToShape(crop.lock); }
+  drawCropShapes(); paintCrop();
+};
+$('#croplock').onchange = e => { if (!crop || !crop.nw) return; crop.lock = e.target.checked ? cropAr() : 0; if (!e.target.checked) crop.shape = 'free'; drawCropShapes(); };
+// resize from a handle (n, se, w...) or move the whole frame; a locked shape keeps its proportions
+function cropDrag(mode, r0, dx, dy){
+  const MIN = .03; let { x, y, w, h } = r0;
+  if (mode === 'move') return { x:clamp(x + dx, 0, 1 - w), y:clamp(y + dy, 0, 1 - h), w, h };
+  if (mode.includes('e')) w = clamp(r0.w + dx, MIN, 1 - r0.x);
+  if (mode.includes('w')){ const nx = clamp(r0.x + dx, 0, r0.x + r0.w - MIN); w = r0.x + r0.w - nx; x = nx; }
+  if (mode.includes('s')) h = clamp(r0.h + dy, MIN, 1 - r0.y);
+  if (mode.includes('n')){ const ny = clamp(r0.y + dy, 0, r0.y + r0.h - MIN); h = r0.y + r0.h - ny; y = ny; }
+  if (crop.lock){
+    const f = crop.lock * crop.nh / crop.nw; // width ÷ height, in fractions of the picture
+    if (mode === 'n' || mode === 's') w = h * f; else h = w / f;
+    // keep it inside the picture, shrinking both sides together
+    const maxW = mode.includes('w') ? r0.x + r0.w : mode === 'n' || mode === 's' ? 1 : 1 - x;
+    const maxH = mode.includes('n') ? r0.y + r0.h : mode === 'e' || mode === 'w' ? 1 : 1 - y;
+    const k = Math.min(1, maxW / w, maxH / h); w *= k; h *= k;
+    if (mode.includes('w')) x = r0.x + r0.w - w;
+    if (mode.includes('n')) y = r0.y + r0.h - h;
+    if (mode === 'n' || mode === 's') x = clamp(r0.x + (r0.w - w) / 2, 0, 1 - w);
+    if (mode === 'e' || mode === 'w') y = clamp(r0.y + (r0.h - h) / 2, 0, 1 - h);
+  }
+  return { x, y, w, h };
+}
+let cdrag = null;
+$('#cropbox').onpointerdown = e => {
+  if (!crop || !crop.nw) return;
+  e.preventDefault();
+  const h = e.target.closest('[data-h]'), img = $('#cropimg');
+  cdrag = { mode:h ? h.dataset.h : 'move', x:e.clientX, y:e.clientY, r0:Object.assign({}, crop.r), W:img.clientWidth, H:img.clientHeight };
+  $('#cropbox').setPointerCapture(e.pointerId);
+  if (h && !crop.lock && crop.shape !== 'free'){ crop.shape = 'free'; drawCropShapes(); }
+};
+$('#cropbox').onpointermove = e => { if (!cdrag) return; crop.r = cropDrag(cdrag.mode, cdrag.r0, (e.clientX - cdrag.x) / cdrag.W, (e.clientY - cdrag.y) / cdrag.H); paintCrop(); };
+$('#cropbox').onpointerup = $('#cropbox').onpointercancel = () => { cdrag = null; };
+$('#cropbox').onkeydown = e => {
+  const d = { ArrowLeft:[-1, 0], ArrowRight:[1, 0], ArrowUp:[0, -1], ArrowDown:[0, 1] }[e.key]; if (!d || !crop || !crop.nw) return;
+  e.preventDefault();
+  crop.r = e.shiftKey ? cropDrag(d[0] ? 'e' : 's', crop.r, d[0] * .01, d[1] * .01) : cropDrag('move', crop.r, d[0] * .01, d[1] * .01);
+  paintCrop();
+};
+addEventListener('resize', () => { if ($('#dlg-crop').open) paintCrop(); });
+// cut away edges that are see-through, or the same color as the corners (usually white)
+$('#croptrim').onclick = () => {
+  if (!crop || !crop.nw) return;
+  const im = new Image(); im.crossOrigin = 'anonymous';
+  im.onload = () => {
+    if (!crop) return;
+    const W = Math.min(400, im.naturalWidth), H = Math.max(1, Math.round(W * im.naturalHeight / im.naturalWidth));
+    const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+    const g = cv.getContext('2d'); g.drawImage(im, 0, 0, W, H);
+    let d; try { d = g.getImageData(0, 0, W, H).data; } catch (er){ toast("This picture's host doesn't allow reading it, so trim it by dragging the frame."); return; }
+    const px = (x, y) => { const i = (y * W + x) * 4; return [d[i], d[i + 1], d[i + 2], d[i + 3]]; };
+    const corners = [px(0, 0), px(W - 1, 0), px(0, H - 1), px(W - 1, H - 1)];
+    const clear = corners.filter(c => c[3] < 20).length >= 2;
+    const bg = corners.reduce((a, c) => a.map((v, i) => v + c[i] / 4), [0, 0, 0, 0]);
+    const empty = (x, y) => { const [r, gg, b2, a] = px(x, y); if (a < 20) return true; if (clear) return false; return Math.abs(r - bg[0]) + Math.abs(gg - bg[1]) + Math.abs(b2 - bg[2]) < 40; };
+    let x0 = W, y0 = H, x1 = -1, y1 = -1;
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (!empty(x, y)){ if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+    if (x1 < 0){ toast('The picture looks empty, so there was nothing to trim.'); return; }
+    const r = { x:Math.max(0, x0 - 1) / W, y:Math.max(0, y0 - 1) / H };
+    r.w = Math.min(W, x1 + 2) / W - r.x; r.h = Math.min(H, y1 + 2) / H - r.y;
+    if (r.w > .985 && r.h > .985){ toast('No empty edges to trim.'); return; }
+    crop.r = r; crop.shape = 'free'; crop.lock = 0; drawCropShapes(); paintCrop(); toast('Trimmed the empty edges.');
+  };
+  im.onerror = () => toast("This picture couldn't be read for trimming. Drag the frame instead.");
+  im.src = /^data:/.test(crop.src) ? crop.src : 'https://images.weserv.nl/?url=' + encodeURIComponent(crop.src) + '&w=400&output=png';
+};
+$('#cropreset').onclick = () => { if (!crop || !crop.nw) return; crop.r = { x:0, y:0, w:1, h:1 }; crop.shape = 'free'; crop.lock = 0; drawCropShapes(); paintCrop(); };
+$('#cropclose').onclick = () => $('#dlg-crop').close();
+$('#dlg-crop').addEventListener('close', () => { crop = null; cdrag = null; });
+$('#cropapply').onclick = () => {
+  if (!crop || !crop.nw) return;
+  const { b, r, nw, nh, src } = crop, c = b.crop, R4 = v => Math.round(v * 10000) / 10000;
+  if (r.x < .002 && r.y < .002 && r.w > .996 && r.h > .996){ delete c.rect; c.aspect = 'orig'; c.zoom = 1; }
+  else {
+    c.rect = { x:R4(r.x), y:R4(r.y), w:R4(r.w), h:R4(r.h) };
+    c.aspect = `${Math.max(1, Math.round(r.w * nw))}:${Math.max(1, Math.round(r.h * nh))}`;
+    c.zoom = 1; c.x = 50; c.y = 50;
+    // the picture's size goes with the crop, so the email can cut the same part out of the linked file
+    if (!/^data:/.test(src)) c.dim = { url:src, w:nw, h:nh };
+    if (crop.shape === 'circle') b.shape = 'circle';
+  }
+  const shape = crop.shape;
+  $('#dlg-crop').close();
+  changed({ insp:true }); toast(shape === 'circle' ? 'Cropped to a circle.' : 'Cropped.', UNDO);
+};
 // the picture this block shows right now (the current person's photo for a person field)
 function framedSrc(b){
   const p = personFor(state), V = p ? p.values : {};
@@ -1569,16 +1990,58 @@ function applyPaletteIn(st, next){
   recolorMap(map, st); S.palette = next.slice(); if (S.link === STYLE0.link || S.link === next[0]) S.link = next[0];
 }
 function applyPalette(next){ applyPaletteIn(state, next); changed({ insp:true, list:true }); }
+// what each of the five brand colors is for, as labels on the swatches
+const PAL_ROLES = ['Primary', 'Text', 'Secondary text', 'Light accent', 'Background tint'];
+// "#1a2b3c, 445566 ..." pasted from a brand guide: up to five colors, in order
+const hexList = s => (String(s).match(/#?\b[0-9a-f]{6}\b|#[0-9a-f]{3}\b/gi) || []).slice(0, 5).map(h => { h = h.replace('#', ''); if (h.length === 3) h = h.replace(/./g, '$&$&'); return '#' + h.toLowerCase(); });
+function hexPaste(cur, apply){
+  const f = el(`<div class="field"><span>Paste color codes${helpBtn('Paste color codes')}</span><div class="hexrow"><input type="text" placeholder="#1f4e79, #222222, #6b7280" aria-label="Color codes, in order: ${PAL_ROLES.join(', ')}"><button type="button" class="btn sm">Use</button></div></div>`);
+  const i = f.querySelector('.hexrow input'), go = () => { const l = hexList(i.value); if (!l.length){ toast('No color codes found. Use codes like #1f4e79.'); return; } apply(l.concat(cur.slice(l.length))); i.value = ''; };
+  f.querySelector('.hexrow button').onclick = go; i.onkeydown = e => { if (e.key === 'Enter'){ e.preventDefault(); go(); } };
+  return f;
+}
+const fontName = v => (FONTS.find(f => f[0] === v) || ['', ''])[1];
+const sameBrand = (co, st) => !!co.palette && co.palette.join().toLowerCase() === st.style.palette.join().toLowerCase() && (!co.font || co.font === st.style.font);
+// brand kits (each company's colors, font and logo) at the top of Signature style: apply one in a click, or save this design as one
+function brandKitPanel(){
+  const kits = companies.filter(c => c.palette && c.palette.length === 5), box = el('<div class="kits"></div>');
+  const cur = coById(state.companyId);
+  if (cur && cur.palette && !sameBrand(cur, state)) box.appendChild(note(`<b>${esc(cur.name)}</b>'s kit is different from this signature's colors or font. Apply it again to update this signature.`));
+  kits.forEach(co => {
+    const on = sameBrand(co, state);
+    const k = el(`<div class="kit${co.id === state.companyId ? ' cur' : ''}"><div class="kn"><b>${esc(co.name)}</b><span>${swatches(co.palette)}</span><small>${esc(fontName(co.font) || 'Keeps the signature\'s font')}${co.logoUrl ? ' · logo' : ''}</small></div><button type="button" class="btn sm${on ? '' : ' primary'}"${on ? ' disabled' : ''}>${on ? 'In use' : 'Apply'}</button></div>`);
+    k.querySelector('button').onclick = () => { applyBrandIn(state, co); renderCompanySelect(); changed({ insp:true, list:true }); toast(`Applied the ${co.name} brand kit.`, UNDO); };
+    box.appendChild(k);
+  });
+  if (!kits.length) box.appendChild(note('Save this signature\'s colors, font and logo as a brand kit, then apply it to any other signature in one click.'));
+  if (!(curSig() && curSig().sh)){
+    const sv = el(`<div class="hexrow"><input type="text" maxlength="60" placeholder="Kit name, e.g. your business" aria-label="Name for a new brand kit"><button type="button" class="btn sm">Save as a kit</button></div>`);
+    const i = sv.querySelector('input'), go = async () => {
+      const name = i.value.trim(); if (!name){ i.focus(); toast('Give the kit a name first.'); return; }
+      const co = brandFromDesign({ id:uid() + uid(), name, palette:[], font:'', logo:'', logoUrl:'' }, state);
+      try {
+        await coSave(co);
+        if (!state.companyId){ state.companyId = co.id; renderCompanySelect(); queueSave(); }
+        toast(`Saved the ${name} brand kit. It's also a company in your library.`); renderInspector();
+      } catch (er){ toast(er.message); }
+    };
+    sv.querySelector('button').onclick = go; i.onkeydown = e => { if (e.key === 'Enter'){ e.preventDefault(); go(); } };
+    box.appendChild(sv);
+  }
+  return box;
+}
 function paletteEditor(){
   const S = state.style;
   const w = el(`<div class="field"><span>Brand colors${helpBtn('Brand colors')}</span><div style="display:flex;gap:6px;flex-wrap:wrap"></div></div>`);
   S.palette.forEach((p, i) => {
-    const c = el(`<input type="color" aria-label="Brand color ${i + 1}" style="width:40px;height:32px;padding:0;border:1px solid var(--line);border-radius:6px;background:none">`);
+    const c = el(`<input type="color" aria-label="${PAL_ROLES[i]} color" title="${PAL_ROLES[i]}" style="width:40px;height:32px;padding:0;border:1px solid var(--line);border-radius:6px;background:none">`);
     c.value = p; let from = p;
     c.oninput = () => { recolor(from, c.value); from = c.value; S.palette[i] = c.value; changed(); };
     c.onchange = () => renderInspector();
     w.lastChild.appendChild(c);
   });
+  w.appendChild(el(`<p class="note">In order: ${PAL_ROLES.join(', ')}.</p>`));
+  const paste = hexPaste(S.palette, next => { applyPalette(next); toast('Brand colors set.', UNDO); });
   // match colors to a logo or photo: one in the design, or a file on this computer (read here, never stored)
   // one button per picture (the same logo used twice is one button), with a thumbnail; repeated names get numbered
   const imgs = [], named = {};
@@ -1592,7 +2055,7 @@ function paletteEditor(){
   const m = el(`<div class="field"><span>Match colors to a logo or photo${helpBtn('Match colors to a logo or photo')}</span><div style="display:flex;gap:6px;flex-wrap:wrap">${imgs.map((x, i) => `<button type="button" class="btn sm" data-img="${i}"><img src="${esc(x.src)}" alt="" width="18" height="18" referrerpolicy="no-referrer" style="object-fit:contain;background:#fff;border-radius:3px;vertical-align:middle;margin-right:6px">From ${esc(x.label)}</button>`).join('')}<label class="btn sm">From a file<input type="file" accept="image/*" hidden></label></div><p class="note">A file is only read for its colors. It isn't uploaded or saved.</p></div>`);
   m.onclick = e => { const b = e.target.closest('[data-img]'); if (b) paletteFromImage(imgs[+b.dataset.img].src, p => { applyPalette(p); toast('Colors matched.', UNDO); }); };
   m.querySelector('input').onchange = e => { const f = e.target.files[0]; if (f) readImage(f, 300, d => paletteFromImage(d, p => { applyPalette(p); toast('Colors matched to your logo.', UNDO); })); };
-  return [w, m];
+  return [w, paste, m];
 }
 // bold / italic / all caps as toggle buttons right under size, where people look for them
 function styleToggles(b){
@@ -1617,6 +2080,48 @@ const BLOCK_DESC = {
   button:'A button that opens a link, like a booking page.',
   html:'Your own HTML, for anything the other blocks can\'t do.'
 };
+// the blocks that share a line with block i of a column: the first one, and every "next to the block above" after it
+function lineOf(blocks, i){
+  let a = i; while (a > 0 && blocks[a].inline) a--;
+  let z = a; while (blocks[z + 1] && blocks[z + 1].inline) z++;
+  return blocks.slice(a, z + 1);
+}
+// turn an older contact separator (any short text) into the separator settings
+function legacySep(s){
+  s = String(s ?? '|').trim();
+  const k = Object.keys(SEP_CH).find(x => SEP_CH[x] === s) || (s === '-' ? 'dash' : s === '•' ? 'bullet' : '');
+  return { ch:!s ? 'none' : k || 'custom', custom:k ? '' : s, space:'normal', color:'#b0b7c3', size:0 };
+}
+const VALIGN_LINE = [['baseline','Text baseline'],['top','Top'],['middle','Middle'],['bottom','Bottom']];
+function sepFields(s){
+  return [segs(s, 'ch', 'Separator', SEPS, { insp:true }),
+    s.ch === 'custom' ? txt(s, 'custom', 'Your separator', { ph:'e.g. ✦ or ~' }) : null,
+    s.ch && s.ch !== 'none' ? [segs(s, 'space', 'Space around it', [['tight','Tight'],['normal','Normal'],['wide','Wide']]),
+      row(color(s, 'color', 'Separator color', 'Same as the text'), num(s, 'size', 'Size (0 = match text)', 0, 40))] : null];
+}
+// settings for the line a block sits on: how its items line up, what goes between them, and a nudge when sizes clash
+function lineEditor(f){
+  const group = lineOf(f.c.blocks, f.i); if (group.length < 2) return null;
+  const lead = group[0], b = f.b;
+  // shows the alignment in effect (a default isn't stored), and stores it on the line's first block once picked
+  const al = { get v(){ return groupAlign(group); }, set v(x){ lead.rowAlign = x; } }, alS = sel_(al, 'v', 'Line up the items', VALIGN_LINE);
+  if (!lead.gsep) lead.gsep = { ch:'none', custom:'', space:'normal', color:'', size:0 };
+  const out = [alS, ...[sepFields(lead.gsep)].flat(9)];
+  if (b.inline){
+    const t = { on:!!b.sepOwn }, own = chk(t, 'on', 'A different separator before this item');
+    own.querySelector('input').onchange = e => { b.sepOwn = e.target.checked ? clone(lead.gsep) : null; changed({ insp:true }); };
+    out.push(own, b.sepOwn ? el('<div class="sub"></div>') : null);
+    if (b.sepOwn) [sepFields(b.sepOwn)].flat(9).filter(Boolean).forEach(n => out[out.length - 1].appendChild(n));
+  }
+  // two sizes of text on one line rarely look right; offer to match them
+  const ts = group.filter(g => g.type === 'text');
+  if (b.type === 'text' && ts.length > 1 && Math.max(...ts.map(g => g.size)) / Math.min(...ts.map(g => g.size)) >= 1.25){
+    const m = el(`<div class="field"><p class="note">The text on this line is in different sizes (${[...new Set(ts.map(g => g.size))].join(', ')}px), so it can look like two lines.</p><button type="button" class="btn sm">Match the others to ${b.size}px</button></div>`);
+    m.querySelector('button').onclick = () => { ts.forEach(g => { g.size = b.size; }); changed({ insp:true }); toast('Text sizes matched.', UNDO); };
+    out.push(m);
+  }
+  return grp('Items on this line', ...out);
+}
 function lineCount(r){ let n = 0; for (let i = 1; i < r.cols.length; i++) if (lineOn(r, i)) n++; return n; }
 // the look of a row's lines; every line in the row shares it
 function lineFields(r, shared){
@@ -1675,7 +2180,7 @@ function renderInspector(){
   if (sel === 'style'){
     const S = state.style;
     put(tabbed(ihead({ glyph:'style', kind:'Whole signature', title:'Signature style', desc:'Colors, font and the box around everything. To change one part, click it in the preview or in the list on the left.' }), [
-      ['Colors', [grp('Brand', paletteEditor()), grp('Text & links', row(color(S, 'color', 'Text color'), color(S, 'link', 'Link color')))]],
+      ['Colors', [grp('Brand kit', brandKitPanel()), grp('Brand', paletteEditor()), grp('Text & links', row(color(S, 'color', 'Text color'), color(S, 'link', 'Link color')))]],
       ['Text', [grp('Font', sel_(S, 'font', 'Font family', FONTS), num(S, 'size', 'Base size', 9, 24),
         note('Email apps only show fonts installed on the reader\'s device, so these are the email-safe ones.'))]],
       ['Box', [grp('Size', num(S, 'width', 'Fixed width (0 = fit content)', 0, 700, 10), num(S, 'pad', 'Inner padding', 0, 60)),
@@ -1703,7 +2208,7 @@ function renderInspector(){
     const lines = { on:lineCount(r) > 0 }, tg = chk(lines, 'on', 'Draw lines between columns');
     tg.querySelector('input').onchange = e => { r.divW = e.target.checked ? Math.max(1, N0(r.divW)) : 0; r.divHide = {}; changed({ list:true, insp:true }); };
     put(tabbed(ihead({ glyph:'row', kind:'Row', obj:r, ph:`Row ${ri}`, crumbs:top, desc:'A row holds columns that sit side by side. Stack rows to build any layout.' }), [['', [
-      grp('Columns', colCount(r, 'Number of columns'), multi ? row(num(r, 'gap', 'Space between', 0, 60), sel_(r, 'valign', 'Line up', VALIGN)) : null,
+      grp('Columns', colCount(r, 'Items side by side'), multi ? row(num(r, 'gap', 'Space between', 0, 60), sel_(r, 'valign', 'Line up', VALIGN)) : null,
         r.cols.map(c => num(c, 'width', `${colLabel(r, c)} width (0 = auto)`, 0, COLMAX, 2, { list:true })),
         chk(r, 'full', 'Stretch row to full signature width')),
       multi ? grp('Lines between columns', tg, lines.on ? note('To hide a single line, click it in the list on the left or in the preview.') : null) : null,
@@ -1714,7 +2219,7 @@ function renderInspector(){
   if (f.kind === 'col'){
     const c = f.c;
     put(tabbed(ihead({ glyph:'col', kind:'Column', obj:c, ph:`Column ${f.r.cols.indexOf(c) + 1}`, crumbs:[...top, [rowName(f.r), f.r.id]], desc:'Select a block in this column to edit it, or add one from the left.' }), [['', [
-      grp('Layout', colCount(f.r, 'Columns in this row'), num(c, 'width', 'Width (0 = auto)', 0, COLMAX, 2, { list:true })),
+      grp('Layout', colCount(f.r, 'Columns side by side'), num(c, 'width', 'Width (0 = auto)', 0, COLMAX, 2, { list:true })),
       grp('Background', chk(c, 'bgOn', 'Fill this column', { insp:true }), c.bgOn ? [color(c, 'bg', 'Color'), row(num(c, 'pad', 'Padding', 0, 40), num(c, 'radius', 'Corner radius', 0, 30))] : num(c, 'pad', 'Padding', 0, 40))]]]));
     return;
   }
@@ -1728,17 +2233,15 @@ function renderInspector(){
   }
   const mover = sel_({ to:f.c.id }, 'to', 'Move to column', allCols().map(x => [x.c.id, colName(x.r, x.c)]));
   place.push(segs(b, 'align', 'Alignment', ALIGN), row(num(b, 'pt', 'Space above', -20, 60), num(b, 'pb', 'Space below', -20, 60)));
-  const nxt = f.c.blocks[f.i + 1];
-  if (!b.inline && nxt && nxt.inline && !b.rowAlign) b.rowAlign = 'middle';
-  if (!b.inline && nxt && nxt.inline) place.push(sel_(b, 'rowAlign', 'Line up side-by-side blocks', VALIGN));
-  const where = [mover, colCount(f.r, 'Columns in this row')];
+  const lineGrp = lineEditor(f);
+  const where = [mover, colCount(f.r, 'Columns side by side')];
   if (f.i > 0 && f.r.cols.length < 5){
     const sp = el('<button type="button" class="btn sm">Move this and the blocks below into a new column</button>');
     sp.onclick = () => { const moved = f.c.blocks.splice(f.i); moved[0].inline = false; f.r.cols.splice(f.r.cols.indexOf(f.c) + 1, 0, mkCol(moved)); changed({ list:true, insp:true }); };
     where.push(sp);
   }
   mover.querySelector('select').onchange = e => { const to = find(e.target.value); f.c.blocks.splice(f.i, 1); to.c.blocks.push(b); changed({ list:true, insp:true }); };
-  let content = [], style = [], layout = [grp('Position & spacing', ...place), grp('Column', ...where)];
+  let content = [], style = [], layout = [grp('Position & spacing', ...place), lineGrp, grp('Column', ...where)];
   switch (b.type){
     case 'text': {
       // the pronoun color and italic options only matter once there are pronouns, so they appear as you type them
@@ -1767,7 +2270,7 @@ function renderInspector(){
     case 'contact':
       content = [grp('Contact lines', itemsEditor(b, 'contact'), chips())];
       style = [grp('Text', segs(b, 'layout', 'Layout', [['stack','Stacked'],['inline','One line']], { insp:true }),
-          b.layout === 'inline' ? txt(b, 'sep', 'Separator') : null,
+          b.layout === 'inline' ? sepFields(b.cs || (b.cs = legacySep(b.sep))) : null,
           row(num(b, 'size', 'Text size', 8, 24), num(b, 'gap', 'Space between lines', 0, 20)), color(b, 'color', 'Text color', 'Same as signature')),
         grp('Icons', row(num(b, 'iconSize', 'Icon size', 8, 32), color(b, 'iconColor', 'Icon color')),
           sel_(b, 'iconShape', 'Icon background', [['none','None'],['circle','Circle'],['rounded','Rounded square'],['square','Square']], { insp:true }),
@@ -1785,7 +2288,10 @@ function renderInspector(){
       content = [grp('Button', txt(b, 'text', 'Button text', { list:true }), txt(b, 'link', 'Link', { ph:'https://… or name@site.com' }), chips(),
           chk(b, 'inline', 'Sit beside the previous button', { insp:true }))];
       style = [grp('Colors', row(color(b, 'bg', 'Button color'), color(b, 'color', 'Text & icon color'))),
-        grp('Icon', iconField(b, 'icon', 'Icon', true), row(sel_(b, 'iconPos', 'Position', [['left','Before text'],['right','After text']]), num(b, 'iconSize', 'Icon size', 8, 32))),
+        grp('Icon', iconField(b, 'icon', 'Icon', true), b.icon ? [
+          row(sel_(b, 'iconPos', 'Position', [['left','Before text'],['right','After text']]), num(b, 'iconGap', 'Space before text', 0, 24)),
+          chk(b, 'iconAuto', 'Size the icon to match the text', { insp:true }),
+          b.iconAuto ? null : num(b, 'iconSize', 'Icon size', 8, 32)] : null),
         grp('Text', row(num(b, 'size', 'Text size', 9, 24), sel_(b, 'weight', 'Weight', WEIGHTS))),
         grp('Shape', row(num(b, 'padX', 'Padding left/right', 0, 40), num(b, 'padY', 'Padding top/bottom', 0, 24)),
           num(b, 'radius', 'Corner radius', 0, 40), row(num(b, 'borderW', 'Border thickness', 0, 8), color(b, 'borderColor', 'Border color')))];
@@ -2051,18 +2557,24 @@ function iconIndex(){
 }
 function openPicker(cb){ pickCb = cb; $('#isearch').value = ''; drawIcons(); $('#dlg-icons').showModal(); $('#isearch').focus(); }
 function drawIcons(){
-  const q = $('#isearch').value.trim().toLowerCase(), Gd = $('#igrid');
-  if (pickSet === 'custom'){
-    Gd.innerHTML = myIcons.map((m, i) => `<button type="button" data-my="${i}" title="${esc(m.name)}"><img src="${esc(m.data)}" alt=""><span>${esc(m.name)}</span></button>`).join('');
-    $('#inote').textContent = myIcons.length ? 'Icon links you added are remembered in this browser.' : 'No icons of your own yet. Paste an icon link above.';
+  const q = $('#isearch').value.trim().toLowerCase(), Gd = $('#igrid'), mine = pickSet === 'custom';
+  // the icon link box only belongs to My icons; an empty grid centers its message in the same space
+  $('#iaddform').hidden = $('#iaddhelp').hidden = !mine;
+  const empty = on => Gd.parentElement.classList.toggle('none', on);
+  if (mine){
+    const list = myIcons.filter(m => !q || m.name.toLowerCase().includes(q));
+    Gd.innerHTML = list.map(m => `<button type="button" data-my="${myIcons.indexOf(m)}" title="${esc(m.name)}"><img src="${esc(m.data)}" alt=""><span>${esc(m.name)}</span></button>`).join('');
+    $('#inote').textContent = !myIcons.length ? 'No icons of your own yet. Paste an icon link above.' : list.length ? 'Icon links you added are remembered in this browser.' : 'None of your icons match.';
+    empty(!list.length);
     return;
   }
-  if (!iconIndex().length){ Gd.innerHTML = ''; $('#inote').textContent = 'The icon library did not load. Reload the page, or add your own icon by link.'; return; }
+  if (!iconIndex().length){ Gd.innerHTML = ''; $('#inote').textContent = 'The icon library did not load. Reload the page, or add your own icon by link.'; empty(true); return; }
   const list = iconIndex().filter(x => (pickSet === 'all' || x.set === pickSet) && (!q || x.terms.includes(q)));
   const shown = list.slice(0, 300);
   Gd.innerHTML = shown.map((x, i) => `<button type="button" data-i="${i}" title="${x.name}">${iconSvg(x)}<span>${x.name}</span></button>`).join('');
   Gd._list = shown;
-  $('#inote').textContent = list.length > 300 ? `Showing 300 of ${list.length}. Type to narrow it down.` : list.length ? '' : 'No icons match. Try a simpler word, or add your own by link.';
+  $('#inote').textContent = list.length > 300 ? `Showing 300 of ${list.length}. Type to narrow it down.` : list.length ? '' : 'No icons match. Try a simpler word, or add your own on the My icons tab.';
+  empty(!list.length);
 }
 $('#isearch').oninput = drawIcons;
 $('#isets').onclick = e => { const b = e.target.closest('[data-set]'); if (!b) return; pickSet = b.dataset.set; $('#isets').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b)); drawIcons(); };
@@ -2439,7 +2951,8 @@ function renderHome(){
   const brandKit = co && brandOpen ? `<div class="brandkit">
       <div class="field"><span>Company name</span><input id="bk-name" type="text" value="${esc(co.name)}"></div>
       <div class="field"><span>Logo link</span><input id="bk-logourl" type="text" placeholder="https://…/logo.png" value="${esc(co.logoUrl || '')}"><div class="row" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:4px">${co.logoUrl ? `<img src="${esc(co.logoUrl)}" alt="" referrerpolicy="no-referrer" style="max-width:110px;max-height:34px;object-fit:contain">` : ''}<button class="btn sm" type="button" data-a="co-match"${co.logoUrl ? '' : ' disabled'}>Match colors to logo</button></div></div>
-      <div class="field"><span>Brand colors</span><div style="display:flex;gap:6px;flex-wrap:wrap">${(co.palette || STYLE0.palette).map((c, i) => `<input type="color" data-bkc="${i}" value="${esc(c)}" aria-label="Brand color ${i + 1}" style="width:36px;height:30px;padding:0;border:1px solid var(--line);border-radius:6px;background:none">`).join('')}</div></div>
+      <div class="field"><span>Brand colors</span><div style="display:flex;gap:6px;flex-wrap:wrap">${(co.palette || STYLE0.palette).map((c, i) => `<input type="color" data-bkc="${i}" value="${esc(c)}" aria-label="${PAL_ROLES[i]} color" title="${PAL_ROLES[i]}" style="width:36px;height:30px;padding:0;border:1px solid var(--line);border-radius:6px;background:none">`).join('')}</div><p class="note">In order: ${PAL_ROLES.join(', ')}.</p></div>
+      <div class="field"><span>Paste color codes</span><div class="hexrow"><input id="bk-hex" type="text" placeholder="#1f4e79, #222222, #6b7280" aria-label="Color codes, in order"><button class="btn sm" type="button" id="bk-hexgo">Use</button></div></div>
       <div class="field"><span>Font</span><select id="bk-font"><option value="">Keep each signature's font</option>${FONTS.map(f => `<option value="${esc(f[0])}"${fontStyle(f[0])}${f[0] === co.font ? ' selected' : ''}>${esc(f[1])}</option>`).join('')}</select></div>
       <div class="field"><span>Signatures</span><div class="row" style="display:flex;gap:6px;flex-wrap:wrap">${co.sh ? '' : `<button class="btn sm primary" data-a="co-applyall" type="button"${count(co.id) ? '' : ' disabled'}>Update all ${count(co.id)} with this brand</button>`}<button class="btn sm" data-a="co-done" type="button">Done</button></div></div>
     </div>` : '';
@@ -2473,6 +2986,8 @@ function wireBrandKit(co){
   $('#bk-logourl').onchange = e => { co.logoUrl = e.target.value.trim(); sv('Logo link saved.').then(renderHome); };
   $('#bk-font').onchange = e => { co.font = e.target.value; sv(); };
   document.querySelectorAll('[data-bkc]').forEach(inp => inp.onchange = () => { co.palette = (co.palette || STYLE0.palette).slice(); co.palette[+inp.dataset.bkc] = inp.value; sv(); });
+  const hx = () => { const l = hexList($('#bk-hex').value); if (!l.length){ toast('No color codes found. Use codes like #1f4e79.'); return; } co.palette = l.concat((co.palette || STYLE0.palette).slice(l.length)); sv('Brand colors saved.').then(renderHome); };
+  $('#bk-hexgo').onclick = hx; $('#bk-hex').onkeydown = e => { if (e.key === 'Enter') hx(); };
   const mb = document.querySelector('[data-a="co-match"]');
   if (mb) mb.onclick = () => paletteFromImage(co.logoUrl, p => { co.palette = p; sv(`${co.name}'s colors now match the logo.`).then(renderHome); });
 }
@@ -2877,8 +3392,10 @@ document.addEventListener('keydown', e => {
   if (step !== 'design' || typing || !permsOf(curSig()).edit_design) return;
   if (k === 'delete' || k === 'backspace'){
     const f = find(sel);
-    if (f && f.kind === 'block'){ e.preventDefault(); f.c.blocks.splice(f.i, 1); sel = 'style'; toast('Block deleted.', UNDO); changed({ list:true, insp:true }); }
+    if (f && f.kind === 'block'){ e.preventDefault(); takeBlock(f.c, f.i); normLines(); sel = 'style'; toast('Block deleted.', UNDO); changed({ list:true, insp:true }); }
   }
+  // Alt + up/down moves the selected block or row
+  if (e.altKey && (k === 'arrowup' || k === 'arrowdown')){ const f = find(sel); if (f && f.kind !== 'col'){ e.preventDefault(); nudge(sel, k === 'arrowup' ? -1 : 1); } }
   if (mod && k === 'd'){
     const f = find(sel);
     if (f && f.kind === 'block'){ e.preventDefault(); const c = clone(f.b); c.id = uid(); f.c.blocks.splice(f.i + 1, 0, c); sel = c.id; changed({ list:true, insp:true }); }

@@ -137,15 +137,30 @@
   <header><h2>Choose an icon</h2>
     <input id="isearch" class="search" type="search" placeholder="Search 2,000+ icons: phone, linkedin, calendar…">
     <button class="btn sm" id="iclose" type="button">Close</button></header>
-  <header style="padding-top:0">
+  <header class="ibar2">
     <div class="seg" id="isets" role="group" aria-label="Icon set">
       <button data-set="all" aria-pressed="true" type="button">All</button><button data-set="fab" aria-pressed="false" type="button">Brands</button><button data-set="fas" aria-pressed="false" type="button">Solid</button><button data-set="far" aria-pressed="false" type="button">Outline</button><button data-set="custom" aria-pressed="false" type="button">My icons</button>
     </div>
-    <span class="spacer"></span>
-    <form id="iaddform" style="display:flex;gap:6px;flex-wrap:wrap"><input id="iaddurl" type="url" class="search" placeholder="Icon link (PNG), e.g. from Flaticon" aria-label="Icon image link" style="flex:1 1 220px"><button class="btn sm" type="submit">Add icon</button></form>
+    <form id="iaddform" hidden><input id="iaddurl" type="url" class="search" placeholder="Icon link (PNG), e.g. from Flaticon" aria-label="Icon image link"><button class="btn sm" type="submit">Add icon</button></form>
   </header>
+  <p class="note iaddhelp" id="iaddhelp" hidden>Copy the image address of a PNG (from Flaticon or your site) and add it here. Use PNG, since Gmail doesn't show SVG.</p>
   <div class="body"><div class="igrid" id="igrid"></div><p class="note" id="inote"></p></div>
-  <footer><span class="note">Your own icon: copy the image address of a PNG (from Flaticon or your site) and add it above. Use PNG, since Gmail doesn't show SVG. Built-in icons are Font Awesome Free (CC BY 4.0).</span></footer>
+  <footer><span class="note">Built-in icons are Font Awesome Free (CC BY 4.0).</span></footer>
+</div></dialog>
+
+<dialog id="dlg-crop"><div class="dlg">
+  <header><h2>Crop picture</h2><button class="btn sm" id="cropclose" type="button">Cancel</button></header>
+  <header class="cropbar">
+    <div class="seg" id="cropshapes" role="group" aria-label="Crop shape"></div>
+    <label class="chk"><input type="checkbox" id="croplock">Lock the shape</label>
+    <span class="spacer"></span>
+    <button class="btn sm" id="croptrim" type="button" title="Cut away empty, white or see-through edges">Trim empty space</button>
+  </header>
+  <div class="body cropbody">
+    <div class="cropstage" id="cropstage"><img id="cropimg" alt="" referrerpolicy="no-referrer"><div class="cropbox" id="cropbox" tabindex="0" role="application" aria-label="Crop area. Drag it to move it, or drag a corner or edge to resize it. Arrow keys move it; Shift and the arrow keys resize it."><i data-h="nw"></i><i data-h="n"></i><i data-h="ne"></i><i data-h="e"></i><i data-h="se"></i><i data-h="s"></i><i data-h="sw"></i><i data-h="w"></i></div></div>
+    <div class="cropside"><p class="label">In the signature</p><div class="croppv" id="croppv"></div><p class="note" id="cropinfo"></p><p class="note">The original picture isn't changed. Open Crop again any time to adjust it or go back to the full picture.</p></div>
+  </div>
+  <footer><button class="btn sm ghost" id="cropreset" type="button">Use the full picture</button><span class="spacer"></span><button class="btn sm primary" id="cropapply" type="button">Apply crop</button></footer>
 </div></dialog>
 
 <dialog id="dlg-new" style="width:min(980px,calc(100vw - 32px))"><div class="dlg">
