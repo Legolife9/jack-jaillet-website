@@ -652,3 +652,12 @@ button.brand:hover{background:var(--panel2)}
 .linkhelp a{color:var(--sel)}
 .linkq{display:inline-flex;align-items:center;gap:5px}
 .linkq svg{width:11px;height:11px;fill:currentColor}
+/* reset to defaults: a small button in each section header, and "Reset all settings" at the end of a panel */
+.grp{position:relative}
+.greset{position:absolute;top:9px;right:36px;display:inline-flex;align-items:center;gap:4px;padding:3px 7px;border:1px solid transparent;border-radius:6px;background:none;color:var(--muted);font-size:11px;cursor:pointer}
+.greset svg{width:10px;height:10px;fill:currentColor}
+.greset:hover,.greset:focus-visible{border-color:var(--line);color:var(--ink);background:var(--panel2)}
+.grp .ghead .label{padding-right:70px}
+.iresetall{margin:14px 12px 18px;padding-top:12px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.iresetall .btn svg{width:11px;height:11px;fill:currentColor;margin-right:5px}
+.ro-design .greset,.ro-design .iresetall{display:none}
